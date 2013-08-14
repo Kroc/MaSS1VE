@@ -22,14 +22,104 @@ Option Explicit
 'Subclass an object to track mouse enter / leave / wheel events
 
 'Status             Ready to use
-'Dependencies       bluMagic.cls, WIN32.bas
-'Last Updated       08-AUG-13
+'Dependencies       bluMagic.cls
+'Last Updated       14-AUG-13
+'Last Update        Remove WIN32.bas dependency, it creates some duplication but it's _
+                    better for people who want to drop this class into their project
 
-'TODO: Remove the dependencies since this is the kind of class most people would _
- want to add to their projects as-is
 'TODO: Support the mouse browser buttons (back / forward)
 
 '/// API DEFS /////////////////////////////////////////////////////////////////////////
+
+'In VB6 True is -1 and False is 0, but in the Win32 API it's 1 for True
+Private Enum BOOL
+    API_TRUE = 1
+    API_FALSE = 0
+End Enum
+
+'A point _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162805%28v=vs.85%29.aspx>
+Private Type POINT
+   X As Long
+   Y As Long
+End Type
+
+'A rectangle _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162897%28v=vs.85%29.aspx>
+Private Type RECT
+    Left                As Long
+    Top                 As Long
+    'It's important to note that the Right and Bottom edges are _exclusive_, that is, _
+     the right-most and bottom-most pixel are not part of the overall width / height _
+     <blogs.msdn.com/b/oldnewthing/archive/2004/02/18/75652.aspx>
+    Right               As Long
+    Bottom              As Long
+End Type
+
+'Get/set various system configuration info _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms724947%28v=vs.85%29.aspx>
+Private Declare Function user32_SystemParametersInfo Lib "user32" Alias "SystemParametersInfoA" ( _
+    ByVal Action As SPI, _
+    ByVal Param As Long, _
+    ByRef ParamAny As Any, _
+    ByVal WinIni As Long _
+) As BOOL
+
+Private Enum SPI
+    'Number of "lines" to scroll with the mouse wheel
+    SPI_GETWHEELSCROLLLINES = &H68
+    'Number of "chars" to scroll with a horizontal mouse wheel
+    SPI_GETWHEELSCROLLCHARS = &H6C
+End Enum
+
+'Get the dimensions of the whole window, including the border area _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms633519%28v=vs.85%29.aspx>
+Private Declare Function user32_GetWindowRect Lib "user32" Alias "GetWindowRect" ( _
+    ByVal hndWindow As Long, _
+    ByRef IntoRECT As RECT _
+) As BOOL
+
+'Is a point in the rectangle? e.g. check if mouse is within a window _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162882%28v=vs.85%29.aspx>
+Private Declare Function user32_PtInRect Lib "user32" Alias "PtInRect" ( _
+    ByRef InRect As RECT, _
+    ByVal X As Long, _
+    ByVal Y As Long _
+) As BOOL
+
+'Load a mouse cursor _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms648391%28v=vs.85%29.aspx>
+Private Declare Function user32_LoadCursor Lib "user32" Alias "LoadCursorA" ( _
+    ByVal hndInstance As Long, _
+    ByVal CursorName As IDC _
+) As Long
+
+'Sets the screen cursor _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms648393%28v=vs.85%29.aspx>
+Private Declare Function user32_SetCursor Lib "user32" Alias "SetCursor" ( _
+    ByVal hndCursor As Long _
+) As Long
+
+Public Enum IDC
+    'This is our own addition to tell us to not change it one way or another
+    vbDefault = 0
+    
+    IDC_APPSTARTING = 32650&
+    IDC_ARROW = 32512&
+    IDC_CROSS = 32515&
+    IDC_HAND = 32649&
+    IDC_HELP = 32651&
+    IDC_IBEAM = 32513&
+    IDC_ICON = 32641&
+    IDC_NO = 32648&
+    IDC_SIZEALL = 32646&
+    IDC_SIZENESW = 32643&
+    IDC_SIZENS = 32645&
+    IDC_SIZENWSE = 32642&
+    IDC_SIZEWE = 32644&
+    IDC_UPARROW = 32516&
+    IDC_WAIT = 32514&
+End Enum
 
 'A mouse event _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms644968%28v=vs.85%29.aspx>
@@ -230,6 +320,22 @@ Public Sub Attach( _
     End If
 End Sub
 
+'/// PRIVATE PROPERTIES ///////////////////////////////////////////////////////////////
+
+'PROPERTY WheelScrollLines : The number of lines to scroll when the mouse wheel rolls _
+ ======================================================================================
+Private Property Get WheelScrollLines() As Long
+    Call user32_SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, WheelScrollLines, 0)
+    If WheelScrollLines <= 0 Then WheelScrollLines = 3
+End Property
+
+'PROPERTY WheelScrollChars : The number of characters to scroll with horizontal wheel _
+ ======================================================================================
+Private Property Get WheelScrollChars() As Long
+    Call user32_SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, WheelScrollChars, 0)
+    If WheelScrollChars <= 0 Then WheelScrollChars = 3
+End Property
+
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
 'GetMouseStateFromParam : Extract the mouse / key state from a message param _
@@ -290,10 +396,10 @@ Private Sub SubclassWindowProcedure( _
         'Get the location of the control in the screen _
          (including the non-client area, such as the scrollbars)
         Dim WindowRECT As RECT
-        Call WIN32.user32_GetWindowRect(hndTarget, WindowRECT)
+        Call user32_GetWindowRect(hndTarget, WindowRECT)
         'Determine which mouse button / meta keys are pressed
         Call GetMouseStateFromParam(wParam, lParam, Button, Shift, X, Y)
-        If WIN32.user32_PtInRect(WindowRECT, X, Y) = API_FALSE Then Exit Sub
+        If user32_PtInRect(WindowRECT, X, Y) = API_FALSE Then Exit Sub
         
         'The upper bytes of the `wParam` contain the amount the wheel scrolled, _
          which will be some fraction or multiple of 120 _
@@ -314,12 +420,12 @@ Private Sub SubclassWindowProcedure( _
          (holding shift converts a vertical scroll to horizontal)
         If Message = WM_MOUSEHWHEEL Or (Shift And vbShiftMask) > 0 Then
             Dim CharsScrolled As Single
-            Let CharsScrolled = WIN32.WheelScrollChars * (Delta / 120)
+            Let CharsScrolled = WheelScrollChars * (Delta / 120)
             'Alert the controller so it can do the scrolling
             RaiseEvent MouseHScroll(CharsScrolled, Button, Shift, X, Y)
         Else
             Dim LinesScrolled As Single
-            Let LinesScrolled = WIN32.WheelScrollLines * (Delta / 120)
+            Let LinesScrolled = WheelScrollLines * (Delta / 120)
             'Alert the controller so it can do the scrolling
             RaiseEvent MouseVScroll(LinesScrolled, Button, Shift, X, Y)
         End If
@@ -330,6 +436,8 @@ Private Sub SubclassWindowProcedure( _
     '`WM_MOUSEHOVER` _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms645613%28v=vs.85%29.aspx>
     ElseIf Message = WM_MOUSEHOVER Then '----------------------------------------------
+        '`TrackMouseEvent` automatically cancels itself each time one of its messages _
+         (`WM_MOUSELEAVE` / `WM_MOUSEHOVER`) are sent
         Let IsTracking = False
         
         'Determine which mouse button / meta keys are pressed
@@ -339,7 +447,11 @@ Private Sub SubclassWindowProcedure( _
         Let ReturnValue = 0
         Let Handled = True
         
+    '`WM_MOUSELEAVE`: Does not fire until you've used `TrackMouseEvent` API _
+     <msdn.microsoft.com/en-us/library/windows/desktop/ms645615%28v=vs.85%29.aspx>
     ElseIf Message = WM_MOUSELEAVE Then '----------------------------------------------
+        '`TrackMouseEvent` automatically cancels itself each time one of its messages _
+         (`WM_MOUSELEAVE` / `WM_MOUSEHOVER`) are sent
         RaiseEvent MouseOut
         Let IsTracking = False
         Let IsOut = True
@@ -347,11 +459,17 @@ Private Sub SubclassWindowProcedure( _
         Let ReturnValue = 0
         Let Handled = True
     
+    '`WM_MOUSEMOVE` _
+     <msdn.microsoft.com/en-us/library/windows/desktop/ms645616%28v=vs.85%29.aspx>
     ElseIf Message = WM_MOUSEMOVE Then '-----------------------------------------------
+        'Had the mouse left the window, the mouse tracking would have stopped
         If IsTracking = False Then
             Let IsTracking = True
+            'Start the mouse tracking again to get the mouse leave message
             Call user32_TrackMouseEvent(TME)
         End If
+        'There is no mouse-enter message, the first time a mouse move message is _
+         receieve then the mouse has entered the window
         If IsOut = True Then
             IsOut = False
             RaiseEvent MouseIn
@@ -360,10 +478,15 @@ Private Sub SubclassWindowProcedure( _
         'We don't mark the message as handled because we want the regular `MouseMove` _
          event to fire. With thanks to Tanner Helland for alerting me to this
     
+    '`WM_SETCURSOR` _
+     <msdn.microsoft.com/en-us/library/windows/desktop/ms648382%28v=vs.85%29.aspx>
     ElseIf Message = WM_SETCURSOR Then '-----------------------------------------------
         If IsOut = False And MousePointer > 0 Then
+            'If we set the cursor here, in `WM_SETCURSOR` it won't be overrided or _
+             replaced by some other action in the message queue _
+             <blogs.msdn.com/b/oldnewthing/archive/2005/05/25/421707.aspx>
             Call user32_SetCursor( _
-                WIN32.user32_LoadCursor(0, MousePointer) _
+                user32_LoadCursor(0, MousePointer) _
             )
             Let ReturnValue = 1
             Let Handled = True

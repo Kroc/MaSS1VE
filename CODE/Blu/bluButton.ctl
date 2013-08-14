@@ -146,7 +146,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     If blu.UserMode = True Then
         'Attach the mouse tracking
         Set MouseEvents = New bluMouseEvents
-        Let MouseEvents.MousePointer = IDC_HAND
+        Let MouseEvents.MousePointer = IDC.IDC_HAND
         Call MouseEvents.Attach(UserControl.bluLabel.hWnd)
     End If
 End Sub

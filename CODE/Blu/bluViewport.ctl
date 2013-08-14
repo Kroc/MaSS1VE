@@ -744,7 +744,7 @@ Private Sub InitScrollBars()
         Let OldHpos = .Pos
         Let .Mask = SIF_PAGE Or SIF_RANGE Or SIF_POS
         Let .Page = c.ClientRECT.Right
-        Let .Max = Lib.Min(c.ImageRECT.Right + .Page - c.ClientRECT.Right)
+        Let .Max = Lib.Min(c.ImageRECT.Right)
         Let .Pos = Lib.Range(.Pos, Me.ScrollMax(HORZ), .Min)
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, HORZ, c.Info(HORZ), API_TRUE)

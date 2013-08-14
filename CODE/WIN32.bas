@@ -11,8 +11,8 @@ Option Explicit
 
 'Status             In Flux
 'Dependencies       None
-'Last Updated       04-AUG-13
-'Last Update        Added `InitCommonControls`
+'Last Updated       14-AUG-13
+'Last Update        Moved mouse defs into bluMouseEvents
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -580,43 +580,6 @@ Public Enum DT
     DT_MODIFYSTRING = &H10000       'Change the string to match the truncation
     DT_WORD_ELLIPSIS = &H40000      'Truncate any word outside the bounding box
     DT_HIDEPREFIX = &H100000        'Process accelerators, but hide the underline
-End Enum
-
-'MOUSE CURSOR _
- --------------------------------------------------------------------------------------
-
-'Load a mouse cursor _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms648391%28v=vs.85%29.aspx>
-Public Declare Function user32_LoadCursor Lib "user32" Alias "LoadCursorA" ( _
-    ByVal hndInstance As Long, _
-    ByVal CursorName As IDC _
-) As Long
-
-'Sets the screen cursor _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms648393%28v=vs.85%29.aspx>
-Public Declare Function user32_SetCursor Lib "user32" Alias "SetCursor" ( _
-    ByVal hndCursor As Long _
-) As Long
-
-Public Enum IDC
-    'This is our own addition to tell us to not change it one way or another
-    vbDefault = 0
-    
-    IDC_APPSTARTING = 32650&
-    IDC_ARROW = 32512&
-    IDC_CROSS = 32515&
-    IDC_HAND = 32649&
-    IDC_HELP = 32651&
-    IDC_IBEAM = 32513&
-    IDC_ICON = 32641&
-    IDC_NO = 32648&
-    IDC_SIZEALL = 32646&
-    IDC_SIZENESW = 32643&
-    IDC_SIZENS = 32645&
-    IDC_SIZENWSE = 32642&
-    IDC_SIZEWE = 32644&
-    IDC_UPARROW = 32516&
-    IDC_WAIT = 32514&
 End Enum
 
 'I need to investigate the actual effectiveness of this lot (preventing repaints to _
