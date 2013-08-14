@@ -493,7 +493,7 @@ End Property
 Public Property Get ScrollMax(ByVal Bar As bluScrollBar) As Long
 Attribute ScrollMax.VB_ProcData.VB_Invoke_Property = ";Behavior"
     Let ScrollMax = Lib.Min( _
-        c.Info(Bar).Max - c.Info(Bar).Page - 1 _
+        c.Info(Bar).Max - c.Info(Bar).Page _
     )
 End Property
 
