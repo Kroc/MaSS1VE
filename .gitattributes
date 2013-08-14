@@ -1,0 +1,13 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+*.txt eol=crlf
+
+# VB6 stuff
+*.bas eol=crlf
+*.cls eol=crlf
+*.ctl eol=crlf
+*.ctx -diff
+*.frm eol=crlf
+*.frx -diff
+*.res -diff
+*.vbp eol=crlf

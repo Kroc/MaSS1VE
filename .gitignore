@@ -1,0 +1,9 @@
+*
+!.gitignore
+!.gitattributes
+
+!README.md
+!LICENCE.txt
+!*.vbp
+!BUILD/
+!CODE/
