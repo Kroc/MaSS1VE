@@ -1,0 +1,9 @@
+*
+!.gitignore
+
+!*.bas
+!*.cls
+!*.ctl
+!*.ctx
+!*.frm
+!*.frx
