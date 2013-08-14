@@ -188,7 +188,7 @@ Public Function Load(ByVal FilePath As String) As Boolean
     Let File = FilePath
     Let Load = True
     Close #FileNumber
-    Exit Sub
+    Exit Function
     
 Fail:
     Call MsgBox( _
@@ -226,7 +226,7 @@ Public Function Save(Optional ByVal FilePath As String = "") As Boolean
     Put #FileNumber, , Data
     Let Save = True
     Close #FileNumber
-    Exit Sub
+    Exit Function
 
 Fail:
     Call MsgBox( _
