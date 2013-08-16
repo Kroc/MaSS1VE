@@ -1,6 +1,5 @@
 Type=Exe
 Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\Windows\System32\stdole2.tlb#OLE Automation
-Object={EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}#1.1#0; ieframe.dll
 Module=WIN32; CODE\WIN32.bas
 Module=Run; CODE\Run.bas
 Module=ROM; CODE\ROM.bas

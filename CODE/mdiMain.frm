@@ -1,5 +1,4 @@
 VERSION 5.00
-Object = "{EAB22AC0-30C1-11CF-A7EB-0000C05BAE0B}#1.1#0"; "ieframe.dll"
 Begin VB.MDIForm mdiMain 
    Appearance      =   0  'Flat
    AutoShowChildren=   0   'False
@@ -28,31 +27,6 @@ Begin VB.MDIForm mdiMain
       Top             =   990
       Visible         =   0   'False
       Width           =   3660
-      Begin SHDocVwCtl.WebBrowser webHelp 
-         Height          =   4215
-         Left            =   0
-         TabIndex        =   3
-         Top             =   480
-         Width           =   3615
-         ExtentX         =   6376
-         ExtentY         =   7435
-         ViewMode        =   0
-         Offline         =   0
-         Silent          =   0
-         RegisterAsBrowser=   0
-         RegisterAsDropTarget=   0
-         AutoArrange     =   0   'False
-         NoClientEdge    =   0   'False
-         AlignLeft       =   0   'False
-         NoWebView       =   0   'False
-         HideFileNames   =   0   'False
-         SingleClick     =   0   'False
-         SingleSelection =   0   'False
-         NoFolders       =   0   'False
-         Transparent     =   0   'False
-         ViewID          =   "{0057D0E0-3573-11CF-AE69-08002B2E1262}"
-         Location        =   "http:///"
-      End
       Begin VB.PictureBox picHelpToolbar 
          Appearance      =   0  'Flat
          BackColor       =   &H00FFAF00&
@@ -85,7 +59,7 @@ Begin VB.MDIForm mdiMain
          Caption         =   ">"
          Height          =   255
          Left            =   2760
-         TabIndex        =   10
+         TabIndex        =   9
          Top             =   120
          Width           =   375
       End
@@ -93,14 +67,14 @@ Begin VB.MDIForm mdiMain
          Caption         =   "<"
          Height          =   255
          Left            =   2400
-         TabIndex        =   9
+         TabIndex        =   8
          Top             =   120
          Width           =   375
       End
       Begin MaSS1VE.bluControlBox cbxClose 
          Height          =   480
          Left            =   14640
-         TabIndex        =   6
+         TabIndex        =   5
          Top             =   0
          Width           =   480
          _ExtentX        =   847
@@ -127,7 +101,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
          Left            =   0
-         TabIndex        =   5
+         TabIndex        =   4
          Top             =   495
          Width           =   1200
          _ExtentX        =   2117
@@ -145,7 +119,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
          Left            =   14160
-         TabIndex        =   4
+         TabIndex        =   3
          Top             =   495
          Width           =   975
          _ExtentX        =   1720
@@ -155,7 +129,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluControlBox cbxMin 
          Height          =   480
          Left            =   13920
-         TabIndex        =   7
+         TabIndex        =   6
          Top             =   0
          Width           =   480
          _ExtentX        =   847
@@ -165,7 +139,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluControlBox cbxMax 
          Height          =   480
          Left            =   14280
-         TabIndex        =   8
+         TabIndex        =   7
          Top             =   0
          Width           =   480
          _ExtentX        =   847
@@ -249,14 +223,14 @@ Private Sub MDIForm_Load()
     Call Me.bluWindow.RegisterMoveHandler(Me.lblMaSS1VE)
     Call Me.bluWindow.RegisterMoveHandler(Me.lblTip)
     
-    webHelp.AddressBar = False
-    webHelp.MenuBar = False
-    webHelp.Resizable = False
-    webHelp.Silent = True
-    webHelp.StatusBar = False
-    webHelp.TheaterMode = True
-    webHelp.toolbar = False
-    webHelp.Navigate "about:blank"
+'    webHelp.AddressBar = False
+'    webHelp.MenuBar = False
+'    webHelp.Resizable = False
+'    webHelp.Silent = True
+'    webHelp.StatusBar = False
+'    webHelp.TheaterMode = True
+'    webHelp.toolbar = False
+'    webHelp.Navigate "about:blank"
     
     'If on a small screen, start up maximised (we need at least 1024x600)
     If Screen.Width \ Screen.TwipsPerPixelX <= 1024 Then
@@ -318,14 +292,14 @@ Private Sub MDIForm_Resize()
             blu.Xpx, 0, Me.picHelp.ScaleWidth - blu.Xpx, blu.Ypx(blu.Metric) _
         )
         
-        'Resizing the MDI form quickly can throw off the reported sizes of aligned _
-         controls, we need to use something else than the aligned control to size
-        Call Me.webHelp.Move( _
-            blu.Xpx, _
-            Me.picHelpToolbar.Height, _
-            Me.picHelp.Width - blu.Xpx, _
-            FormHeight - Me.picHelpToolbar.Height _
-        )
+'        'Resizing the MDI form quickly can throw off the reported sizes of aligned _
+'         controls, we need to use something else than the aligned control to size
+'        Call Me.webHelp.Move( _
+'            blu.Xpx, _
+'            Me.picHelpToolbar.Height, _
+'            Me.picHelp.Width - blu.Xpx, _
+'            FormHeight - Me.picHelpToolbar.Height _
+'        )
     End If
     
     Call lblTip.Move( _
@@ -371,7 +345,7 @@ Private Sub btnHelp_Click()
     If Me.picHelp.Visible = False Then
         Me.btnHelp.State = bluSTATE.Active
         Me.picHelp.Visible = True
-        Me.webHelp.Navigate "http://127.0.0.1"
+'        Me.webHelp.Navigate "http://127.0.0.1"
         Call MDIForm_Resize
     Else
         Me.btnHelp.State = bluSTATE.Inactive
