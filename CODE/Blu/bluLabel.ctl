@@ -53,10 +53,6 @@ Private My_Alignment As VBRUN.AlignmentConstants
 
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
-'To avoid repainting hundreds of times as each property gets set at initialisation _
- we use a flag here to tell the control to hold off on painting
-Dim Freeze As Boolean
-
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
 'Define our events we'll expose
@@ -65,10 +61,6 @@ Event Click()
 'CONTROL InitProperties _
  ======================================================================================
 Private Sub UserControl_InitProperties()
-    'Avoid repainting until we're done with resizing
-    Dim Frozen As Boolean
-    If Freeze = True Then Let Frozen = True Else Let Freeze = True
-    
     'Colours
     Let Me.BaseColour = blu.BaseColour
     Let Me.TextColour = blu.TextColour
@@ -80,7 +72,6 @@ Private Sub UserControl_InitProperties()
     Let Me.Alignment = vbLeftJustify
     Let Me.Caption = "bluLabel"
     
-    If Frozen = False Then Let Freeze = False
     Call UserControl_Paint
 End Sub
 
@@ -97,10 +88,6 @@ End Sub
 'CONTROL ReadProperties _
  ======================================================================================
 Private Sub UserControl_ReadProperties(ByRef PropBag As PropertyBag)
-    'Avoid repainting until we're done with resizing
-    Dim Frozen As Boolean
-    If Freeze = True Then Let Frozen = True Else Let Freeze = True
-    
     With PropBag
         Let Me.ActiveColour = .ReadProperty(Name:="ActiveColour", DefaultValue:=blu.ActiveColour)
         Let Me.Alignment = .ReadProperty(Name:="Alignment", DefaultValue:=VBRUN.AlignmentConstants.vbLeftJustify)
@@ -113,7 +100,6 @@ Private Sub UserControl_ReadProperties(ByRef PropBag As PropertyBag)
         Let Me.TextColour = .ReadProperty(Name:="TextColour", DefaultValue:=blu.TextColour)
     End With
     
-    If Frozen = False Then Let Freeze = False
     Call UserControl_Paint
 End Sub
 
@@ -269,9 +255,6 @@ End Property
 'Paint : Does the actual painting so that it can be shared between Run / Design Time _
  ======================================================================================
 Private Sub Paint()
-    'Are we being told to hold off on painting?
-    If Freeze = True Then Exit Sub
-    
     Dim ClientRECT As RECT
     Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
     
