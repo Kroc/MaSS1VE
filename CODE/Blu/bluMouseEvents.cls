@@ -23,9 +23,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       bluMagic.cls
-'Last Updated       14-AUG-13
-'Last Update        Remove WIN32.bas dependency, it creates some duplication but it's _
-                    better for people who want to drop this class into their project
+'Last Updated       17-AUG-13
+'Last Update        `WM_MOUSEMOVE` added twice when subclassing
 
 'TODO: Support the mouse browser buttons (back / forward)
 
@@ -301,7 +300,7 @@ Public Sub Attach( _
             'Listen into the mouse events
             Call Magic.ssc_AddMsg( _
                 hndTarget, MSG_BEFORE, _
-                WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE _
+                WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE _
             )
         End If
         
