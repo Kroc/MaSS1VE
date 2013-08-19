@@ -116,11 +116,11 @@ Begin VB.Form frmEditor
       End
       Begin MaSS1VE.bluLabel lblGrid 
          Height          =   480
-         Left            =   10320
+         Left            =   10200
          Top             =   0
          Visible         =   0   'False
-         Width           =   495
-         _ExtentX        =   873
+         Width           =   615
+         _ExtentX        =   1085
          _ExtentY        =   847
          Alignment       =   1
          Caption         =   "grid"
@@ -548,9 +548,7 @@ Private Sub Form_Resize()
     'Toolbar Buttons: _
      ----------------------------------------------------------------------------------
     'The title of the level; this will eventually be a custom text box
-    Call Me.lblTitle.Move( _
-        0, Me.picSidePane(0).Left + Me.picSidePane(0).Width _
-    )
+    Call Me.lblTitle.Move(0, 0, Me.bluTab.Width + Me.picSidePane(0).Width)
     
     With Me.lineSplit(0)
         Let .X1 = Me.picSidePane(0).Left + Me.picSidePane(0).Width: Let .X2 = .X1
@@ -895,6 +893,8 @@ Public Sub SetTheme( _
     Optional ByVal ActiveColour As OLE_COLOR = blu.ActiveColour, _
     Optional ByVal InertColour As OLE_COLOR = blu.InertColour _
 )
+    Dim i As Long
+    
     'Deal with all blu controls automatically
     Call blu.ApplyColoursToForm( _
         Me, BaseColour, TextColour, ActiveColour, InertColour _
@@ -902,10 +902,11 @@ Public Sub SetTheme( _
     
     'Some frmEditor specifics
     Let Me.picToolbar.BackColor = ActiveColour
-    Let Me.lineSplit(0).BorderColor = ActiveColour
-    Let Me.lineSplit(1).BorderColor = ActiveColour
-    Let Me.lineSplit(2).BorderColor = ActiveColour
-    Let Me.lineSplit(3).BorderColor = ActiveColour
+    For i = 0 To Me.lineSplit.Count - 1
+        Let Me.lineSplit(i).BorderColor = ActiveColour
+        'For some reason, this is necessary otherwise the line can randomly disappear!
+        Call Me.lineSplit(i).Refresh
+    Next i
     Let Me.picBlocksToolbar.BackColor = ActiveColour
     
     'Update the ring counter
