@@ -44,20 +44,23 @@ Begin VB.Form frmEditor
       TabIndex        =   11
       Top             =   480
       Width           =   495
-      _extentx        =   873
-      _extenty        =   2117
-      border          =   0   'False
-      orientation     =   1
-      autosize        =   -1  'True
+      _ExtentX        =   873
+      _ExtentY        =   2117
+      AutoSize        =   -1  'True
+      Border          =   0   'False
+      Orientation     =   1
    End
-   Begin VB.Frame fraToolbar 
+   Begin VB.PictureBox picToolbar 
       Appearance      =   0  'Flat
       BackColor       =   &H00FFAF00&
       BorderStyle     =   0  'None
       ClipControls    =   0   'False
       ForeColor       =   &H80000008&
+      HasDC           =   0   'False
       Height          =   480
       Left            =   0
+      ScaleHeight     =   480
+      ScaleWidth      =   14655
       TabIndex        =   3
       Top             =   0
       Width           =   14655
@@ -95,10 +98,10 @@ Begin VB.Form frmEditor
          TabIndex        =   4
          Top             =   0
          Width           =   495
-         _extentx        =   873
-         _extenty        =   847
-         caption         =   "2×"
-         style           =   1
+         _ExtentX        =   873
+         _ExtentY        =   847
+         Caption         =   "2×"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnZoomTV 
          Height          =   480
@@ -106,10 +109,10 @@ Begin VB.Form frmEditor
          TabIndex        =   5
          Top             =   0
          Width           =   495
-         _extentx        =   873
-         _extenty        =   847
-         caption         =   "TV"
-         style           =   1
+         _ExtentX        =   873
+         _ExtentY        =   847
+         Caption         =   "TV"
+         Style           =   1
       End
       Begin MaSS1VE.bluLabel lblGrid 
          Height          =   480
@@ -130,10 +133,10 @@ Begin VB.Form frmEditor
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _extentx        =   1085
-         _extenty        =   847
-         caption         =   "OFF"
-         style           =   1
+         _ExtentX        =   1085
+         _ExtentY        =   847
+         Caption         =   "OFF"
+         Style           =   1
       End
       Begin MaSS1VE.bluLabel lblZoom 
          Height          =   480
@@ -152,10 +155,10 @@ Begin VB.Form frmEditor
          TabIndex        =   7
          Top             =   0
          Width           =   495
-         _extentx        =   873
-         _extenty        =   847
-         caption         =   "1×"
-         style           =   1
+         _ExtentX        =   873
+         _ExtentY        =   847
+         Caption         =   "1×"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnUndo 
          Height          =   480
@@ -164,10 +167,10 @@ Begin VB.Form frmEditor
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _extentx        =   1296
-         _extenty        =   847
-         caption         =   "UNDO"
-         style           =   1
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Caption         =   "UNDO"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnRedo 
          Height          =   480
@@ -176,10 +179,10 @@ Begin VB.Form frmEditor
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _extentx        =   1296
-         _extenty        =   847
-         caption         =   "REDO"
-         style           =   1
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Caption         =   "REDO"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnShare 
          Height          =   480
@@ -187,10 +190,10 @@ Begin VB.Form frmEditor
          TabIndex        =   15
          Top             =   0
          Width           =   975
-         _extentx        =   1720
-         _extenty        =   847
-         caption         =   "SHARE"
-         style           =   1
+         _ExtentX        =   1720
+         _ExtentY        =   847
+         Caption         =   "SHARE"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnCut 
          Height          =   480
@@ -199,10 +202,10 @@ Begin VB.Form frmEditor
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _extentx        =   1085
-         _extenty        =   847
-         caption         =   "CUT"
-         style           =   1
+         _ExtentX        =   1085
+         _ExtentY        =   847
+         Caption         =   "CUT"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnCopy 
          Height          =   480
@@ -211,10 +214,10 @@ Begin VB.Form frmEditor
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _extentx        =   1296
-         _extenty        =   847
-         caption         =   "COPY"
-         style           =   1
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Caption         =   "COPY"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnPaste 
          Height          =   480
@@ -223,10 +226,10 @@ Begin VB.Form frmEditor
          Top             =   0
          Visible         =   0   'False
          Width           =   855
-         _extentx        =   1508
-         _extenty        =   847
-         caption         =   "PASTE"
-         style           =   1
+         _ExtentX        =   1508
+         _ExtentY        =   847
+         Caption         =   "PASTE"
+         Style           =   1
       End
       Begin VB.Line lineSplit 
          BorderColor     =   &H00FFAF00&
@@ -268,14 +271,17 @@ Begin VB.Form frmEditor
          Y2              =   360
       End
    End
-   Begin VB.Frame fraSidePane 
+   Begin VB.PictureBox picSidePane 
       Appearance      =   0  'Flat
       BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
+      HasDC           =   0   'False
       Height          =   5535
       Index           =   0
       Left            =   480
+      ScaleHeight     =   5535
+      ScaleWidth      =   3255
       TabIndex        =   2
       Top             =   480
       Width           =   3255
@@ -288,12 +294,17 @@ Begin VB.Form frmEditor
          _ExtentX        =   2778
          _ExtentY        =   2778
       End
-      Begin VB.Frame fraBlocksToolbar 
+      Begin VB.PictureBox picBlocksToolbar 
+         Appearance      =   0  'Flat
          BackColor       =   &H00FFAF00&
          BorderStyle     =   0  'None
          ClipControls    =   0   'False
+         ForeColor       =   &H80000008&
+         HasDC           =   0   'False
          Height          =   1200
          Left            =   0
+         ScaleHeight     =   1200
+         ScaleWidth      =   3255
          TabIndex        =   8
          Top             =   0
          Width           =   3255
@@ -480,7 +491,7 @@ Private Sub Form_Resize()
     If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
     
     'Size the toolbar along the top, we need this to position everything below it
-    Call Me.fraToolbar.Move( _
+    Call Me.picToolbar.Move( _
         0, 0, Me.ScaleWidth, blu.Ypx(blu.Metric) _
     )
     
@@ -488,27 +499,27 @@ Private Sub Form_Resize()
      ----------------------------------------------------------------------------------
     'Move the vertical tab strip into place
     Call Me.bluTab.Move( _
-        0, Me.fraToolbar.Top + Me.fraToolbar.Height, _
+        0, Me.picToolbar.Top + Me.picToolbar.Height, _
         blu.Xpx(blu.Metric) _
     )
     
     'Move the side panes into place
     Dim i As Long
-    For i = 0 To Me.fraSidePane.Count - 1: Call Me.fraSidePane(i).Move( _
+    For i = 0 To Me.picSidePane.Count - 1: Call Me.picSidePane(i).Move( _
         Me.bluTab.Left + Me.bluTab.Width, _
-        Me.fraToolbar.Top + Me.fraToolbar.Height, _
+        Me.picToolbar.Top + Me.picToolbar.Height, _
         blu.Xpx( _
             (x32(PaneBlockWidth) + PaneBlockWidth) + _
             WIN32.GetSystemMetric(SM_CXVSCROLL) _
         ), _
-        Me.ScaleHeight - (Me.fraToolbar.Top + Me.fraToolbar.Height) _
+        Me.ScaleHeight - (Me.picToolbar.Top + Me.picToolbar.Height) _
     ): Next i
     
     'Blocks (Layout) Side Pane: _
      ----------------------------------------------------------------------------------
     'Position the tool bar
-    Call Me.fraBlocksToolbar.Move( _
-        0, 0, Me.fraSidePane(0).Width, 1200 _
+    Call Me.picBlocksToolbar.Move( _
+        0, 0, Me.picSidePane(0).Width, 1200 _
     )
     
     'The current block selections
@@ -528,25 +539,25 @@ Private Sub Form_Resize()
     'Position the block picker
     
     Call Me.vwpBlocks.Move( _
-        0, Me.fraBlocksToolbar.Top + Me.fraBlocksToolbar.Height + blu.Ypx, _
-        Me.fraSidePane(0).Width, _
-        Me.fraSidePane(0).Height _
-        - (Me.fraBlocksToolbar.Top + Me.fraBlocksToolbar.Height + blu.Ypx) _
+        0, Me.picBlocksToolbar.Top + Me.picBlocksToolbar.Height + blu.Ypx, _
+        Me.picSidePane(0).Width, _
+        Me.picSidePane(0).Height _
+        - (Me.picBlocksToolbar.Top + Me.picBlocksToolbar.Height + blu.Ypx) _
     )
     
     'Toolbar Buttons: _
      ----------------------------------------------------------------------------------
     'The title of the level; this will eventually be a custom text box
     Call Me.lblTitle.Move( _
-        0, Me.fraSidePane(0).Left + Me.fraSidePane(0).Width _
+        0, Me.picSidePane(0).Left + Me.picSidePane(0).Width _
     )
     
     With Me.lineSplit(0)
-        Let .X1 = Me.fraSidePane(0).Left + Me.fraSidePane(0).Width: Let .X2 = .X1
+        Let .X1 = Me.picSidePane(0).Left + Me.picSidePane(0).Width: Let .X2 = .X1
     End With
     
     'The display that shows the number of rings on the level
-    Let Me.picRings.Left = Me.fraSidePane(0).Left + Me.fraSidePane(0).Width 'Me.lineSplit(0).X1 + blu.Xpx(8)
+    Let Me.picRings.Left = Me.picSidePane(0).Left + Me.picSidePane(0).Width 'Me.lineSplit(0).X1 + blu.Xpx(8)
     
     With Me.lineSplit(1)
         Let .X1 = Me.picRings.Left + Me.picRings.Width + blu.Xpx(8): Let .X2 = .X1
@@ -567,7 +578,7 @@ Private Sub Form_Resize()
     Let Me.btnPaste.Left = Me.btnCopy.Left + Me.btnCopy.Width
     
     'Right-hand aligned buttons (working backwards from the right):
-    Let Me.btnShare.Left = Me.fraToolbar.Width - Me.btnShare.Width
+    Let Me.btnShare.Left = Me.picToolbar.Width - Me.btnShare.Width
     With Me.lineSplit(3)
         Let .X1 = Me.btnShare.Left - blu.Xpx(8): Let .X2 = .X1
     End With
@@ -584,10 +595,10 @@ Private Sub Form_Resize()
      ----------------------------------------------------------------------------------
     'Reposition the level viewport
     Call Me.vwpLevel.Move( _
-        Me.fraSidePane(0).Left + Me.fraSidePane(0).Width, _
-        Me.fraToolbar.Top + Me.fraToolbar.Height, _
-        Me.ScaleWidth - (Me.fraSidePane(0).Left + Me.fraSidePane(0).Width), _
-        Me.ScaleHeight - (Me.fraToolbar.Top + Me.fraToolbar.Height) _
+        Me.picSidePane(0).Left + Me.picSidePane(0).Width, _
+        Me.picToolbar.Top + Me.picToolbar.Height, _
+        Me.ScaleWidth - (Me.picSidePane(0).Left + Me.picSidePane(0).Width), _
+        Me.ScaleHeight - (Me.picToolbar.Top + Me.picToolbar.Height) _
     )
     Call picSizer.Move( _
         Me.ScaleWidth - Me.picSizer.Width, _
@@ -599,7 +610,7 @@ Private Sub Form_Resize()
     'TODO: This isn't finalised. Should be done on mdiMain rather than from MDI child
     
     Let mdiMain.bluWindow.MinWidth = ( _
-        Me.bluTab.Width + Me.fraSidePane(0).Width + _
+        Me.bluTab.Width + Me.picSidePane(0).Width + _
         Me.picRings.Width + _
         Me.lblZoom.Width + Me.btnZoom1.Width + Me.btnZoom2.Width + Me.btnZoomTV.Width + _
         Me.btnShare.Width _
@@ -890,12 +901,12 @@ Public Sub SetTheme( _
     )
     
     'Some frmEditor specifics
-    Let Me.fraToolbar.BackColor = ActiveColour
+    Let Me.picToolbar.BackColor = ActiveColour
     Let Me.lineSplit(0).BorderColor = ActiveColour
     Let Me.lineSplit(1).BorderColor = ActiveColour
     Let Me.lineSplit(2).BorderColor = ActiveColour
     Let Me.lineSplit(3).BorderColor = ActiveColour
-    Let Me.fraBlocksToolbar.BackColor = ActiveColour
+    Let Me.picBlocksToolbar.BackColor = ActiveColour
     
     'Update the ring counter
     Let Me.picRings.BackColor = ActiveColour
