@@ -1,7 +1,6 @@
 VERSION 5.00
 Begin VB.UserControl bluLabel 
    Appearance      =   0  'Flat
-   AutoRedraw      =   -1  'True
    BackColor       =   &H00FFFFFF&
    CanGetFocus     =   0   'False
    ClientHeight    =   375
@@ -28,11 +27,8 @@ Option Explicit
 
 'Status             In flux
 'Dependencies       blu.bas, WIN32.bas
-'Last Updated       10-AUG-13
-
-'NOTE: This is currently in the process of being rewritten to be more API-drive _
- (i.e. handling the `WM_PAINT` ourselves) to reduce flicker. The behaviour is not _
- right yet and there will be visual problems with this control
+'Last Updated       18-AUG-13
+'Last Update        Now using API-driven painting
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 
@@ -50,8 +46,6 @@ Private My_Style As bluSTYLE
 'Text
 Private My_Caption As String
 Private My_Alignment As VBRUN.AlignmentConstants
-
-'/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
@@ -71,8 +65,6 @@ Private Sub UserControl_InitProperties()
     'Text
     Let Me.Alignment = vbLeftJustify
     Let Me.Caption = "bluLabel"
-    
-    Call UserControl_Paint
 End Sub
 
 'CONTROL Click _
@@ -83,6 +75,7 @@ Private Sub UserControl_Click(): RaiseEvent Click: End Sub
  ======================================================================================
 Private Sub UserControl_Paint()
     Call Paint
+'    Call UserControl.Refresh
 End Sub
 
 'CONTROL ReadProperties _
@@ -93,14 +86,19 @@ Private Sub UserControl_ReadProperties(ByRef PropBag As PropertyBag)
         Let Me.Alignment = .ReadProperty(Name:="Alignment", DefaultValue:=VBRUN.AlignmentConstants.vbLeftJustify)
         Let Me.BaseColour = .ReadProperty(Name:="BaseColour", DefaultValue:=blu.BaseColour)
         Let Me.Caption = .ReadProperty(Name:="Caption", DefaultValue:="bluLabel")
+        Let Me.Enabled = .ReadProperty(Name:="Enabled", DefaultValue:=True)
         Let Me.InertColour = .ReadProperty(Name:="InertColour", DefaultValue:=blu.InertColour)
         Let Me.Orientation = .ReadProperty(Name:="Orientation", DefaultValue:=bluORIENTATION.Horizontal)
         Let Me.State = .ReadProperty(Name:="State", DefaultValue:=bluSTATE.Inactive)
         Let Me.Style = .ReadProperty(Name:="Style", DefaultValue:=bluSTYLE.Normal)
         Let Me.TextColour = .ReadProperty(Name:="TextColour", DefaultValue:=blu.TextColour)
     End With
-    
-    Call UserControl_Paint
+End Sub
+
+'CONTROL Resize _
+ ======================================================================================
+Private Sub UserControl_Resize()
+    Call Me.Refresh
 End Sub
 
 'CONTROL WriteProperties _
@@ -111,6 +109,7 @@ Private Sub UserControl_WriteProperties(ByRef PropBag As PropertyBag)
         Call .WriteProperty(Name:="Alignment", Value:=My_Alignment, DefaultValue:=VBRUN.AlignmentConstants.vbLeftJustify)
         Call .WriteProperty(Name:="BaseColour", Value:=My_BaseColour, DefaultValue:=blu.BaseColour)
         Call .WriteProperty(Name:="Caption", Value:=My_Caption, DefaultValue:="bluLabel")
+        Call .WriteProperty(Name:="Enabled", Value:=UserControl.Enabled, DefaultValue:=True)
         Call .WriteProperty(Name:="InertColour", Value:=My_InertColour, DefaultValue:=blu.InertColour)
         Call .WriteProperty(Name:="Orientation", Value:=My_Orientation, DefaultValue:=bluORIENTATION.Horizontal)
         Call .WriteProperty(Name:="State", Value:=My_State, DefaultValue:=bluSTATE.Inactive)
@@ -131,7 +130,7 @@ End Property
 Public Property Let ActiveColour(ByVal NewColour As OLE_COLOR)
     If My_ActiveColour = NewColour Then Exit Property
     Let My_ActiveColour = NewColour
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("ActiveColour")
 End Property
 
@@ -145,7 +144,7 @@ End Property
 Public Property Let Alignment(ByVal NewAlignment As VBRUN.AlignmentConstants)
     If My_Alignment = NewAlignment Then Exit Property
     Let My_Alignment = NewAlignment
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("Alignment")
 End Property
 
@@ -153,10 +152,11 @@ End Property
  ======================================================================================
 Public Property Get BaseColour() As OLE_COLOR: Let BaseColour = My_BaseColour: End Property
 Attribute BaseColour.VB_ProcData.VB_Invoke_Property = ";Appearance"
+Attribute BaseColour.VB_UserMemId = -501
 Public Property Let BaseColour(ByVal NewColour As OLE_COLOR)
     If My_BaseColour = NewColour Then Exit Property
     Let My_BaseColour = NewColour
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("BaseColour")
 End Property
 
@@ -164,17 +164,27 @@ End Property
  ======================================================================================
 Public Property Get Caption() As String: Let Caption = My_Caption: End Property
 Attribute Caption.VB_ProcData.VB_Invoke_Property = ";Text"
+Attribute Caption.VB_UserMemId = -518
 Attribute Caption.VB_MemberFlags = "200"
 Public Property Let Caption(ByVal NewCaption As String)
     If My_Caption = NewCaption Then Exit Property
     Let My_Caption = NewCaption
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("Caption")
 End Property
 
-'PROPERTY hWnd _
+'PROPERTY Enabled : You can disable the control to allow click-through _
  ======================================================================================
-Public Property Get hWnd() As Long: Let hWnd = UserControl.hWnd: End Property
+Public Property Get Enabled() As Boolean
+Attribute Enabled.VB_ProcData.VB_Invoke_Property = ";Behavior"
+Attribute Enabled.VB_UserMemId = -514
+   Let Enabled = UserControl.Enabled
+End Property
+
+Public Property Let Enabled(ByVal newValue As Boolean)
+   Let UserControl.Enabled = newValue
+   Call PropertyChanged("Enabled")
+End Property
 
 'PROPERTY InertColour _
  ======================================================================================
@@ -183,7 +193,7 @@ Attribute InertColour.VB_ProcData.VB_Invoke_Property = ";Text"
 Public Property Let InertColour(ByVal NewColour As OLE_COLOR)
     If My_InertColour = NewColour Then Exit Property
     Let My_InertColour = NewColour
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("InertColour")
 End Property
 
@@ -196,7 +206,7 @@ End Property
 
 Public Property Let Orientation(ByVal NewOrientation As bluORIENTATION)
     If My_Orientation = NewOrientation Then Exit Property
-    'If switching between horizontal / vertical (or vice-versa) then rotate the control
+    'If switching between horizontal / vertical, rotate the control
     If ( _
         My_Orientation = bluORIENTATION.Horizontal And _
         (NewOrientation = bluORIENTATION.VerticalDown Or NewOrientation = bluORIENTATION.VerticalUp) And _
@@ -213,7 +223,7 @@ Public Property Let Orientation(ByVal NewOrientation As bluORIENTATION)
     End If
     
     Let My_Orientation = NewOrientation
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("Orientation")
 End Property
 
@@ -224,18 +234,18 @@ Attribute State.VB_ProcData.VB_Invoke_Property = ";Appearance"
 Public Property Let State(ByVal NewState As bluSTATE)
     If My_State = NewState Then Exit Property
     Let My_State = NewState
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("State")
 End Property
 
-'PROPERTY TextColour _
+'PROPERTY Style : Normal or invert colour scheme _
  ======================================================================================
 Public Property Get Style() As bluSTYLE: Let Style = My_Style: End Property
 Attribute Style.VB_ProcData.VB_Invoke_Property = ";Appearance"
 Public Property Let Style(ByVal NewStyle As bluSTYLE)
     If My_Style = NewStyle Then Exit Property
     Let My_Style = NewStyle
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("Style")
 End Property
 
@@ -243,12 +253,22 @@ End Property
  ======================================================================================
 Public Property Get TextColour() As OLE_COLOR: Let TextColour = My_TextColour: End Property
 Attribute TextColour.VB_ProcData.VB_Invoke_Property = ";Text"
+Attribute TextColour.VB_UserMemId = -513
 Public Property Let TextColour(ByVal NewColour As OLE_COLOR)
     If My_TextColour = NewColour Then Exit Property
     Let My_TextColour = NewColour
-    Call UserControl_Paint
+    Call Me.Refresh
     Call UserControl.PropertyChanged("TextColour")
 End Property
+
+'/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
+
+'Refresh : Force a repaint _
+ ======================================================================================
+Public Sub Refresh()
+    Call Paint
+    Call UserControl.Refresh
+End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
@@ -266,7 +286,7 @@ Private Sub Paint()
              set the background colour every paint, but it seems stupid to do so
 '            If UserControl.BackColor <> My_ActiveColour Then _
 '                Let UserControl.BackColor = My_ActiveColour
-            Call WIN32.gdi32_SetDCBrushColor(UserControl.hDC, My_ActiveColour)
+            Call WIN32.gdi32_SetDCBrushColor(UserControl.hDC, WIN32.OLETranslateColor(My_ActiveColour))
             'Set the text colour
             Select Case My_State
                 Case bluSTATE.Active
@@ -286,7 +306,7 @@ Private Sub Paint()
              set the background colour every paint, but it seems stupid to do so
 '            If UserControl.BackColor <> My_BaseColour Then _
 '                Let UserControl.BackColor = My_BaseColour
-            Call WIN32.gdi32_SetDCBrushColor(UserControl.hDC, My_BaseColour)
+            Call WIN32.gdi32_SetDCBrushColor(UserControl.hDC, WIN32.OLETranslateColor(My_BaseColour))
             'Set the text colour
             Select Case My_State
                 Case bluSTATE.Active

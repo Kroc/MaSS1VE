@@ -88,6 +88,7 @@ Begin VB.MDIForm mdiMain
          _ExtentX        =   7858
          _ExtentY        =   873
          Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
+         Enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblGameTitle 
          Height          =   480
@@ -115,6 +116,7 @@ Begin VB.MDIForm mdiMain
          _ExtentX        =   6800
          _ExtentY        =   873
          Caption         =   "The quick brown fox jumps over the lazy dog"
+         Enabled         =   0   'False
       End
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
@@ -220,8 +222,6 @@ Private Sub MDIForm_Load()
     End With
     
     Call Me.bluWindow.RegisterMoveHandler(Me.toolbar)
-    Call Me.bluWindow.RegisterMoveHandler(Me.lblMaSS1VE)
-    Call Me.bluWindow.RegisterMoveHandler(Me.lblTip)
     
 '    webHelp.AddressBar = False
 '    webHelp.MenuBar = False

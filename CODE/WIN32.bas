@@ -11,8 +11,8 @@ Option Explicit
 
 'Status             In Flux
 'Dependencies       None
-'Last Updated       14-AUG-13
-'Last Update        Moved mouse defs into bluMouseEvents
+'Last Updated       19-AUG-13
+'Last Update        Added GDI world transform APIs
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -241,6 +241,14 @@ Public Declare Function user32_GetClientRect Lib "user32" Alias "GetClientRect" 
     ByRef ClientRECT As RECT _
 ) As BOOL
 
+'Shift a rectangle's position _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162746%28v=vs.85%29.aspx>
+Public Declare Function user32_OffsetRect Lib "user32" Alias "OffsetRect" ( _
+    ByRef RectToMove As RECT, _
+    ByVal X As Long, _
+    ByVal Y As Long _
+) As BOOL
+
 'Is a point in the rectangle? e.g. check if mouse is within a window _
  <msdn.microsoft.com/en-us/library/windows/desktop/dd162882%28v=vs.85%29.aspx>
 Public Declare Function user32_PtInRect Lib "user32" Alias "PtInRect" ( _
@@ -294,6 +302,52 @@ Public Declare Function gdi32_SetDCBrushColor Lib "gdi32" Alias "SetDCBrushColor
     ByVal hndDeviceContext As Long, _
     ByVal Color As Long _
 ) As Long
+
+'Move the origin point (0,0) used for painting. This is partciularly important when _
+ rotating so as to ensure you rotate around the centrepoint of the shape / text _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd145099%28v=vs.85%29.aspx>
+Public Declare Function gdi32_SetViewportOrgEx Lib "gdi32" Alias "SetViewportOrgEx" ( _
+    ByVal hndDeviceContext As Long, _
+    ByVal X As Long, ByVal Y As Long, _
+    ByRef PreviousOrigin As POINT _
+) As BOOL
+
+'Enable access to world transformations (that is, scaling and rotating) _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162977%28v=vs.85%29.aspx>
+Public Declare Function gdi32_SetGraphicsMode Lib "gdi32" Alias "SetGraphicsMode" ( _
+    ByVal hndDeviceContext As Long, _
+    ByVal Mode As GM _
+) As Long
+
+Public Enum GM
+    GM_COMPATIBLE = 1
+    GM_ADVANCED = 2
+End Enum
+
+'A transformation matrix, used by `Get/SetWorldTransform` to apply scaling & rotation _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd145228%28v=vs.85%29.aspx>
+Public Type XFORM
+    eM11 As Single
+    eM12 As Single
+    eM21 As Single
+    eM22 As Single
+    eDx As Single
+    eDy As Single
+End Type
+
+'Retrieve any current world transform (i.e. scaling and rotation) _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd144953%28v=vs.85%29.aspx>
+Public Declare Function gdi32_GetWorldTransform Lib "gdi32" Alias "GetWorldTransform" ( _
+    ByVal hndDeviceContext As Long, _
+    ByRef Transform As XFORM _
+) As BOOL
+
+'Set the world transform _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd145104%28v=vs.85%29.aspx>
+Public Declare Function gdi32_SetWorldTransform Lib "gdi32" Alias "SetWorldTransform" ( _
+    ByVal hndDeviceContext As Long, _
+    ByRef Transform As XFORM _
+) As BOOL
 
 'Paint an area of an image one colour _
  <msdn.microsoft.com/en-us/library/windows/desktop/dd162719%28v=vs.85%29.aspx>
@@ -583,9 +637,9 @@ Public Enum DT
 End Enum
 
 'I need to investigate the actual effectiveness of this lot (preventing repaints to _
- reduce flicker). If I subclass my controls, remove the `WM_ERASEKGD` message and do _
- `WM_PAINT` myself then there is no flicker. The plan thus is to do this for all blu _
- controls and see what remains that flickers where these APIs might be involved
+ reduce flicker). I've fixed flicker during resizing, but there are instances - mostly _
+ when switching level, that several things have to repaint close to each other and I'd _
+ like to hold off redrawing the window entirely until the whole process is complete
 '--------------------------------------------------------------------------------------
 'Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
 'Private Declare Function RedrawWindow Lib "user32" (ByVal hWnd As Long, lprcUpdate As RECT, ByVal hrgnUpdate As Long, ByVal fuRedraw As Long) As Long

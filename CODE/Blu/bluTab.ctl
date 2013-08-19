@@ -19,6 +19,7 @@ Begin VB.UserControl bluTab
       Width           =   1215
       _ExtentX        =   2143
       _ExtentY        =   873
+      Caption         =   "bluButton"
       State           =   1
    End
    Begin VB.Line lineBorder 
@@ -375,16 +376,16 @@ End Property
 Private Sub SetColour()
     'Set the border colour of the tabstrip
     If Me.Style = Invert Then
-        Let UserControl.BackColor = Me.ActiveColour
-        Let UserControl.lineBorder.BorderColor = Me.BaseColour
+        Let UserControl.BackColor = My_ActiveColour
+        Let UserControl.lineBorder.BorderColor = My_BaseColour
     Else
-        Let UserControl.BackColor = Me.BaseColour
-        Let UserControl.lineBorder.BorderColor = Me.ActiveColour
+        Let UserControl.BackColor = My_BaseColour
+        Let UserControl.lineBorder.BorderColor = My_ActiveColour
     End If
     'Propogate the colours to each tab button
     Dim bluControl As bluButton
     For Each bluControl In UserControl.bluButton
-        bluControl.BaseColour = Me.BaseColour
-        bluControl.ActiveColour = Me.ActiveColour
+        Let bluControl.BaseColour = My_BaseColour
+        Let bluControl.ActiveColour = My_ActiveColour
     Next
 End Sub

@@ -35,8 +35,8 @@ Begin VB.Form frmEditor
       TabIndex        =   19
       Top             =   480
       Width           =   10935
-      _extentx        =   19288
-      _extenty        =   13996
+      _ExtentX        =   19288
+      _ExtentY        =   13996
    End
    Begin MaSS1VE.bluTab bluTab 
       Height          =   1200
@@ -83,11 +83,11 @@ Begin VB.Form frmEditor
          Left            =   0
          Top             =   0
          Width           =   3615
-         _extentx        =   6376
-         _extenty        =   873
-         caption         =   "Green Hill Act 1"
-         state           =   1
-         style           =   1
+         _ExtentX        =   6376
+         _ExtentY        =   873
+         Caption         =   "Green Hill Act 1"
+         State           =   1
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnZoom2 
          Height          =   480
@@ -117,11 +117,11 @@ Begin VB.Form frmEditor
          Top             =   0
          Visible         =   0   'False
          Width           =   495
-         _extentx        =   873
-         _extenty        =   847
-         alignment       =   1
-         caption         =   "grid"
-         style           =   1
+         _ExtentX        =   873
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "grid"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnGrid 
          Height          =   480
@@ -140,11 +140,11 @@ Begin VB.Form frmEditor
          Left            =   11280
          Top             =   0
          Width           =   735
-         _extentx        =   1296
-         _extenty        =   847
-         alignment       =   1
-         caption         =   "zoom"
-         style           =   1
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "zoom"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnZoom1 
          Height          =   480
@@ -285,8 +285,8 @@ Begin VB.Form frmEditor
          TabIndex        =   20
          Top             =   1200
          Width           =   1575
-         _extentx        =   2778
-         _extenty        =   2778
+         _ExtentX        =   2778
+         _ExtentY        =   2778
       End
       Begin VB.Frame fraBlocksToolbar 
          BackColor       =   &H00FFAF00&
@@ -342,20 +342,20 @@ Begin VB.Form frmEditor
             Left            =   480
             Top             =   0
             Width           =   615
-            _extentx        =   1085
-            _extenty        =   873
-            caption         =   "LMB"
-            style           =   1
+            _ExtentX        =   1085
+            _ExtentY        =   873
+            Caption         =   "LMB"
+            Style           =   1
          End
          Begin MaSS1VE.bluLabel lblRMB 
             Height          =   495
             Left            =   480
             Top             =   600
             Width           =   615
-            _extentx        =   1085
-            _extenty        =   873
-            caption         =   "RMB"
-            style           =   1
+            _ExtentX        =   1085
+            _ExtentY        =   873
+            Caption         =   "RMB"
+            Style           =   1
          End
       End
    End
