@@ -90,23 +90,9 @@ End Sub
 'CONTROL Paint _
  ======================================================================================
 Private Sub UserControl_Paint()
-    'First determine the colour scheme...
-    Dim SwapColours As Boolean
-    'If the style is Normal, the button will be default colours. _
-     If the style is Invert, the colours will be swapped
-    Let SwapColours = (My_Style <> Normal)
-    'If the button state is Active, the colours will swap. _
-     This cannot be overrided by hover
-    If My_State = Active Then Let SwapColours = Not SwapColours
-    'If the button is hovered over, the colours will swap (except when Active)
-    If My_State = Inactive And IsHovered = True Then Let SwapColours = Not SwapColours
-    
     'Clear background: _
      ----------------------------------------------------------------------------------
-    'Set the colour for clearing the background
-    Let UserControl.BackColor = WIN32.OLETranslateColor( _
-        IIf(SwapColours = False, My_BaseColour, My_ActiveColour) _
-    )
+    'Select the background colour
     Call WIN32.gdi32_SetDCBrushColor( _
         hndDeviceContext:=UserControl.hDC, _
         Color:=WIN32.OLETranslateColor(UserControl.BackColor) _
@@ -205,10 +191,7 @@ Private Sub UserControl_Paint()
     
     'Draw the text! _
      ----------------------------------------------------------------------------------
-    'Set the colour of the text
-    Let UserControl.ForeColor = WIN32.OLETranslateColor( _
-        IIf(SwapColours = False, My_ActiveColour, My_BaseColour) _
-    )
+    'Select the colour of the text
     Call WIN32.gdi32_SetTextColor( _
         hndDeviceContext:=UserControl.hDC, _
         Color:=WIN32.OLETranslateColor(UserControl.ForeColor) _
@@ -299,6 +282,7 @@ Private Sub MouseEvents_MouseIn()
     'The mouse is in the button, we'll cause a hover effect as long as the button is _
      not locked into an active state
     Let IsHovered = True
+    Call SetForeBackColours
     Call Me.Refresh
     RaiseEvent MouseIn
 End Sub
@@ -309,6 +293,7 @@ Private Sub MouseEvents_MouseOut()
     'The mouse has left the button, we need to undo the hover effect, as long as the _
      button is not locked into an active state
     Let IsHovered = False
+    Call SetForeBackColours
     Call Me.Refresh
     RaiseEvent MouseOut
 End Sub
@@ -317,22 +302,17 @@ End Sub
 
 'PROPERTY ActiveColour _
  ======================================================================================
-Public Property Get ActiveColour() As OLE_COLOR
-    Let ActiveColour = My_ActiveColour
-End Property
-
+Public Property Get ActiveColour() As OLE_COLOR: Let ActiveColour = My_ActiveColour: End Property
 Public Property Let ActiveColour(ByVal NewColour As OLE_COLOR)
     Let My_ActiveColour = NewColour
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("ActiveColour")
 End Property
 
 'PROPERTY Alignment : Text alignment (left / center / right) _
  ======================================================================================
-Public Property Get Alignment() As VBRUN.AlignmentConstants
-    Let Alignment = My_Alignment
-End Property
-
+Public Property Get Alignment() As VBRUN.AlignmentConstants: Let Alignment = My_Alignment: End Property
 Public Property Let Alignment(ByVal NewAlignment As VBRUN.AlignmentConstants)
     Let My_Alignment = NewAlignment
     Call Me.Refresh
@@ -341,22 +321,17 @@ End Property
 
 'PROPERTY BaseColour _
  ======================================================================================
-Public Property Get BaseColour() As OLE_COLOR
-    Let BaseColour = My_BaseColour
-End Property
-
+Public Property Get BaseColour() As OLE_COLOR: Let BaseColour = My_BaseColour: End Property
 Public Property Let BaseColour(ByVal NewColour As OLE_COLOR)
     Let My_BaseColour = NewColour
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("BaseColour")
 End Property
 
 'PROPERTY Caption _
  ======================================================================================
-Public Property Get Caption() As String
-    Let Caption = My_Caption
-End Property
-
+Public Property Get Caption() As String: Let Caption = My_Caption: End Property
 Public Property Let Caption(ByVal NewCaption As String)
     Let My_Caption = NewCaption
     Call Me.Refresh
@@ -365,10 +340,7 @@ End Property
 
 'PROPERTY Orientation _
  ======================================================================================
-Public Property Get Orientation() As bluORIENTATION
-    Let Orientation = My_Orientation
-End Property
-
+Public Property Get Orientation() As bluORIENTATION: Let Orientation = My_Orientation: End Property
 Public Property Let Orientation(ByVal NewOrientation As bluORIENTATION)
     'If switching between horizontal / vertical (or vice-versa) then rotate the control
     If ( _
@@ -396,6 +368,7 @@ End Property
 Public Property Get State() As bluSTATE: Let State = My_State: End Property
 Public Property Let State(ByVal NewState As bluSTATE)
     Let My_State = NewState
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("State")
 End Property
@@ -405,6 +378,7 @@ End Property
 Public Property Get Style() As bluSTYLE: Let Style = My_Style: End Property
 Public Property Let Style(ByVal NewStyle As bluSTYLE)
     Let My_Style = NewStyle
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("Style")
 End Property
@@ -416,4 +390,30 @@ End Property
 Public Sub Refresh()
     Call UserControl_Paint
     Call UserControl.Refresh
+End Sub
+
+'/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
+
+'SetForeBackColours : Based on the state of the button set the fore/back colours _
+ ======================================================================================
+Private Sub SetForeBackColours()
+    'The fore/back colours will be swapped depending on a number of factors
+    Dim SwapColours As Boolean
+    'If the style is Normal, the button will be default colours. _
+     If the style is Invert, the colours will be swapped
+    Let SwapColours = (My_Style <> Normal)
+    'If the button state is Active, the colours will swap. _
+     This cannot be overrided by hover
+    If My_State = Active Then Let SwapColours = Not SwapColours
+    'If the button is hovered over, the colours will swap (except when Active)
+    If My_State = Inactive And IsHovered = True Then Let SwapColours = Not SwapColours
+    
+    'Set background colour
+    Let UserControl.BackColor = WIN32.OLETranslateColor( _
+        IIf(SwapColours = False, My_BaseColour, My_ActiveColour) _
+    )
+    'Set the foreground (text) colour
+    Let UserControl.ForeColor = WIN32.OLETranslateColor( _
+        IIf(SwapColours = False, My_ActiveColour, My_BaseColour) _
+    )
 End Sub
