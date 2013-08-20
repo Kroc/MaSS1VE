@@ -25,10 +25,10 @@ Option Explicit
 '======================================================================================
 'CONTROL :: bluLabel
 
-'Status             In flux
+'Status             Ready to use
 'Dependencies       blu.bas, WIN32.bas
-'Last Updated       18-AUG-13
-'Last Update        Now using API-driven painting
+'Last Updated       20-AUG-13
+'Last Update        Switched to using the shared text drawing function in blu.bas
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 
@@ -74,25 +74,43 @@ Private Sub UserControl_Click(): RaiseEvent Click: End Sub
 'CONTROL Paint _
  ======================================================================================
 Private Sub UserControl_Paint()
-    Call Paint
-'    Call UserControl.Refresh
+    'Select the background colour
+    Call WIN32.gdi32_SetDCBrushColor( _
+        UserControl.hDC, UserControl.BackColor _
+    )
+    'Get the dimensions of the label
+    Dim ClientRECT As RECT
+    Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    'Then use those to fill with the selected background colour
+    Call WIN32.user32_FillRect( _
+        UserControl.hDC, ClientRECT, _
+        WIN32.gdi32_GetStockObject(DC_BRUSH) _
+    )
+    'All the text drawing is shared
+    Call blu.DrawText( _
+        UserControl.hDC, ClientRECT, My_Caption, UserControl.ForeColor, _
+        My_Alignment, My_Orientation _
+    )
 End Sub
 
 'CONTROL ReadProperties _
  ======================================================================================
 Private Sub UserControl_ReadProperties(ByRef PropBag As PropertyBag)
     With PropBag
-        Let Me.ActiveColour = .ReadProperty(Name:="ActiveColour", DefaultValue:=blu.ActiveColour)
-        Let Me.Alignment = .ReadProperty(Name:="Alignment", DefaultValue:=VBRUN.AlignmentConstants.vbLeftJustify)
-        Let Me.BaseColour = .ReadProperty(Name:="BaseColour", DefaultValue:=blu.BaseColour)
-        Let Me.Caption = .ReadProperty(Name:="Caption", DefaultValue:="bluLabel")
+        Let My_ActiveColour = .ReadProperty(Name:="ActiveColour", DefaultValue:=blu.ActiveColour)
+        Let My_Alignment = .ReadProperty(Name:="Alignment", DefaultValue:=VBRUN.AlignmentConstants.vbLeftJustify)
+        Let My_BaseColour = .ReadProperty(Name:="BaseColour", DefaultValue:=blu.BaseColour)
+        Let My_Caption = .ReadProperty(Name:="Caption", DefaultValue:="bluLabel")
         Let Me.Enabled = .ReadProperty(Name:="Enabled", DefaultValue:=True)
-        Let Me.InertColour = .ReadProperty(Name:="InertColour", DefaultValue:=blu.InertColour)
-        Let Me.Orientation = .ReadProperty(Name:="Orientation", DefaultValue:=bluORIENTATION.Horizontal)
-        Let Me.State = .ReadProperty(Name:="State", DefaultValue:=bluSTATE.Inactive)
-        Let Me.Style = .ReadProperty(Name:="Style", DefaultValue:=bluSTYLE.Normal)
-        Let Me.TextColour = .ReadProperty(Name:="TextColour", DefaultValue:=blu.TextColour)
+        Let My_InertColour = .ReadProperty(Name:="InertColour", DefaultValue:=blu.InertColour)
+        Let My_Orientation = .ReadProperty(Name:="Orientation", DefaultValue:=bluORIENTATION.Horizontal)
+        Let My_State = .ReadProperty(Name:="State", DefaultValue:=bluSTATE.Inactive)
+        Let My_Style = .ReadProperty(Name:="Style", DefaultValue:=bluSTYLE.Normal)
+        Let My_TextColour = .ReadProperty(Name:="TextColour", DefaultValue:=blu.TextColour)
     End With
+    
+    Call SetForeBackColours
+    Call Me.Refresh
 End Sub
 
 'CONTROL Resize _
@@ -122,25 +140,20 @@ End Sub
 
 'PROPERTY ActiveColour: _
  ======================================================================================
-Public Property Get ActiveColour() As OLE_COLOR
+Public Property Get ActiveColour() As OLE_COLOR: Let ActiveColour = My_ActiveColour: End Property
 Attribute ActiveColour.VB_ProcData.VB_Invoke_Property = ";Appearance"
-    Let ActiveColour = My_ActiveColour
-End Property
-
 Public Property Let ActiveColour(ByVal NewColour As OLE_COLOR)
     If My_ActiveColour = NewColour Then Exit Property
     Let My_ActiveColour = NewColour
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("ActiveColour")
 End Property
 
 'PROPERTY Alignment _
  ======================================================================================
-Public Property Get Alignment() As VBRUN.AlignmentConstants
+Public Property Get Alignment() As VBRUN.AlignmentConstants: Let Alignment = My_Alignment: End Property
 Attribute Alignment.VB_ProcData.VB_Invoke_Property = ";Text"
-    Let Alignment = My_Alignment
-End Property
-
 Public Property Let Alignment(ByVal NewAlignment As VBRUN.AlignmentConstants)
     If My_Alignment = NewAlignment Then Exit Property
     Let My_Alignment = NewAlignment
@@ -156,6 +169,7 @@ Attribute BaseColour.VB_UserMemId = -501
 Public Property Let BaseColour(ByVal NewColour As OLE_COLOR)
     If My_BaseColour = NewColour Then Exit Property
     Let My_BaseColour = NewColour
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("BaseColour")
 End Property
@@ -175,12 +189,9 @@ End Property
 
 'PROPERTY Enabled : You can disable the control to allow click-through _
  ======================================================================================
-Public Property Get Enabled() As Boolean
+Public Property Get Enabled() As Boolean: Let Enabled = UserControl.Enabled: End Property
 Attribute Enabled.VB_ProcData.VB_Invoke_Property = ";Behavior"
 Attribute Enabled.VB_UserMemId = -514
-   Let Enabled = UserControl.Enabled
-End Property
-
 Public Property Let Enabled(ByVal newValue As Boolean)
    Let UserControl.Enabled = newValue
    Call PropertyChanged("Enabled")
@@ -193,6 +204,7 @@ Attribute InertColour.VB_ProcData.VB_Invoke_Property = ";Text"
 Public Property Let InertColour(ByVal NewColour As OLE_COLOR)
     If My_InertColour = NewColour Then Exit Property
     Let My_InertColour = NewColour
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("InertColour")
 End Property
@@ -234,6 +246,7 @@ Attribute State.VB_ProcData.VB_Invoke_Property = ";Appearance"
 Public Property Let State(ByVal NewState As bluSTATE)
     If My_State = NewState Then Exit Property
     Let My_State = NewState
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("State")
 End Property
@@ -245,6 +258,7 @@ Attribute Style.VB_ProcData.VB_Invoke_Property = ";Appearance"
 Public Property Let Style(ByVal NewStyle As bluSTYLE)
     If My_Style = NewStyle Then Exit Property
     Let My_Style = NewStyle
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("Style")
 End Property
@@ -257,6 +271,7 @@ Attribute TextColour.VB_UserMemId = -513
 Public Property Let TextColour(ByVal NewColour As OLE_COLOR)
     If My_TextColour = NewColour Then Exit Property
     Let My_TextColour = NewColour
+    Call SetForeBackColours
     Call Me.Refresh
     Call UserControl.PropertyChanged("TextColour")
 End Property
@@ -266,166 +281,30 @@ End Property
 'Refresh : Force a repaint _
  ======================================================================================
 Public Sub Refresh()
-    Call Paint
+    Call UserControl_Paint
     Call UserControl.Refresh
 End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
-'Paint : Does the actual painting so that it can be shared between Run / Design Time _
+'SetForeBackColours : Based on the state of the button set the fore/back colours _
  ======================================================================================
-Private Sub Paint()
-    Dim ClientRECT As RECT
-    Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
-    
-    'Set the colours: _
-     ----------------------------------------------------------------------------------
+Private Sub SetForeBackColours()
     Select Case My_Style
         Case bluSTYLE.Invert
-            'Set the background colour. I don't know if it is actually any slower to _
-             set the background colour every paint, but it seems stupid to do so
-'            If UserControl.BackColor <> My_ActiveColour Then _
-'                Let UserControl.BackColor = My_ActiveColour
-            Call WIN32.gdi32_SetDCBrushColor(UserControl.hDC, WIN32.OLETranslateColor(My_ActiveColour))
+            'Set the background colour
+            Let UserControl.BackColor = WIN32.OLETranslateColor(My_ActiveColour)
             'Set the text colour
-            Select Case My_State
-                Case bluSTATE.Active
-                    Call WIN32.gdi32_SetTextColor( _
-                        hndDeviceContext:=UserControl.hDC, _
-                        Color:=WIN32.OLETranslateColor(My_BaseColour) _
-                    )
-                Case Else
-                    Call WIN32.gdi32_SetTextColor( _
-                        hndDeviceContext:=UserControl.hDC, _
-                        Color:=WIN32.OLETranslateColor(My_InertColour) _
-                    )
-            End Select
+            Let UserControl.ForeColor = WIN32.OLETranslateColor( _
+                IIf(My_State = Active, My_BaseColour, My_InertColour) _
+            )
 
         Case Else
-            'Set the background colour. I don't know if it is actually any slower to _
-             set the background colour every paint, but it seems stupid to do so
-'            If UserControl.BackColor <> My_BaseColour Then _
-'                Let UserControl.BackColor = My_BaseColour
-            Call WIN32.gdi32_SetDCBrushColor(UserControl.hDC, WIN32.OLETranslateColor(My_BaseColour))
+            'Set the background colour
+            Let UserControl.BackColor = WIN32.OLETranslateColor(My_BaseColour)
             'Set the text colour
-            Select Case My_State
-                Case bluSTATE.Active
-                    Call WIN32.gdi32_SetTextColor( _
-                        hndDeviceContext:=UserControl.hDC, _
-                        Color:=WIN32.OLETranslateColor(My_ActiveColour) _
-                    )
-                Case Else
-                    Call WIN32.gdi32_SetTextColor( _
-                        hndDeviceContext:=UserControl.hDC, _
-                        Color:=WIN32.OLETranslateColor(My_TextColour) _
-                    )
-            End Select
-    End Select
-    
-    Call WIN32.user32_FillRect( _
-        UserControl.hDC, ClientRECT, _
-        WIN32.gdi32_GetStockObject(DC_BRUSH) _
-    )
-
-    'Determine the rotation
-    Dim Escapement As Long
-    Select Case My_Orientation
-        Case bluORIENTATION.Horizontal: Let Escapement = 0
-        Case bluORIENTATION.VerticalDown: Let Escapement = -900
-        Case bluORIENTATION.VerticalUp: Let Escapement = 900
-    End Select
-
-    'Create the font
-    Dim hndFont As Long
-    Let hndFont = WIN32.gdi32_CreateFont( _
-        Height:=15, Width:=0, _
-        Escapement:=Escapement, Orientation:=Escapement, _
-        Weight:=FW_NORMAL, Italic:=API_FALSE, Underline:=API_FALSE, _
-        StrikeOut:=API_FALSE, CharSet:=DEFAULT_CHARSET, _
-        OutputPrecision:=OUT_DEFAULT_PRECIS, ClipPrecision:=CLIP_DEFAULT_PRECIS, _
-        Quality:=DEFAULT_QUALITY, PitchAndFamily:=VARIABLE_PITCH Or FF_DONTCARE, _
-        Face:="Arial" _
-    )
-    
-    'Select the font (remembering the previous object selected to clean up later)
-    Dim hndOld As Long
-    Let hndOld = WIN32.gdi32_SelectObject(UserControl.hDC, hndFont)
-    
-    'Draw the text! _
-     ----------------------------------------------------------------------------------
-    Select Case My_Orientation
-        Case bluORIENTATION.Horizontal
-            Call WIN32.gdi32_SetTextAlign(UserControl.hWnd, TA_TOP Or TA_LEFT Or TA_NOUPDATECP)
-            
-            Dim Alignment As Long
-            Select Case My_Alignment
-                Case VBRUN.AlignmentConstants.vbCenter
-                    Let Alignment = DT.DT_CENTER
-                Case VBRUN.AlignmentConstants.vbLeftJustify
-                    Let Alignment = DT.DT_LEFT
-                Case VBRUN.AlignmentConstants.vbRightJustify
-                    Let Alignment = DT.DT_RIGHT
-            End Select
-            
-            With ClientRECT
-                Let .Left = .Left + 8
-                Let .Right = .Right - 8
-            End With
-            
-            Call WIN32.user32_DrawText( _
-                hndDeviceContext:=UserControl.hDC, _
-                Text:=My_Caption, Length:=Len(My_Caption), _
-                BoundingBox:=ClientRECT, _
-                Format:=Alignment Or DT_VCENTER Or DT_NOPREFIX Or DT_SINGLELINE _
+            Let UserControl.ForeColor = WIN32.OLETranslateColor( _
+                IIf(My_State = Active, My_ActiveColour, My_TextColour) _
             )
-            
-        Case Else
-            Select Case My_Alignment
-                Case VBRUN.AlignmentConstants.vbCenter
-                    Call WIN32.gdi32_SetTextAlign(UserControl.hDC, TA_TOPCENTER)
-                Case VBRUN.AlignmentConstants.vbLeftJustify
-                    Call WIN32.gdi32_SetTextAlign(UserControl.hDC, TA_LEFT)
-                Case VBRUN.AlignmentConstants.vbRightJustify
-                    Call WIN32.gdi32_SetTextAlign(UserControl.hDC, TA.TA_RIGHT)
-            End Select
-            
-            Dim TextPos As Long
-            Select Case My_Alignment
-                Case VBRUN.AlignmentConstants.vbCenter
-                    Let TextPos = IIf(My_Orientation = Horizontal, UserControl.ScaleWidth \ 2, UserControl.ScaleHeight \ 2)
-                Case VBRUN.AlignmentConstants.vbLeftJustify
-                    Let TextPos = IIf(My_Orientation = VerticalUp, UserControl.ScaleHeight - 8, 8)
-                Case VBRUN.AlignmentConstants.vbRightJustify
-                    If My_Orientation = Horizontal Then
-                        Let TextPos = UserControl.ScaleWidth - 8
-                    ElseIf My_Orientation = VerticalUp Then
-                        Let TextPos = 8
-                    ElseIf My_Orientation = VerticalDown Then
-                        Let TextPos = UserControl.ScaleHeight - 8
-                    End If
-            End Select
-            
-            Dim X As Long, Y As Long
-            Select Case My_Orientation
-                Case bluORIENTATION.Horizontal
-                    Let X = TextPos: Let Y = (UserControl.ScaleHeight - 15) \ 2
-                Case bluORIENTATION.VerticalUp
-                    Let X = (UserControl.ScaleWidth - 15) \ 2: Let Y = TextPos
-                Case bluORIENTATION.VerticalDown
-                    Let X = (UserControl.ScaleWidth + 15) \ 2: Let Y = TextPos
-            End Select
-            
-            Call WIN32.gdi32_TextOut( _
-                hndDeviceContext:=UserControl.hDC, _
-                X:=X, Y:=Y, Text:=My_Caption, Length:=Len(My_Caption) _
-            )
-            
     End Select
-    
-    'Select the previous object into the DC (i.e. unselect the font)
-    Call WIN32.gdi32_SelectObject(UserControl.hDC, hndOld)
-    Call WIN32.gdi32_DeleteObject(hndFont)
 End Sub
-
-'/// SUBCLASS /////////////////////////////////////////////////////////////////////////
-

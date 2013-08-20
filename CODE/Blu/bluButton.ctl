@@ -33,12 +33,10 @@ Option Explicit
 '======================================================================================
 'CONTROL :: BluButton
 
-'Status             In flux
+'Status             Ready to use
 'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), WIN32.bas
-'Last Updated       19-AUG-13
-'Last Update        Removed nested bluLabel control and added API-driven painting, _
-                    also added real rotation of text so that the same text API is _
-                    used for horizontal and vertical text
+'Last Updated       20-AUG-13
+'Last Update        Moved the text drawing to a shared function in blu.bas
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 
@@ -90,14 +88,10 @@ End Sub
 'CONTROL Paint _
  ======================================================================================
 Private Sub UserControl_Paint()
-    'Clear background: _
-     ----------------------------------------------------------------------------------
     'Select the background colour
     Call WIN32.gdi32_SetDCBrushColor( _
-        hndDeviceContext:=UserControl.hDC, _
-        Color:=WIN32.OLETranslateColor(UserControl.BackColor) _
+        UserControl.hDC, UserControl.BackColor _
     )
-    
     'Get the dimensions of the button
     Dim ClientRECT As RECT
     Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
@@ -106,141 +100,28 @@ Private Sub UserControl_Paint()
         UserControl.hDC, ClientRECT, _
         WIN32.gdi32_GetStockObject(DC_BRUSH) _
     )
-    
-    'Create and set the font: _
-     ----------------------------------------------------------------------------------
-    'Create the GDI font object that describes our font properties
-    Dim hndFont As Long
-    Let hndFont = WIN32.gdi32_CreateFont( _
-        Height:=15, Width:=0, _
-        Escapement:=0, Orientation:=0, _
-        Weight:=FW_NORMAL, Italic:=API_FALSE, Underline:=API_FALSE, _
-        StrikeOut:=API_FALSE, CharSet:=DEFAULT_CHARSET, _
-        OutputPrecision:=OUT_DEFAULT_PRECIS, ClipPrecision:=CLIP_DEFAULT_PRECIS, _
-        Quality:=DEFAULT_QUALITY, PitchAndFamily:=VARIABLE_PITCH Or FF_DONTCARE, _
-        Face:="Arial" _
+    'All the text drawing is shared
+    Call blu.DrawText( _
+        UserControl.hDC, ClientRECT, My_Caption, UserControl.ForeColor, _
+        My_Alignment, My_Orientation _
     )
-
-    'Select the font (remembering the previous object selected to clean up later)
-    Dim hndOld As Long
-    Let hndOld = WIN32.gdi32_SelectObject(UserControl.hDC, hndFont)
-    
-    'The `DrawText` API doesn't work with the position set by `SetTextAlign`, _
-     so we ensure it's set to a safe, non-interfering value
-    Call WIN32.gdi32_SetTextAlign( _
-        UserControl.hWnd, TA_TOP Or TA_LEFT Or TA_NOUPDATECP _
-    )
-    
-    'Prepare the alignment value used for the `DrawText` API
-    Dim Alignment As DT
-    Let Alignment = Choose(My_Alignment + 1, DT.DT_LEFT, DT.DT_RIGHT, DT.DT_CENTER)
-    
-    'Rotate the text? _
-     ----------------------------------------------------------------------------------
-    'Made possible with directions from: <edais.mvps.org/Tutorials/GDI/DC/DCch8.html>
-    If My_Orientation <> Horizontal Then
-        'The button is already in a vertical shape, but we want to rotate a horizontal _
-         piece of text, so we have to swap the dimensions of the button to begin with
-        Call WIN32.user32_SetRect( _
-            ClientRECT, _
-            ClientRECT.Left, ClientRECT.Top, ClientRECT.Bottom, ClientRECT.Right _
-        )
-        'In addition to that, we also need to position our text with its center at _
-         0,0, instead of the top-left corner, so that when we rotate, the text stays _
-         centered and doesn't swing off out of place
-        Call WIN32.user32_OffsetRect( _
-            ClientRECT, -ClientRECT.Right \ 2, -ClientRECT.Bottom \ 2 _
-        )
-        
-        'Now we need to move the origin point (0,0) to the centre of the button _
-         so that the rotated text obviously appears in the center of the button _
-         whilst the rotation occurs around the centrepoint of the text
-        Dim Org As POINT
-        Call WIN32.gdi32_SetViewportOrgEx( _
-            UserControl.hDC, _
-            UserControl.ScaleWidth \ 2, UserControl.ScaleHeight \ 2, _
-            Org _
-        )
-        
-        'In order to use Get/SetWorldTransform we have to make this call
-        Dim OldGM As Long
-        Let OldGM = WIN32.gdi32_SetGraphicsMode(UserControl.hDC, GM_ADVANCED)
-        
-        'Now calculate the rotation
-        Const Pi As Single = 3.14159
-        Dim RotAng As Single
-        Let RotAng = IIf(My_Orientation = VerticalDown, -90, 90)
-        Dim RotRad As Single
-        Let RotRad = (RotAng / 180) * Pi
-        
-        'Read any current transform from the device context
-        Dim OldXForm As XFORM, RotXForm As XFORM
-        Call WIN32.gdi32_GetWorldTransform(UserControl.hDC, OldXForm)
-        
-        'Define our rotation matrix
-        With RotXForm
-            Let .eM11 = Cos(RotRad)
-            Let .eM21 = Sin(RotRad)
-            Let .eM12 = -.eM21
-            Let .eM22 = .eM11
-        End With
-        
-        'Apply the matrix -- rotate the world!
-        Call WIN32.gdi32_SetWorldTransform(UserControl.hDC, RotXForm)
-    End If
-    
-    'Draw the text! _
-     ----------------------------------------------------------------------------------
-    'Select the colour of the text
-    Call WIN32.gdi32_SetTextColor( _
-        hndDeviceContext:=UserControl.hDC, _
-        Color:=WIN32.OLETranslateColor(UserControl.ForeColor) _
-    )
-    
-    'Add a little margin either side
-    With ClientRECT
-        Let .Left = .Left + 8
-        Let .Right = .Right - 8
-    End With
-
-    'Now just paint the text
-    Call WIN32.user32_DrawText( _
-        hndDeviceContext:=UserControl.hDC, _
-        Text:=My_Caption, Length:=Len(My_Caption), _
-        BoundingBox:=ClientRECT, _
-        Format:=Alignment _
-                Or DT_VCENTER Or DT_NOPREFIX Or DT_SINGLELINE Or DT_NOCLIP _
-    )
-    
-    'Clean up: _
-     ----------------------------------------------------------------------------------
-    'If we rotated the text, we need to do some additional clean up
-    If My_Orientation <> Horizontal Then
-        'Restore the previous world transform
-        Call WIN32.gdi32_SetWorldTransform(UserControl.hDC, OldXForm)
-        'Switch back to the previous graphics mode
-        Call WIN32.gdi32_SetGraphicsMode(UserControl.hDC, OldGM)
-        'Return the origin point (0,0) back to the upper-left corner
-        Call WIN32.gdi32_SetViewportOrgEx(UserControl.hDC, Org.X, Org.Y, Org)
-    End If
-    
-    'Select the previous object into the DC (i.e. unselect the font)
-    Call WIN32.gdi32_SelectObject(UserControl.hDC, hndOld)
-    Call WIN32.gdi32_DeleteObject(hndFont)
 End Sub
 
 'CONTROL ReadProperties _
  ======================================================================================
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     With PropBag
-        Let Me.ActiveColour = .ReadProperty(Name:="ActiveColour", DefaultValue:=blu.ActiveColour)
-        Let Me.Alignment = .ReadProperty(Name:="Alignment", DefaultValue:=VBRUN.AlignmentConstants.vbCenter)
-        Let Me.BaseColour = .ReadProperty(Name:="BaseColour", DefaultValue:=blu.BaseColour)
-        Let Me.Caption = .ReadProperty(Name:="Caption", DefaultValue:="bluButton")
-        Let Me.Orientation = .ReadProperty(Name:="Orientation", DefaultValue:=bluORIENTATION.Horizontal)
-        Let Me.State = .ReadProperty(Name:="State", DefaultValue:=bluSTATE.Inactive)
-        Let Me.Style = .ReadProperty(Name:="Style", DefaultValue:=bluSTYLE.Normal)
+        Let My_ActiveColour = .ReadProperty(Name:="ActiveColour", DefaultValue:=blu.ActiveColour)
+        Let My_Alignment = .ReadProperty(Name:="Alignment", DefaultValue:=VBRUN.AlignmentConstants.vbCenter)
+        Let My_BaseColour = .ReadProperty(Name:="BaseColour", DefaultValue:=blu.BaseColour)
+        Let My_Caption = .ReadProperty(Name:="Caption", DefaultValue:="bluButton")
+        Let My_Orientation = .ReadProperty(Name:="Orientation", DefaultValue:=bluORIENTATION.Horizontal)
+        Let My_State = .ReadProperty(Name:="State", DefaultValue:=bluSTATE.Inactive)
+        Let My_Style = .ReadProperty(Name:="Style", DefaultValue:=bluSTYLE.Normal)
     End With
+    
+    Call SetForeBackColours
+    Call Me.Refresh
     
     'Only subclass when the code is actually running (not in design time / compiling)
     If blu.UserMode = True Then
