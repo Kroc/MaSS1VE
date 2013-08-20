@@ -119,9 +119,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         Let My_State = .ReadProperty(Name:="State", DefaultValue:=bluSTATE.Inactive)
         Let My_Style = .ReadProperty(Name:="Style", DefaultValue:=bluSTYLE.Normal)
     End With
-    
     Call SetForeBackColours
-    Call Me.Refresh
     
     'Only subclass when the code is actually running (not in design time / compiling)
     If blu.UserMode = True Then

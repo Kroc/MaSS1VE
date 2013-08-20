@@ -11,6 +11,7 @@ Begin VB.UserControl bluLabel
    ScaleHeight     =   25
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   122
+   Windowless      =   -1  'True
 End
 Attribute VB_Name = "bluLabel"
 Attribute VB_GlobalNameSpace = False
@@ -28,7 +29,7 @@ Option Explicit
 'Status             Ready to use
 'Dependencies       blu.bas, WIN32.bas
 'Last Updated       20-AUG-13
-'Last Update        Switched to using the shared text drawing function in blu.bas
+'Last Update        Now Windowless!
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 
@@ -78,9 +79,12 @@ Private Sub UserControl_Paint()
     Call WIN32.gdi32_SetDCBrushColor( _
         UserControl.hDC, UserControl.BackColor _
     )
-    'Get the dimensions of the label
+    'Get the dimensions of the label _
+     (can't use `GetClientRect` as we don't have a hWnd!)
     Dim ClientRECT As RECT
-    Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    Call WIN32.user32_SetRect( _
+        ClientRECT, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight _
+    )
     'Then use those to fill with the selected background colour
     Call WIN32.user32_FillRect( _
         UserControl.hDC, ClientRECT, _
@@ -110,7 +114,6 @@ Private Sub UserControl_ReadProperties(ByRef PropBag As PropertyBag)
     End With
     
     Call SetForeBackColours
-    Call Me.Refresh
 End Sub
 
 'CONTROL Resize _
@@ -287,7 +290,7 @@ End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
-'SetForeBackColours : Based on the state of the button set the fore/back colours _
+'SetForeBackColours : Based on the state of the label set the fore/back colours _
  ======================================================================================
 Private Sub SetForeBackColours()
     Select Case My_Style
