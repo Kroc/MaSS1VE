@@ -23,10 +23,35 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       bluMagic.cls
-'Last Updated       17-AUG-13
-'Last Update        `WM_MOUSEMOVE` added twice when subclassing
+'Last Updated       22-AUG-13
+'Last Update        Added mouse X button support (browser back / forward buttons)
 
-'TODO: Support the mouse browser buttons (back / forward)
+'/// PUBLIC ENUMS /////////////////////////////////////////////////////////////////////
+'Enums you might have to refer to in your own code
+'NOTE: Because these are public enums in a private class, you will need to prefix the _
+ value name with the enum name, i.e. `Let a = IDC.IDC_HAND`
+
+'Mouse cursor selection for the `MousePointer` property
+Public Enum IDC
+    'This is our own addition to tell us to not change it one way or another
+    vbDefault = 0
+    
+    IDC_APPSTARTING = 32650&
+    IDC_ARROW = 32512&
+    IDC_CROSS = 32515&
+    IDC_HAND = 32649&
+    IDC_HELP = 32651&
+    IDC_IBEAM = 32513&
+    IDC_ICON = 32641&
+    IDC_NO = 32648&
+    IDC_SIZEALL = 32646&
+    IDC_SIZENESW = 32643&
+    IDC_SIZENS = 32645&
+    IDC_SIZENWSE = 32642&
+    IDC_SIZEWE = 32644&
+    IDC_UPARROW = 32516&
+    IDC_WAIT = 32514&
+End Enum
 
 '/// API DEFS /////////////////////////////////////////////////////////////////////////
 
@@ -99,31 +124,10 @@ Private Declare Function user32_SetCursor Lib "user32" Alias "SetCursor" ( _
     ByVal hndCursor As Long _
 ) As Long
 
-Public Enum IDC
-    'This is our own addition to tell us to not change it one way or another
-    vbDefault = 0
-    
-    IDC_APPSTARTING = 32650&
-    IDC_ARROW = 32512&
-    IDC_CROSS = 32515&
-    IDC_HAND = 32649&
-    IDC_HELP = 32651&
-    IDC_IBEAM = 32513&
-    IDC_ICON = 32641&
-    IDC_NO = 32648&
-    IDC_SIZEALL = 32646&
-    IDC_SIZENESW = 32643&
-    IDC_SIZENS = 32645&
-    IDC_SIZENWSE = 32642&
-    IDC_SIZEWE = 32644&
-    IDC_UPARROW = 32516&
-    IDC_WAIT = 32514&
-End Enum
-
 'A mouse event _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms644968%28v=vs.85%29.aspx>
 Private Type MOUSEHOOKSTRUCT
-    Pt As POINT
+    PT As POINT
     hndWindow As Long
     HitTestCode As Long
     ExtraInfo As Long
@@ -166,11 +170,13 @@ Private Enum MK
     MK_XBUTTON2 = &H40          'NEXT mouse button
 End Enum
 
-'The mouse events we're subclassing
+'The window messages we're subclassing
 Private Enum WM
-    WM_SETCURSOR = &H20
+    WM_SETCURSOR = &H20         'For setting the cursor on the control
     WM_MOUSEMOVE = &H200
     WM_MOUSEWHEEL = &H20A
+    WM_XBUTTONDOWN = &H20B      'Mouse X button pressed (Back / Forward)
+    WM_XBUTTONUP = &H20C        'Mouse X button released
     WM_MOUSEHWHEEL = &H20E
     WM_MOUSEHOVER = &H2A1
     WM_MOUSELEAVE = &H2A3
@@ -228,6 +234,23 @@ Event MouseHScroll( _
     ByVal Shift As VBRUN.ShiftConstants, _
     ByVal X As Single, ByVal Y As Single _
 )
+'Mouse X-buttons
+Event MouseBackButtonDown( _
+    ByVal Shift As VBRUN.ShiftConstants, _
+    ByVal X As Single, ByVal Y As Single _
+)
+Event MouseBackButtonUp( _
+    ByVal Shift As VBRUN.ShiftConstants, _
+    ByVal X As Single, ByVal Y As Single _
+)
+Event MouseForwardButtonDown( _
+    ByVal Shift As VBRUN.ShiftConstants, _
+    ByVal X As Single, ByVal Y As Single _
+)
+Event MouseForwardButtonUp( _
+    ByVal Shift As VBRUN.ShiftConstants, _
+    ByVal X As Single, ByVal Y As Single _
+)
 
 'CLASS Initialize _
  ======================================================================================
@@ -244,22 +267,20 @@ Private Sub Class_Terminate()
     Let IsOut = False
     'Clean up the subclassing object
     If Not Magic Is Nothing Then
-        If hndParentForm = 0 Then
-            Call Magic.ssc_DelMsg( _
-                hndTarget, MSG_BEFORE, _
-                WM_MOUSEWHEEL, WM_MOUSEHWHEEL _
-            )
-        Else
-            Call Magic.ssc_DelMsg( _
-                hndParentForm, MSG_BEFORE, _
-                WM_MOUSEWHEEL, WM_MOUSEHWHEEL _
-            )
-            Call Magic.ssc_UnSubclass(hndParentForm)
-        End If
-        
+        'If a parent form was specified to subclass, detach the mouse wheel _
+         messages from that separately from the main target
+        Call Magic.ssc_DelMsg( _
+            IIf(hndParentForm = 0, hndTarget, hndParentForm), MSG_BEFORE, _
+            WM_MOUSEWHEEL, WM_MOUSEHWHEEL _
+        )
+        'And unsubclass the parent form
+        If hndParentForm <> 0 Then _
+            Magic.ssc_UnSubclass (hndParentForm)
+        'Unsubclass the main target
         Call Magic.ssc_DelMsg( _
             hndTarget, MSG_BEFORE, _
-            WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE _
+            WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE, _
+            WM_XBUTTONDOWN, WM_XBUTTONUP _
         )
         Call Magic.ssc_UnSubclass(hndTarget)
         Call Magic.ssc_Terminate
@@ -275,8 +296,14 @@ Public Sub Attach( _
     ByVal Target_hWnd As Long, _
     Optional ByVal ParentForm_hWnd As Long = 0 _
 )
-    'TODO: Test for MDIForm and fail (can use `FindWindowEx` with "MDIClient")
-    If Target_hWnd = 0 Then Exit Sub
+    'Must attach at least something
+    If Target_hWnd = 0 Then
+        MsgBox "You must specify a non-zero Target Window Handle (`hWnd`) for " & _
+               "`bluMouseEvents.Attach`. Perhaps your code called an API and " & _
+               "received an invalid handle which you passed onwards.", _
+               vbOKOnly Or vbCritical, "Developer Error"
+        Exit Sub
+    End If
     
     'Keep hold of the window handles
     Let hndTarget = Target_hWnd
@@ -285,37 +312,41 @@ Public Sub Attach( _
     'Clean up any current tracking
     Call Class_Terminate
     
-    'Start subclassing it
+    'Start subclassing (see the subclass section at the bottom of the file)
     Set Magic = New bluMagic
+    'First, subclass the main target
     If Magic.ssc_Subclass(hndTarget, , , Me) Then
+        'Prepare the mouse tracking API, we want to receive `WM_MOUSEHOVER` and _
+         `WM_MOUSELEAVE` messages
         With TME
             Let .SizeOfMe = LenB(TME)
             Let .Flags = TME_HOVER Or TME_LEAVE
             Let .HoverTime = HOVER_DEFAULT
             Let .hndTrack = hndTarget
         End With
+        'Start the tracking. When the hover or mouse leave events occur the window _
+         will receive the window messages which we handle in the subclass procedure
         If user32_TrackMouseEvent(TME) = API_TRUE Then
             Let IsTracking = True
             Let IsOut = False
             'Listen into the mouse events
             Call Magic.ssc_AddMsg( _
                 hndTarget, MSG_BEFORE, _
-                WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE _
+                WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE, _
+                WM_XBUTTONDOWN, WM_XBUTTONUP _
             )
         End If
         
-        If hndParentForm = 0 Then
-            Call Magic.ssc_AddMsg( _
-                hndTarget, MSG_BEFORE, _
-                WM_MOUSEWHEEL, WM_MOUSEHWHEEL _
-            )
-        Else
-            Call Magic.ssc_Subclass(hndParentForm, , , Me)
-            Call Magic.ssc_AddMsg( _
-                hndParentForm, MSG_BEFORE, _
-                WM_MOUSEWHEEL, WM_MOUSEHWHEEL _
-            )
-        End If
+        'If a parent form is given, subclass it. The mouse wheel events require the _
+         window to be focused, so it's best to subclass the parent form which will _
+         always be focused regardless of the other control's focus
+        If hndParentForm <> 0 Then Call Magic.ssc_Subclass(hndParentForm, , , Me)
+        'Add the mouse wheel events to the subclassing, either to the main target _
+         or the parent form (if given)
+        Call Magic.ssc_AddMsg( _
+            IIf(hndParentForm = 0, hndTarget, hndParentForm), MSG_BEFORE, _
+            WM_MOUSEWHEEL, WM_MOUSEHWHEEL _
+        )
     End If
 End Sub
 
@@ -325,14 +356,14 @@ End Sub
  ======================================================================================
 Private Property Get WheelScrollLines() As Long
     Call user32_SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, WheelScrollLines, 0)
-    If WheelScrollLines <= 0 Then WheelScrollLines = 3
+    If WheelScrollLines <= 0 Then Let WheelScrollLines = 3
 End Property
 
 'PROPERTY WheelScrollChars : The number of characters to scroll with horizontal wheel _
  ======================================================================================
 Private Property Get WheelScrollChars() As Long
     Call user32_SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, WheelScrollChars, 0)
-    If WheelScrollChars <= 0 Then WheelScrollChars = 3
+    If WheelScrollChars <= 0 Then Let WheelScrollChars = 3
 End Property
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
@@ -341,7 +372,7 @@ End Property
  ======================================================================================
 Private Sub GetMouseStateFromParam( _
     ByVal wParam As Long, ByVal lParam As Long, _
-    ByRef Button As VBRUN.ButtonConstants, _
+    ByRef Button As VBRUN.MouseButtonConstants, _
     ByRef Shift As VBRUN.ShiftConstants, _
     ByRef X As Single, ByRef Y As Single _
 )
@@ -374,8 +405,8 @@ Private Sub SubclassWindowProcedure( _
     ByVal lParam As Long, _
     ByRef UserParam As Long _
 )
-    'For the `WM_MOUSEWHEEL` and `WM_MOUSEHOVER` events we'll provide the mouse and _
-     key state (mouse button, ctrl/shift key state and mouse X / Y)
+    'For some message events we'll provide the mouse and key state _
+     (mouse button, ctrl/shift key state and mouse X / Y)
     Dim Button As VBRUN.MouseButtonConstants
     Dim Shift As VBRUN.ShiftConstants
     Dim X As Single, Y As Single
@@ -470,12 +501,49 @@ Private Sub SubclassWindowProcedure( _
         'There is no mouse-enter message, the first time a mouse move message is _
          receieve then the mouse has entered the window
         If IsOut = True Then
-            IsOut = False
+            Let IsOut = False
             RaiseEvent MouseIn
         End If
         
         'We don't mark the message as handled because we want the regular `MouseMove` _
          event to fire. With thanks to Tanner Helland for alerting me to this
+    
+    '`WM_XBUTTONDOWN` _
+     <msdn.microsoft.com/en-us/library/windows/desktop/ms646245%28v=vs.85%29.aspx>
+    '`WM_XBUTTONUP` _
+     <msdn.microsoft.com/en-us/library/windows/desktop/ms646246%28v=vs.85%29.aspx>
+    ElseIf Message = WM_XBUTTONDOWN _
+        Or Message = WM_XBUTTONUP Then '-----------------------------------------------
+        'NOTE: The correct way to handle the mouse X buttons is to process the _
+         `WM_APPCOMMAND` message as this will be sent back / forward commands _
+         automatically <msdn.microsoft.com/en-us/library/ms997498.aspx>, however _
+         since the back / forward app commands (and a host of others) can be _
+         triggered by the keyboard too, that's really the responsibility of a _
+         global keyboard hook control and not a per-window tracker like this
+        
+        'Determine which meta keys are pressed, this doesn't determine _
+         the mouse X buttons but fills in everything else we need
+        Call GetMouseStateFromParam(wParam, lParam, Button, Shift, X, Y)
+        
+        'Now test which X button
+        If (wParam And MK.MK_XBUTTON1) <> 0 Then
+            'And raise the right event (button down / up)
+            If Message = WM_XBUTTONDOWN Then
+                RaiseEvent MouseBackButtonDown(Shift, X, Y)
+            Else
+                RaiseEvent MouseBackButtonUp(Shift, X, Y)
+            End If
+        ElseIf (wParam And MK.MK_XBUTTON2) <> 0 Then
+            'And raise the right event (button down / up)
+            If Message = WM_XBUTTONDOWN Then
+                RaiseEvent MouseForwardButtonDown(Shift, X, Y)
+            Else
+                RaiseEvent MouseForwardButtonUp(Shift, X, Y)
+            End If
+        End If
+        
+        Let ReturnValue = 1
+        Let Handled = True
     
     '`WM_SETCURSOR` _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms648382%28v=vs.85%29.aspx>
@@ -490,7 +558,7 @@ Private Sub SubclassWindowProcedure( _
             Let ReturnValue = 1
             Let Handled = True
         End If
-    
+        
     End If
     
 '======================================================================================
