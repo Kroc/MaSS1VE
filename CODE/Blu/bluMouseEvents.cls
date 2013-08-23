@@ -19,11 +19,12 @@ Option Explicit
 '======================================================================================
 'CLASS :: bluMouseEvents
 
-'Subclass an object to track mouse enter / leave / wheel events
+'Subclass an object to track mouse enter / leave / wheel events. _
+ Special thanks to Tanner Helland <tannerhelland.com> for direction and bug-fixes
 
 'Status             Ready to use
 'Dependencies       bluMagic.cls
-'Last Updated       22-AUG-13
+'Last Updated       23-AUG-13
 'Last Update        Added mouse X button support (browser back / forward buttons)
 
 '/// PUBLIC ENUMS /////////////////////////////////////////////////////////////////////
@@ -101,6 +102,13 @@ End Enum
 Private Declare Function user32_GetWindowRect Lib "user32" Alias "GetWindowRect" ( _
     ByVal hndWindow As Long, _
     ByRef IntoRECT As RECT _
+) As BOOL
+
+'Convert an X/Y point on the screen to local coordinates of a window area _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162952%28v=vs.85%29.aspx>
+Private Declare Function user32_ScreenToClient Lib "user32" Alias "ScreenToClient" ( _
+    ByVal hndWindow As Long, _
+    ByRef ScreenPoint As POINT _
 ) As BOOL
 
 'Is a point in the rectangle? e.g. check if mouse is within a window _
@@ -305,12 +313,12 @@ Public Sub Attach( _
         Exit Sub
     End If
     
+    'Clean up any current tracking
+    Call Class_Terminate
+    
     'Keep hold of the window handles
     Let hndTarget = Target_hWnd
     Let hndParentForm = ParentForm_hWnd
-    
-    'Clean up any current tracking
-    Call Class_Terminate
     
     'Start subclassing (see the subclass section at the bottom of the file)
     Set Magic = New bluMagic
@@ -431,6 +439,13 @@ Private Sub SubclassWindowProcedure( _
         Call GetMouseStateFromParam(wParam, lParam, Button, Shift, X, Y)
         If user32_PtInRect(WindowRECT, X, Y) = API_FALSE Then Exit Sub
         
+        'The mouse co-ords are relative to the screen, so we need to transform these _
+         to be local to the target window
+        Dim ClientPOINT As POINT
+        Let ClientPOINT.X = X
+        Let ClientPOINT.Y = Y
+        Call user32_ScreenToClient(hndTarget, ClientPOINT)
+        
         'The upper bytes of the `wParam` contain the amount the wheel scrolled, _
          which will be some fraction or multiple of 120 _
          <blogs.msdn.com/b/oldnewthing/archive/2013/01/23/10387366.aspx>
@@ -452,12 +467,18 @@ Private Sub SubclassWindowProcedure( _
             Dim CharsScrolled As Single
             Let CharsScrolled = WheelScrollChars * (Delta / 120)
             'Alert the controller so it can do the scrolling
-            RaiseEvent MouseHScroll(CharsScrolled, Button, Shift, X, Y)
+            RaiseEvent MouseHScroll( _
+                CharsScrolled, Button, Shift, _
+                ClientPOINT.X, ClientPOINT.Y _
+            )
         Else
             Dim LinesScrolled As Single
             Let LinesScrolled = WheelScrollLines * (Delta / 120)
             'Alert the controller so it can do the scrolling
-            RaiseEvent MouseVScroll(LinesScrolled, Button, Shift, X, Y)
+            RaiseEvent MouseVScroll( _
+                LinesScrolled, Button, Shift, _
+                ClientPOINT.X, ClientPOINT.Y _
+            )
         End If
         
         Let ReturnValue = 0
