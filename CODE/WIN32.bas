@@ -27,6 +27,7 @@ End Enum
  <msdn.microsoft.com/en-us/library/windows/desktop/aa378137%28v=vs.85%29.aspx>
 Public Enum HRESULT
     S_OK = 0
+    S_FALSE = 1
 End Enum
 
 'A point _
@@ -209,6 +210,34 @@ Public Enum SM
     SM_SWAPBUTTON = 23          'Mouse buttons are swapped
     SM_MOUSEHORIZONTALWHEELPRESENT = 91
     SM_MOUSEWHEELPRESENT = 75
+End Enum
+
+'Get the location of a special folder, e.g. "My Documents", "System32" &c. _
+ <msdn.microsoft.com/en-us/library/windows/desktop/bb762181%28v=vs.85%29.aspx>
+Private Declare Function shfolder_SHGetFolderPath Lib "shfolder" Alias "SHGetFolderPathA" ( _
+    ByVal hWndOwner As Long, _
+    ByVal Folder As CSIDL, _
+    ByVal Token As Long, _
+    ByVal Flags As SHGFP, _
+    ByVal Path As String _
+) As HRESULT
+
+'Full list with descriptions here: _
+ <msdn.microsoft.com/en-us/library/windows/desktop/bb762494%28v=vs.85%29.aspx>
+Public Enum CSIDL
+    CSIDL_APPDATA = &H1A&       'Application data (roaming), intended for app data
+                                 'that should persist with the user between machines
+    CSIDL_LOCAL_APPDATA = &H1C& 'Application data specific to the PC (e.g. cache)
+    CSIDL_COMMON_APPDATA = &H23 'Application data shared between all users
+    
+    
+    CSIDL_FLAG_CREATE = &H8000& 'OR this with any of the above to create the folder
+                                 'if it doesn't exist (e.g. user deleted My Pictures)
+End Enum
+
+Private Enum SHGFP
+    SHGFP_TYPE_CURRENT = 0      'Retrieve the folder's current path (it may have moved)
+    SHGFP_TYPE_DEFAULT = 1      'Get the default path
 End Enum
 
 'Convert a system color (such as "button face" or "inactive window") to a RGB value _
@@ -725,10 +754,30 @@ End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
-'GetSystemMetric _
+'GetSpecialFolder : Get the path to a system folder, e.g. AppData _
  ======================================================================================
-Public Function GetSystemMetric(ByVal Index As SM) As Long
-    Let GetSystemMetric = user32_GetSystemMetrics(Index)
+Public Function GetSpecialFolder(ByVal Folder As CSIDL) As String
+    'TODO: Handle errors / what to do if no return value?
+    
+    'Fill a buffer to receive the path
+    Dim Result As String
+    Let Result = String$(260, " ")
+    'Attempt to get the special folder path, creating it if it doesn't exist _
+     (e.g. the user deleted the "My Pictures" folder)
+    If shfolder_SHGetFolderPath( _
+        0&, Folder Or CSIDL_FLAG_CREATE, 0&, SHGFP_TYPE_CURRENT, Result _
+    ) = S_OK Then
+        'The string will be null-terminated; find the end and trim
+        Let GetSpecialFolder = Left$( _
+            Result, InStr(1, Result, vbNullChar) - 1 _
+        )
+    End If
+End Function
+
+'GetSystemMetric : Sizes for window borders, menus, scroll bars &c. _
+ ======================================================================================
+Public Function GetSystemMetric(ByVal Metric As SM) As Long
+    Let GetSystemMetric = user32_GetSystemMetrics(Metric)
 End Function
 
 'InitCommonControls : Enable Windows themeing on controls (application wide) _
