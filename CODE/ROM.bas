@@ -209,7 +209,7 @@ Public Function Import() As Boolean
     Call GAME.Clear
     
     'TODO: Error if `ROM.Path` not set
-    Log "Importing ROM: " & ROM.Path
+    Debug.Print "Importing ROM: " & ROM.Path
     Dim StartTime As Single
     Let StartTime = Timer
     
@@ -219,27 +219,27 @@ Public Function Import() As Boolean
     
     'Misc: _
      ==================================================================================
-    Log "* Sonic"
+    Debug.Print "* Sonic"
     Set GAME.Sonic = Import_Art_Uncompressed( _
         ROMOffset:=ROM_SONICART, NumberOfTiles:=512, _
         Skip4thByte:=True, UseTransparency:=True _
     )
     'The ring graphic is not a part of the level art. It gets painted on to the level _
      art in the last four tiles
-    Log "* Power Ups"
+    Debug.Print "* Power Ups"
     Set GAME.PowerUps = Import_Art_Uncompressed(ROM_POWERUPSART, 32)
-    Log "* Ring Art"
+    Debug.Print "* Ring Art"
     Set GAME.Ring = Import_Art_Uncompressed(ROM_RINGART, 20)
-    Log "* HUD Art"
+    Debug.Print "* HUD Art"
     Set GAME.HUD = Import_Art(ROM_HUDART, , True)
-    Log "* Underwater Palettes"
+    Debug.Print "* Underwater Palettes"
     Set GAME.UnderwaterLevelPalette = Import_Palette(ROM_UWPALETTE)
     Set GAME.UnderwaterSpritePalette = Import_Palette(ROM_UWPALETTE + 16)
-    Log "* End Sign"
+    Debug.Print "* End Sign"
     Set GAME.EndSignPalette = Import_Palette(ROM_ENDSIGN_PALETTE)
     Set GAME.EndSignTileset = Import_Art(ROM_ENDSIGN_ART)
     Call GAME.EndSignTileset.ApplyPalette(GAME.EndSignPalette)
-    Log "* Boss"
+    Debug.Print "* Boss"
     Set GAME.BossPalette = Import_Palette(ROM_BOSS_PALETTE)
     Set GAME.BossTileset = Import_Art(ROM_BOSS_ART)
     Call GAME.BossTileset.ApplyPalette(GAME.BossPalette)
@@ -338,7 +338,7 @@ Continue_LevelPointers:
             Case &H1A9528B9: Let .Title = "Special Stage 8"
             Case Else: Let .Title = "Level #" & LevelIndex + 1
         End Select
-        Call Run.Log(.Title & " Header: $" & Hex(LevelHeader) & " (#" & Hex(Pointer) & ")")
+        Debug.Print .Title & " Header: $" & Hex(LevelHeader) & " (#" & Hex(Pointer) & ")"
         
         'Record the "Mapping Location" (pointer to the level's Block Mappings)
         Call Lib.PushLong( _
@@ -449,7 +449,7 @@ Continue_LevelPointers:
             'Add the Floor Layout to the global pool of layouts available
             Call GAME.FloorLayouts.Add(Item:=FloorLayout, Key:=FloorLayout.ID)
         End If
-        Call Run.Log("- Floor Layout: $" & Hex(ROM_FLOORDATA + Pointer) & " (#" & Hex(Pointer) & ") '" & FloorLayout.Title & "'")
+        Debug.Print "- Floor Layout: $" & Hex(ROM_FLOORDATA + Pointer) & " (#" & Hex(Pointer) & ") '" & FloorLayout.Title & "'"
         
         'Apply the Floor Layout to the level
         Set .FloorLayout = GAME.FloorLayouts(Hex(Pointer))
@@ -461,7 +461,7 @@ Continue_LevelPointers:
         
         'Has this Object Layout been seen before?
         If Not Lib.Exists(Key:=Hex(Pointer), Col:=GAME.ObjectLayouts) Then
-            Log "- Object Layout: $" & Hex(ROM_OBJECTLAYOUT + Pointer) & " (#" & Hex(Pointer) & ")"
+            Debug.Print "- Object Layout: $" & Hex(ROM_OBJECTLAYOUT + Pointer) & " (#" & Hex(Pointer) & ")"
             
             'Create a new Object Layout to populate from the ROM
             Dim ObjectLayout As S1ObjectLayout
@@ -524,7 +524,7 @@ Continue_LevelPointers:
         Let Pointer = BIN.IntLE(LevelHeader + 21)
         'Has this Level Art been processed yet?
         If Not Lib.Exists(Key:=Hex(Pointer), Col:=GAME.LevelArt) Then
-            Log "- Level Art: $" & Hex(ROM_LEVELART + Pointer) & " (#" & Hex(Pointer) & ")"
+            Debug.Print "- Level Art: $" & Hex(ROM_LEVELART + Pointer) & " (#" & Hex(Pointer) & ")"
             
             Dim LevelArt As S1Tileset
             Set LevelArt = Import_Art(ROM_LEVELART + Pointer, .LevelPalette)
@@ -541,7 +541,7 @@ Continue_LevelPointers:
         Let Pointer = BIN.IntLE(LevelHeader + 24)
         'Has this Level Art been processed yet?
         If Not Lib.Exists(Key:=Hex(Pointer), Col:=GAME.SpriteArt) Then
-            Log "- Sprite Art: $" & Hex(ROM_SPRITEART + Pointer) & " (#" & Hex(Pointer) & ")"
+            Debug.Print "- Sprite Art: $" & Hex(ROM_SPRITEART + Pointer) & " (#" & Hex(Pointer) & ")"
             
             Dim SpriteArt As S1Tileset
             Set SpriteArt = Import_Art(ROM_SPRITEART + Pointer, .SpritePalette, True)
@@ -649,8 +649,8 @@ Continue_LevelPointers:
     End If
     
     'ROM imported!
-    Import = True
-    Log "ROM was imported: " & Round(Timer - StartTime, 3)
+    Let Import = True
+    Debug.Print "ROM was imported: " & Round(Timer - StartTime, 3)
     
     'Free the ROM from memory
     Set BIN = Nothing
@@ -662,8 +662,8 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
     Dim i As Long
 
     'Let's do this thing!
-    Log "Exporting ROM: " & FilePath
-    Log "(Using original ROM: " & ROM.Path & ")"
+    Debug.Print "Exporting ROM: " & FilePath
+    Debug.Print "(Using original ROM: " & ROM.Path & ")"
     
     'Read the ROM into memory
     Set BIN = New BinaryFile
@@ -719,7 +719,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
             End If
         End If
     Next LevelIndex
-    Call Run.Log("Total Compressed Floor Layout Size: " & CurrentFloorLocation & " Bytes")
+    Debug.Print "Total Compressed Floor Layout Size: " & CurrentFloorLocation & " Bytes"
     If CurrentFloorLocation > ROM_FLOOR_SPACE Then Stop
     
     'Write Level Headers: _
@@ -790,7 +790,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
     
     'Save the ROM to the new location
     Call BIN.Save(FilePath)
-    Call Run.Log("ROM was exported" & vbCrLf)
+    Debug.Print "ROM was exported" & vbCrLf
     
     'Free the ROM from memory
     Set BIN = Nothing
