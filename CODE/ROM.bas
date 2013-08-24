@@ -74,11 +74,6 @@ Private Const ROM_LEVELART = &H30000
 'As with level art, sprite art data is a pointer
 Private Const ROM_SPRITEART = &H24000
 
-'A relative pointer (from $30000) to the end of the level art in an original ROM
-Private Const ROM_LEVELART_END = &HDA28&
-'and where the sprite art ends (from $24000)
-Private Const ROM_SPRITEART_END = &HB92E&      '$2F92E-$24000
-
 'ROM Palette Declarations: _
  --------------------------------------------------------------------------------------
 
