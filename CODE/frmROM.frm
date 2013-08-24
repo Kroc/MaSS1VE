@@ -174,7 +174,8 @@ Private Sub Form_OLEDragDrop( _
     ByRef X As Single, ByRef Y As Single _
 )
     Call Me.Hide
-    ROM.Import (Data.Files(1))
+    Let ROM.Path = Data.Files(1)
+    Call ROM.Import
     Call Unload(Me)
 End Sub
 

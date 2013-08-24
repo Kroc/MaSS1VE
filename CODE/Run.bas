@@ -9,8 +9,12 @@ Option Explicit
 
 'Where execution begins. Also, generic stuff for the whole app
 
+'/// PUBLIC VARS //////////////////////////////////////////////////////////////////////
+
 'Like `App.Path`, but the same place ("BUILD" folder) for MaSS1VE in IDE / compiled
 Public Path As String
+
+'/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'MAIN : It all starts here! _
  ======================================================================================
@@ -27,28 +31,29 @@ Private Sub Main()
     'Set `Run.Path` so that program output goes to the BUILD folder when in IDE
     Let Run.Path = App.Path & IIf(Run.InIDE, "\BUILD\", "\")
     
+'    'Clear the last log file
+'    Dim FileNumber As Integer: FileNumber = FreeFile
+'    Open Run.Path & "Log.txt" For Output Access Write As #FileNumber
+'    Close #FileNumber
+    Call Run.Log("BEGIN")
+    
     'Allow Windows to theme VB's controls
     'NOTE: This works because "CompiledInResources.res" contains a manifest file, _
      see <www.vbforums.com/showthread.php?606736-VB6-XP-Vista-Win7-Manifest-Creator>
     Call WIN32.InitCommonControls( _
         ICC_STANDARD_CLASSES Or ICC_INTERNET_CLASSES _
     )
-    
-'    'Clear the last log file
-'    Dim FileNumber As Integer: FileNumber = FreeFile
-'    Open Run.Path & "Log.txt" For Output Access Write As #FileNumber
-'    Close #FileNumber
-    
-    Call Run.Log("BEGIN")
-'    Load frmSplash: Call frmSplash.Show
+        
+    'Check for Sonic 1 ROM _
+     ----------------------------------------------------------------------------------
+'    Load frmROM: Call frmROM.Show
 
-    ROM.Import Run.Path & "Sonic the Hedgehog (1991)(Sega).sms"
+    Let ROM.Path = Run.Path & "Sonic the Hedgehog (1991)(Sega).sms"
+    Call ROM.Import
     
     Load mdiMain: Call mdiMain.Show
     Load frmEditor: Call frmEditor.Show
 End Sub
-
-'/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'Log : Add to the log of messages as the program runs _
  ======================================================================================

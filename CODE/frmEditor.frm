@@ -81,17 +81,6 @@ Begin VB.Form frmEditor
          Top             =   0
          Width           =   735
       End
-      Begin MaSS1VE.bluLabel lblTitle 
-         Height          =   495
-         Left            =   0
-         Top             =   0
-         Width           =   3615
-         _ExtentX        =   6376
-         _ExtentY        =   873
-         Caption         =   "Green Hill Act 1"
-         State           =   1
-         Style           =   1
-      End
       Begin MaSS1VE.bluButton btnZoom2 
          Height          =   480
          Left            =   12480
@@ -114,18 +103,6 @@ Begin VB.Form frmEditor
          Caption         =   "TV"
          Style           =   1
       End
-      Begin MaSS1VE.bluLabel lblGrid 
-         Height          =   480
-         Left            =   10200
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   615
-         _ExtentX        =   1085
-         _ExtentY        =   847
-         Alignment       =   1
-         Caption         =   "grid"
-         Style           =   1
-      End
       Begin MaSS1VE.bluButton btnGrid 
          Height          =   480
          Left            =   10800
@@ -136,17 +113,6 @@ Begin VB.Form frmEditor
          _ExtentX        =   1085
          _ExtentY        =   847
          Caption         =   "OFF"
-         Style           =   1
-      End
-      Begin MaSS1VE.bluLabel lblZoom 
-         Height          =   480
-         Left            =   11280
-         Top             =   0
-         Width           =   735
-         _ExtentX        =   1296
-         _ExtentY        =   847
-         Alignment       =   1
-         Caption         =   "zoom"
          Style           =   1
       End
       Begin MaSS1VE.bluButton btnZoom1 
@@ -229,6 +195,40 @@ Begin VB.Form frmEditor
          _ExtentX        =   1508
          _ExtentY        =   847
          Caption         =   "PASTE"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluLabel lblTitle 
+         Height          =   495
+         Left            =   0
+         Top             =   0
+         Width           =   3615
+         _ExtentX        =   6376
+         _ExtentY        =   873
+         Caption         =   "Green Hill Act 1"
+         State           =   1
+         Style           =   1
+      End
+      Begin MaSS1VE.bluLabel lblGrid 
+         Height          =   480
+         Left            =   10200
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   615
+         _ExtentX        =   1085
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "grid"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluLabel lblZoom 
+         Height          =   480
+         Left            =   11280
+         Top             =   0
+         Width           =   735
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "zoom"
          Style           =   1
       End
       Begin VB.Line lineSplit 
@@ -735,9 +735,7 @@ Private Sub vwpBlocks_MouseUp(Button As MouseButtonConstants, Shift As ShiftCons
 End Sub
 
 Private Sub Command3_Click()
-    ROM.Export Run.Path & "MaSS1VE.sms", _
-               Run.Path & "Sonic the Hedgehog (1991)(Sega).sms", _
-               0
+    Call ROM.Export(Run.Path & "MaSS1VE.sms", 0)
 End Sub
 
 '/// PROPERTIES ///////////////////////////////////////////////////////////////////////

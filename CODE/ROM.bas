@@ -12,13 +12,19 @@ Option Explicit
  because it modifies a whole bunch of external objects and whilst you could do this _
  a lot more modular, it's far more readable to use linear style code here
 
+'/// PUBLIC VARS //////////////////////////////////////////////////////////////////////
+
+'This will hold the path to an original Sonic 1 ROM to work from (see `Run.Main`) _
+ When you run MaSS1VE for the first time it will ask you to drag-and-drop a ROM into _
+ the form, where it will copy it into the user's app data so we can find it any time _
+ we need it without too much fear it will get moved about
+Public Path As String
+
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
 'The entire ROM binary image. It should be faster to read it in as a single binary _
  array and manipulate it then seek all over the file on disk
 Private BIN As BinaryFile
-
-'Here we define a lot of ROM addresses to refer to during import / export
 
 'ROM Level Header Declarations: _
  --------------------------------------------------------------------------------------
@@ -196,23 +202,20 @@ Private Const ROM_BOSS_ART = &H2EEB1            'Location of boss sprites
 
 'Import : Read a Sonic 1 ROM and populate the level editor's data _
  ======================================================================================
-Public Function Import(FilePath As String) As Boolean
+Public Function Import() As Boolean
     Dim i As Long, ii As Long
-    
-    'Load our UI to show progress
-    VB.Load frmROM
-    Call frmROM.Show: DoEvents
     
     'Remove any existing project in memory
     Call GAME.Clear
     
-    Log "Importing ROM: " & FilePath
+    'TODO: Error if `ROM.Path` not set
+    Log "Importing ROM: " & ROM.Path
     Dim StartTime As Single
     Let StartTime = Timer
     
     'Read the ROM into memory
     Set BIN = New BinaryFile
-    Call BIN.Load(FilePath)
+    Call BIN.Load(ROM.Path)
     
     'Misc: _
      ==================================================================================
@@ -651,26 +654,20 @@ Continue_LevelPointers:
     
     'Free the ROM from memory
     Set BIN = Nothing
-    
-    'Unload the UI
-    frmROM.Hide
-    Unload frmROM
-    
-    Log "frmROM: Unloaded - " & Round(Timer - StartTime, 3)
 End Function
 
 'Export : Write the level to a playable ROM _
  ======================================================================================
-Public Sub Export(ByVal FilePath As String, ByVal OriginalROMFilePath As String, Optional ByVal StartingLevel As Byte = 255)
+Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte = 255)
     Dim i As Long
 
     'Let's do this thing!
     Log "Exporting ROM: " & FilePath
-    Log "(Using original ROM: " & OriginalROMFilePath & ")"
+    Log "(Using original ROM: " & ROM.Path & ")"
     
     'Read the ROM into memory
     Set BIN = New BinaryFile
-    Call BIN.Load(OriginalROMFilePath)
+    Call BIN.Load(ROM.Path)
 
     'Compress levels: _
      ==================================================================================
