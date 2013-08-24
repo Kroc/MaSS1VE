@@ -1,5 +1,5 @@
 VERSION 5.00
-Begin VB.Form frmSplash 
+Begin VB.Form frmROM 
    Appearance      =   0  'Flat
    BackColor       =   &H00FFAF00&
    BorderStyle     =   0  'None
@@ -71,7 +71,7 @@ Begin VB.Form frmSplash
       Enabled         =   0   'False
       Height          =   1920
       Left            =   2400
-      Picture         =   "frmSplash.frx":0000
+      Picture         =   "frmROM.frx":0000
       Stretch         =   -1  'True
       Top             =   1800
       Width           =   1920
@@ -142,7 +142,7 @@ Begin VB.Form frmSplash
       Width           =   1635
    End
 End
-Attribute VB_Name = "frmSplash"
+Attribute VB_Name = "frmROM"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -153,7 +153,7 @@ Option Explicit
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
-'FORM :: frmSplash
+'FORM :: frmROM
 
 Dim ROMVerified As Boolean
 
