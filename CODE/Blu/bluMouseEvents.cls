@@ -460,7 +460,6 @@ Private Sub SubclassWindowProcedure( _
             'Alert the controller so it can do the scrolling
             'NOTE: Right horizontal scroll is positive, so you should *add* the _
              `CharsScrolled` value to your scroll position to scroll correctly
-             Scroll position
             RaiseEvent MouseHScroll( _
                 CharsScrolled, Button, Shift, _
                 ClientPOINT.X, ClientPOINT.Y _
