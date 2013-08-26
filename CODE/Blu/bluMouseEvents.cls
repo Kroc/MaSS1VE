@@ -458,6 +458,9 @@ Private Sub SubclassWindowProcedure( _
             Dim CharsScrolled As Single
             Let CharsScrolled = WheelScrollChars * (Delta / 120)
             'Alert the controller so it can do the scrolling
+            'NOTE: Right horizontal scroll is positive, so you should *add* the _
+             `CharsScrolled` value to your scroll position to scroll correctly
+             Scroll position
             RaiseEvent MouseHScroll( _
                 CharsScrolled, Button, Shift, _
                 ClientPOINT.X, ClientPOINT.Y _
@@ -466,6 +469,8 @@ Private Sub SubclassWindowProcedure( _
             Dim LinesScrolled As Single
             Let LinesScrolled = WheelScrollLines * (Delta / 120)
             'Alert the controller so it can do the scrolling
+            'NOTE: Down vertical scrolling is negative, so you should *subtract* the _
+             `LinesScrolled` value from your scroll position to scroll correctly
             RaiseEvent MouseVScroll( _
                 LinesScrolled, Button, Shift, _
                 ClientPOINT.X, ClientPOINT.Y _

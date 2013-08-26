@@ -431,7 +431,7 @@ Private Sub MouseEvents_MouseHScroll(ByVal CharsScrolled As Single, ByVal Button
     With c.Info(HORZ)
         Let .Mask = SIF_POS
         Let .Pos = Lib.Range( _
-            .Pos - (CharsScrolled * My_ScrollCharSize), _
+            .Pos + (CharsScrolled * My_ScrollCharSize), _
             Me.ScrollMax(HORZ), .Min _
         )
     End With
