@@ -353,7 +353,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         Let Me.ScrollAmountH = .ReadProperty(Name:="ScrollAmountH", DefaultValue:=32)
         Let Me.ScrollAmountV = .ReadProperty(Name:="ScrollAmountV", DefaultValue:=32)
         Let Me.ScrollLineSize = .ReadProperty(Name:="ScrollLineSize", DefaultValue:=16)
-        Let Me.ScrollCharSize = .ReadProperty(Name:="ScrollCharSize", DefaultValue:=16)
+        Let Me.ScrollCharSize = .ReadProperty(Name:="ScrollCharSize", DefaultValue:=64)
     End With
     
     'Only subclass if not in VB's design mode
@@ -407,7 +407,7 @@ Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
         Call .WriteProperty(Name:="ScrollAmountH", Value:=My_ScrollAmount(HORZ), DefaultValue:=32)
         Call .WriteProperty(Name:="ScrollAmountV", Value:=My_ScrollAmount(VERT), DefaultValue:=32)
         Call .WriteProperty(Name:="ScrollLineSize", Value:=My_ScrollLineSize, DefaultValue:=16)
-        Call .WriteProperty(Name:="ScrollCharSize", Value:=My_ScrollCharSize, DefaultValue:=16)
+        Call .WriteProperty(Name:="ScrollCharSize", Value:=My_ScrollCharSize, DefaultValue:=64)
     End With
 End Sub
 
@@ -431,7 +431,7 @@ Private Sub MouseEvents_MouseHScroll(ByVal CharsScrolled As Single, ByVal Button
     With c.Info(HORZ)
         Let .Mask = SIF_POS
         Let .Pos = Lib.Range( _
-            .Pos + (CharsScrolled * My_ScrollCharSize), _
+            .Pos - (CharsScrolled * My_ScrollCharSize), _
             Me.ScrollMax(HORZ), .Min _
         )
     End With
