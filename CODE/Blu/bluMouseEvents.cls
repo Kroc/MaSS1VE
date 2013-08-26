@@ -443,6 +443,12 @@ Private Sub SubclassWindowProcedure( _
         Dim Delta As Long
         Let Delta = wParam \ &H10000
         
+        'The horizontal wheel scroll gives a delta value opposite to vertical _
+         scrolling (that is, right is positive, whilst up (not down) is positive. _
+         We need to normalise this to ensure that real horizontal scroll doesn't act _
+         differently from shift+vscroll
+        If Message = WM_MOUSEHWHEEL Then Let Delta = -Delta
+        
         'WARNING: Most code examples out there integer divide the delta (amount _
          scrolled) by 120 to determine the number of "detents" (notches) of the wheel _
          have been scrolled, but newer wheel mice have no notches and scroll smoothly _
@@ -458,8 +464,8 @@ Private Sub SubclassWindowProcedure( _
             Dim CharsScrolled As Single
             Let CharsScrolled = WheelScrollChars * (Delta / 120)
             'Alert the controller so it can do the scrolling
-            'NOTE: Right horizontal scroll is positive, so you should *add* the _
-             `CharsScrolled` value to your scroll position to scroll correctly
+            'NOTE: You should *subtract* the `CharsScrolled` value to your scroll _
+             position to scroll correctly
             RaiseEvent MouseHScroll( _
                 CharsScrolled, Button, Shift, _
                 ClientPOINT.X, ClientPOINT.Y _
