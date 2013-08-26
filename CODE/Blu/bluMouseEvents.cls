@@ -24,8 +24,9 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       bluMagic.cls
-'Last Updated       23-AUG-13
-'Last Update        Added mouse X button support (browser back / forward buttons)
+'Last Updated       26-AUG-13
+'Last Update        Changed Mouse[Back/Forward]Button[Up/Down] events to *-click _
+                    instead as XBUTTONUP was being very unreliable
 
 '/// PUBLIC ENUMS /////////////////////////////////////////////////////////////////////
 'Enums you might have to refer to in your own code
@@ -184,7 +185,6 @@ Private Enum WM
     WM_MOUSEMOVE = &H200
     WM_MOUSEWHEEL = &H20A
     WM_XBUTTONDOWN = &H20B      'Mouse X button pressed (Back / Forward)
-    WM_XBUTTONUP = &H20C        'Mouse X button released
     WM_MOUSEHWHEEL = &H20E
     WM_MOUSEHOVER = &H2A1
     WM_MOUSELEAVE = &H2A3
@@ -243,19 +243,11 @@ Event MouseHScroll( _
     ByVal X As Single, ByVal Y As Single _
 )
 'Mouse X-buttons
-Event MouseBackButtonDown( _
+Event MouseBackButtonClick( _
     ByVal Shift As VBRUN.ShiftConstants, _
     ByVal X As Single, ByVal Y As Single _
 )
-Event MouseBackButtonUp( _
-    ByVal Shift As VBRUN.ShiftConstants, _
-    ByVal X As Single, ByVal Y As Single _
-)
-Event MouseForwardButtonDown( _
-    ByVal Shift As VBRUN.ShiftConstants, _
-    ByVal X As Single, ByVal Y As Single _
-)
-Event MouseForwardButtonUp( _
+Event MouseForwardButtonClick( _
     ByVal Shift As VBRUN.ShiftConstants, _
     ByVal X As Single, ByVal Y As Single _
 )
@@ -287,8 +279,7 @@ Private Sub Class_Terminate()
         'Unsubclass the main target
         Call Magic.ssc_DelMsg( _
             hndTarget, MSG_BEFORE, _
-            WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE, _
-            WM_XBUTTONDOWN, WM_XBUTTONUP _
+            WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE, WM_XBUTTONDOWN _
         )
         Call Magic.ssc_UnSubclass(hndTarget)
         Call Magic.ssc_Terminate
@@ -341,7 +332,7 @@ Public Sub Attach( _
             Call Magic.ssc_AddMsg( _
                 hndTarget, MSG_BEFORE, _
                 WM_SETCURSOR, WM_MOUSEMOVE, WM_MOUSEHOVER, WM_MOUSELEAVE, _
-                WM_XBUTTONDOWN, WM_XBUTTONUP _
+                WM_XBUTTONDOWN _
             )
         End If
         
@@ -531,10 +522,7 @@ Private Sub SubclassWindowProcedure( _
     
     '`WM_XBUTTONDOWN` _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms646245%28v=vs.85%29.aspx>
-    '`WM_XBUTTONUP` _
-     <msdn.microsoft.com/en-us/library/windows/desktop/ms646246%28v=vs.85%29.aspx>
-    ElseIf Message = WM_XBUTTONDOWN _
-        Or Message = WM_XBUTTONUP Then '-----------------------------------------------
+    ElseIf Message = WM_XBUTTONDOWN Then '---------------------------------------------
         'NOTE: The correct way to handle the mouse X buttons is to process the _
          `WM_APPCOMMAND` message as this will be sent back / forward commands _
          automatically <msdn.microsoft.com/en-us/library/ms997498.aspx>, however _
@@ -548,19 +536,11 @@ Private Sub SubclassWindowProcedure( _
         
         'Now test which X button
         If (wParam And MK.MK_XBUTTON1) <> 0 Then
-            'And raise the right event (button down / up)
-            If Message = WM_XBUTTONDOWN Then
-                RaiseEvent MouseBackButtonDown(Shift, X, Y)
-            Else
-                RaiseEvent MouseBackButtonUp(Shift, X, Y)
-            End If
+            RaiseEvent MouseBackButtonClick(Shift, X, Y)
+                            
         ElseIf (wParam And MK.MK_XBUTTON2) <> 0 Then
-            'And raise the right event (button down / up)
-            If Message = WM_XBUTTONDOWN Then
-                RaiseEvent MouseForwardButtonDown(Shift, X, Y)
-            Else
-                RaiseEvent MouseForwardButtonUp(Shift, X, Y)
-            End If
+            RaiseEvent MouseForwardButtonClick(Shift, X, Y)
+            
         End If
         
         Let ReturnValue = 1
