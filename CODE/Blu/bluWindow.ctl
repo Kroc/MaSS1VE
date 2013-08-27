@@ -280,7 +280,6 @@ Private Enum WM
     WM_SETCURSOR = &H20                 'Which cursor should the mouse have?
     WM_GETMINMAXINFO = &H24             'Determine min/max allowed window size
     WM_NCCALCSIZE = &H83                'Calculate non-client (border) area
-    WM_NCHITTEST = &H84                 'Say what the mouse is interacting with
     WM_NCLBUTTONDOWN = &HA1             'Left mouse button is down in a non-client area
     WM_SYSCOMMAND = &H112               'System menu interaction (move / size &c.)
     WM_LBUTTONDOWN = &H201              'Left mouse button is down
@@ -507,12 +506,12 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         
         'Subclass the parent form and begin listening into the message stream
         Set Magic = New bluMagic
-        Call Magic.ssc_Subclass(hndParentForm, 0, 1, Me)
+        Call Magic.ssc_Subclass(hndParentForm, HT.HTCAPTION, 1, Me)
         Call Magic.ssc_AddMsg( _
             hndParentForm, MSG_BEFORE, _
-            WM_NCCALCSIZE, WM_NCHITTEST, WM_GETMINMAXINFO, _
+            WM_NCCALCSIZE, WM_GETMINMAXINFO, _
             WM_DWMCOMPOSITIONCHANGED, WM_THEMECHANGED, _
-            WM_ACTIVATE, WM_NCLBUTTONDOWN _
+            WM_ACTIVATE, WM_NCLBUTTONDOWN, WM_LBUTTONDOWN _
         )
         
         'When we remove the borders what we're really doing is expanding the form into _
@@ -562,9 +561,9 @@ Private Sub UserControl_Terminate()
         'Detatch the window messages
         Call Magic.ssc_DelMsg( _
             hndParentForm, MSG_BEFORE, _
-            WM_NCCALCSIZE, WM_NCHITTEST, WM_GETMINMAXINFO, _
+            WM_NCCALCSIZE, WM_GETMINMAXINFO, _
             WM_DWMCOMPOSITIONCHANGED, WM_THEMECHANGED, _
-            WM_ACTIVATE, WM_NCLBUTTONDOWN _
+            WM_ACTIVATE, WM_NCLBUTTONDOWN, WM_LBUTTONDOWN _
         )
         Call Magic.ssc_UnSubclass(hndParentForm)
         
@@ -932,14 +931,6 @@ Private Sub SubclassWindowProcedure( _
         Call WIN32.kernel32_RtlMoveMemory(ByVal lParam, MinMax, LenB(MinMax))
         Let Handled = True
     
-    '`WM_NCHITTEST` : Tell Windows what the mouse is interacting with _
-     <msdn.microsoft.com/en-us/library/windows/desktop/ms645618%28v=vs.85%29.aspx>
-    ElseIf Message = WM_NCHITTEST Then '-----------------------------------------------
-        'The borderless form will be movable from anywhere; _
-         return as being over a title bar regardless
-        Let ReturnValue = HT.HTCAPTION
-        Let Handled = True
-    
     ElseIf Message = WM_THEMECHANGED _
         Or Message = WM_DWMCOMPOSITIONCHANGED Then '------------------------------------
         'Windows 8 does not send `WM_DWMCOMPOSITIONCHANGED` messages (DWM is always on); _
@@ -996,12 +987,14 @@ Private Sub SubclassWindowProcedure( _
     '`WM_LBUTTONDOWN` : Left mouse button down _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms645607%28v=vs.85%29.aspx>
     ElseIf Message = WM_LBUTTONDOWN Then '---------------------------------------------
-        'This message is not being processed by the parent form, but instead by the _
-         non client handlers that act as title bars / size-boxes for the parent form. _
-         If the left mouse button is down on the registered control, then we pass _
-         through a message to the form to act out the necessary action
+        'This message is also processed by the non client handlers that act as title _
+         bars / size-boxes for the parent form. If the left mouse button is down on _
+         the registered control, then we pass through a message to the form to act _
+         out the necessary action
+        'WARNING: This causes the `Click` event of the form to no longer fire for the _
+         left mouse button, but will for the right mouse button!
         Call user32_SendMessage(hndParentForm, WM.WM_NCLBUTTONDOWN, UserParam, 0)
-    
+        
     '`WM_NCLBUTTONDOWN` : Left mouse button down in the non-client (border) area _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms645620%28v=vs.85%29.aspx>
     ElseIf Message = WM_NCLBUTTONDOWN Then '-------------------------------------------
