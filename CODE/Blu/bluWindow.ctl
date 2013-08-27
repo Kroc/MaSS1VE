@@ -37,7 +37,10 @@ Option Explicit
 
 'Status             INCOMPLETE, DO NOT USE
 'Dependencies       blu.bas, Lib.bas, WIN32.bas
-'Last Updated       04-AUG-13
+'Last Updated       27-AUG-13
+'Last Update        Improved initialisation, comments
+
+'--------------------------------------------------------------------------------------
 
 'A borderless form with system default shadow!? How is this possible!?
 
@@ -81,7 +84,8 @@ Option Explicit
  will gain proper transparency information with the only drawback that one particular _
  colour (of your choosing) will appear as a "hole" in your form wherever it appears.
 
-'---
+'--------------------------------------------------------------------------------------
+
 'Pieced together by Kroc Camen from endless searching and porting of .NET and C _
  samples, inlcuding:
  
@@ -97,7 +101,7 @@ Option Explicit
 ':: Controls and the Desktop Window Manager _
     <weblogs.asp.net/kennykerr/archive/2007/01/23/controls-and-the-desktop-window-manager.aspx> _
     The first blog post I found with the true answer to solving 24-bit control _
-    backgrounds using the BufferedPaint APIs
+    backgrounds using the `BufferedPaint` APIs
 
 '/// API CALLS ////////////////////////////////////////////////////////////////////////
 
@@ -313,8 +317,8 @@ End Enum
  <msdn.microsoft.com/en-us/library/windows/desktop/ms632606%28v=vs.85%29.aspx>
 Private Type NCCALCSIZE_PARAMS
     Rectangles(0 To 2) As RECT
-    ptrWINDOWPOS As Long                'Pointer to a WINDOWPOS structure
-                                         '(not used in this class)
+    ptrWINDOWPOS As Long                'Pointer to a `WINDOWPOS` structure _
+                                         (not used in this class)
 End Type
 
 'Monitor info for min / max window size: _
@@ -436,7 +440,8 @@ Dim Borders As RECT
  (for moving the form) or fake sizer boxes (for resizing the form)
 Private NonClientHandlers As New Collection
 
-'An enum for choosing the type of non client handler
+'An enum for choosing the type of non client handler _
+ (see the `RegisterNonClientHandler` procedure)
 Private Enum NCH_TYPE
     MoveHandler = 1             'Act as a title bar (move the form)
     SizeHandler = 2             'Act as a sizing box in the bottom-right corner
@@ -449,7 +454,7 @@ End Enum
 Event BorderlessStateChange(ByVal Enabled As Boolean)
 
 'Notify the form of a true Activate event (i.e. when the window gains focus from _
- another app, unlike VB's Activate event which is only between VB's windows)
+ another app, unlike VB's Activate event which is only between VB's own windows)
 Event Activate()
 'And for the deactivate. In Windows 8 an inactive window has no shadow so the user _
  may need to do something to reduce the jarring effect of the shadowless form
@@ -468,17 +473,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     'Get the handle to the parent form, even if the control is in a container
     Let hndParentForm = GetUltimateParent().hWnd
     
-    'Read and set up the ActiveX properties
-    With PropBag
-        Let My_ChromaKey = .ReadProperty(Name:="ChromaKey", DefaultValue:=&H123456)
-        Let My_MinWidth = .ReadProperty(Name:="MinWidth", DefaultValue:=0)
-        Let My_MinHeight = .ReadProperty(Name:="MinHeight", DefaultValue:=0)
-        Let My_MaxWidth = .ReadProperty(Name:="MaxWidth", DefaultValue:=0)
-        Let My_MaxHeight = .ReadProperty(Name:="MaxHeight", DefaultValue:=0)
-    End With
-    
-    'Proceed only if code is running (don't run in IDE's design mode) _
-     (Note: We don't have access to the Ambient object at UserControl initialisation)
+    'Proceed only if code is running (don't run in IDE's design mode)
     If blu.UserMode = True Then
     
         'Determine if the form is borderless to begin with; we will need to add a _
@@ -492,20 +487,25 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         If Not CBool(WStyle And (WS.WS_BORDER Or WS.WS_DLGFRAME Or WS.WS_THICKFRAME)) _
         And Not CBool(XStyle And WS.WS_EX_TOOLWINDOW) _
         Then
-            'Mark as originally borderless. Should the DWM switch off we normally restore _
-             the border, but we can remember to leave it off
+            'Mark as originally borderless. Should the DWM switch off we normally _
+             restore the border, but we can remember to leave it off
             Let WasBorderless = True
         End If
         
+        'Set the extended window style to allow the chroma key transparency
+        Call user32_SetWindowLong(hndParentForm, GWL_EXSTYLE, XStyle Or WS_EX_LAYERED)
+        
         'Check if we will be able to (at the moment) do the borderless trick. _
-         This is only possible on Vista and above, as long as the Desktop Window Manager _
-         is enabled (hardware acceleration) and the theme is not Aero Basic / Classic or _
-         high contrast. This class will watch out for theme changes and remove the form _
-         borders if it becomes possible whilst running
+         This is only possible on Vista and above, as long as the Desktop Window _
+         Manager is enabled (hardware acceleration) and the theme is not Aero Basic / _
+         Classic or High Contrast. This class will watch out for theme changes and _
+         remove the form borders if it becomes possible whilst running
         Let My_IsBorderless = IsDWMAvailable()
         
-        'Subclass the parent form and begin listening into the message stream
+        'Subclass the parent form and begin listening into the message stream; _
+         see the subclass section at the bottom of this file
         Set Magic = New bluMagic
+        'We pass the user param as `HTCAPTION` so you can drag the form from anywhere
         Call Magic.ssc_Subclass(hndParentForm, HT.HTCAPTION, 1, Me)
         Call Magic.ssc_AddMsg( _
             hndParentForm, MSG_BEFORE, _
@@ -517,32 +517,30 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         'When we remove the borders what we're really doing is expanding the form into _
          the borders so the form is bigger than it was before. This might be a problem _
          for you in some instances where you expect your form to be the same size with _
-         a border as without (e.g. tool windows, about screens). To solve this we _
+         a border, as without (e.g. tool windows, about screens). To solve this we _
          shrink the form by the size of the borders to make it the intended size again
         Let Borders = GetNonClientSize()
         If My_IsBorderless = True And WasBorderless = False Then
             Call RepositionForm
         Else
+            'Basically force `WM_NCCALCSIZE` to fire (removes the borders). _
+             `RepositionForm` above does that, but here we need to do so ourselves
             Call user32_SetWindowPos( _
                 hndParentForm, 0, 0, 0, 0, 0, _
                 SWP_FRAMECHANGED Or SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOACTIVATE _
             )
         End If
-        
-        'Extend the frame into the client area by one pixel row so that the window _
-         shadow remains even though the form appears borderless
-        Dim Margin As MARGINS
-        Let Margin.Bottom = 1
-        Call dwmapi_DwmExtendFrameIntoClientArea( _
-            hndParentForm, Margin _
-        )
-        
-        'Set the chroma key
-        Call user32_SetWindowLong(hndParentForm, GWL_EXSTYLE, XStyle Or WS_EX_LAYERED)
-        Call user32_SetLayeredWindowAttributes( _
-            hndParentForm, WIN32.OLETranslateColor(My_ChromaKey), 0, LWA_COLORKEY _
-        )
     End If
+    
+    'Read and set up the ActiveX properties
+    With PropBag
+        'Apply the chroma key, fixing the transparent pixel row
+        Let Me.ChromaKey = .ReadProperty(Name:="ChromaKey", DefaultValue:=&H123456)
+        Let My_MinWidth = .ReadProperty(Name:="MinWidth", DefaultValue:=0)
+        Let My_MinHeight = .ReadProperty(Name:="MinHeight", DefaultValue:=0)
+        Let My_MaxWidth = .ReadProperty(Name:="MaxWidth", DefaultValue:=0)
+        Let My_MaxHeight = .ReadProperty(Name:="MaxHeight", DefaultValue:=0)
+    End With
 End Sub
 
 'CONTROL Resize : The user is trying to resize the control on the form design _
@@ -567,6 +565,10 @@ Private Sub UserControl_Terminate()
         )
         Call Magic.ssc_UnSubclass(hndParentForm)
         
+        'Detatch the subclassing from the controls registered as non-client handlers _
+         (i.e. move / resize boxes). There might be an error here if you destroyed _
+         these controls programatically before we get to this point. (`bluMagic` will _
+         unsubclass them itself, so it won't crash, but may still warn you)
         Dim i As Long
         For i = 1 To NonClientHandlers.Count
             Call Magic.ssc_DelMsg( _
@@ -600,10 +602,13 @@ End Sub
 Public Property Get ChromaKey() As OLE_COLOR: Let ChromaKey = My_ChromaKey: End Property
 Public Property Let ChromaKey(ByVal Colour As OLE_COLOR)
     Let My_ChromaKey = Colour
-    'Update the transparent colour used on the form
-    Call user32_SetLayeredWindowAttributes( _
-        hndParentForm, WIN32.OLETranslateColor(My_ChromaKey), 0, LWA.LWA_COLORKEY _
-    )
+    'We don't need to actually do this in design time
+    If blu.UserMode = True Then
+        'Update the transparent colour used on the form
+        Call user32_SetLayeredWindowAttributes( _
+            hndParentForm, WIN32.OLETranslateColor(My_ChromaKey), 0, LWA.LWA_COLORKEY _
+        )
+    End If
     Call UserControl.PropertyChanged("ChromaKey")
 End Property
 
@@ -808,6 +813,8 @@ Private Function RepositionForm(Optional ByVal DoRemove As Boolean = True)
         End With
     End If
     
+    'Move / resize the window and fire `WM_NCCALCSIZE` to ensure the borders are _
+     added / removed accordingly
     Call user32_SetWindowPos( _
         hndParentForm, 0, _
         WindowRECT.Left, WindowRECT.Top, _
@@ -834,6 +841,9 @@ Private Sub SubclassWindowProcedure( _
     ByVal lParam As Long, _
     ByRef UserParam As HT _
 )
+    'This will be used to extend the form into its borders
+    Dim Margin As MARGINS
+    
     'WM_NCCALCSIZE : Define the non-client (border) area _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms632634%28v=vs.85%29.aspx>
     If Message = WM_NCCALCSIZE And wParam = 1 Then '-----------------------------------
@@ -868,6 +878,14 @@ Private Sub SubclassWindowProcedure( _
         'At this point, if DWM is off we can't expand the form into the borders, _
          just leave the form as is (for example, WindowsXP)
         If My_IsBorderless = False Then Exit Sub
+        
+        'Extend the frame into the client area by one pixel row so that the window _
+         shadow remains even though the form appears borderless. That one pixel row _
+         appears transparent, which is fixed by use of `SetLayeredWindowAttributes`
+        Let Margin.Bottom = 1
+        Call dwmapi_DwmExtendFrameIntoClientArea( _
+            hndParentForm, Margin _
+        )
         
         'There's an issue with maximising the form -- maximised forms are actually _
          bigger than the screen, to account for pushing the window border out of the _
@@ -955,7 +973,6 @@ Private Sub SubclassWindowProcedure( _
         If Old = True And My_IsBorderless = False Then
             If WasBorderless = False Then Call RepositionForm(False)
             
-            Dim Margin As MARGINS
             Let Margin.Bottom = 1
             Call dwmapi_DwmExtendFrameIntoClientArea( _
                 hndParentForm, Margin _
