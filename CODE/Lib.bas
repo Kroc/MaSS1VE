@@ -160,15 +160,6 @@ Public Sub CombSort(ByRef pvarArray As Variant)
     Loop Until lngGap = 1 And Not blnSwapped
 End Sub
 
-'FileExists : See if a file exists or not _
- ======================================================================================
-Public Function FileExists(fName As String) As Boolean
-    On Error Resume Next
-    Dim Temp As Long
-    Let Temp = VBA.GetAttr(fName)
-    Let FileExists = Not CBool(Err)
-End Function
-
 'RoundUp : Always round a number upwards _
  ======================================================================================
 Public Function RoundUp(ByVal InputNumber As Double) As Double
@@ -298,5 +289,26 @@ Public Function HSLToRGB( _
     Else
         HSLToRGB = lMax * &H10101
     End If
+End Function
+
+'EndSlash : Make sure a path always ends in a slash _
+ ======================================================================================
+Public Function EndSlash(ByVal Path As String) As String
+    Let EndSlash = Path
+    If Right$(EndSlash, 1) <> "\" Then Let EndSlash = EndSlash & "\"
+End Function
+
+'FileExists : See if a file exists or not _
+ ======================================================================================
+'<cuinl.tripod.com/Tips/fileexist.htm>
+Public Function FileExists(ByVal Path As String) As Boolean
+    Let FileExists = CBool(Dir$(Path) <> "")
+End Function
+
+'DirExists : See if a folder exists _
+ ======================================================================================
+'<cuinl.tripod.com/Tips/direxist.htm>
+Public Function DirExists(ByVal Path As String) As Boolean
+    Let DirExists = CBool(Dir$(Path, vbDirectory) <> "")
 End Function
 

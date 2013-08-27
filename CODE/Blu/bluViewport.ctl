@@ -33,7 +33,8 @@ Option Explicit
 
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
-'Last Updated       12-AUG-13
+'Last Updated       26-AUG-13
+'Last Update        Increased the speed of the horizontal wheel scroll
 
 'This was made with the help of "Adding Scroll Bars to Forms, PictureBoxes and _
  User Controls" by Steve McMahon, though my own work _

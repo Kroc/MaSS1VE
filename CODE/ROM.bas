@@ -665,7 +665,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
     Call BIN.Load(ROM.Path)
 
     'Compress levels: _
-     ==================================================================================
+     ----------------------------------------------------------------------------------
     'We need to check the size of all levels combined after compression, it cannot be _
      more than 36.5KB -- the maximum space in the ROM for levels ($16DEA-$1FFFF)
 
@@ -718,7 +718,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
     If CurrentFloorLocation > ROM_FLOOR_SPACE Then Stop
     
     'Write Level Headers: _
-     ==================================================================================
+     ----------------------------------------------------------------------------------
     For LevelIndex = LBound(GAME.Levels) To UBound(GAME.Levels)
         If Not GAME.Levels(LevelIndex) Is Nothing Then
             'Locate the level header from the pointers table
@@ -774,7 +774,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
     Next LevelIndex
     
     'Customisations: _
-     ==================================================================================
+     ----------------------------------------------------------------------------------
     'If a level skip is given (playtesting for example), write it in _
      (replaces the first level with the desired level)
     'TODO: This does not set up the underwater effect on Labyrinth Act 3; there must
@@ -790,6 +790,30 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
     'Free the ROM from memory
     Set BIN = Nothing
 End Sub
+
+'Locate : Find the ROM (either in the app path, or the user's app data) _
+ ======================================================================================
+Public Function Locate() As String
+    'Return null if we couldn't find the ROM
+    Let Locate = vbNullString
+    
+    'First check if the ROM exists in the data folder in the same location as the app _
+     (i.e. we're running portably)
+    If Lib.FileExists(Run.Path & "Data\ROM.sms") = False Then
+        'Secondly, check the user's app data
+        Dim AppData As String
+        Let AppData = WIN32.GetSpecialFolder(CSIDL_APPDATA)
+        'This could potentially come back blank
+        If AppData <> vbNullString Then
+            'Is the ROM in the user's app data
+            If Lib.FileExists(AppData & "MaSS1VE\ROM.sms") = True Then
+                Let Locate = AppData & "MaSS1VE\ROM.sms"
+            End If
+        End If
+    Else
+        Let Locate = Run.Path & "Data\ROM.sms"
+    End If
+End Function
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 

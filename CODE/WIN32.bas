@@ -10,9 +10,9 @@ Option Explicit
 'API calls into the guts of Windows
 
 'Status             In Flux
-'Dependencies       None
-'Last Updated       19-AUG-13
-'Last Update        Added GDI world transform APIs
+'Dependencies       Lib.bas
+'Last Updated       27-AUG-13
+'Last Update        Tiny change to `GetSpecialFolder`
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -757,7 +757,8 @@ End Property
 'GetSpecialFolder : Get the path to a system folder, e.g. AppData _
  ======================================================================================
 Public Function GetSpecialFolder(ByVal Folder As CSIDL) As String
-    'TODO: Handle errors / what to do if no return value?
+    'Return null should this fail
+    Let GetSpecialFolder = vbNullString
     
     'Fill a buffer to receive the path
     Dim Result As String
@@ -767,10 +768,11 @@ Public Function GetSpecialFolder(ByVal Folder As CSIDL) As String
     If shfolder_SHGetFolderPath( _
         0&, Folder Or CSIDL_FLAG_CREATE, 0&, SHGFP_TYPE_CURRENT, Result _
     ) = S_OK Then
-        'The string will be null-terminated; find the end and trim
-        Let GetSpecialFolder = Left$( _
+        'The string will be null-terminated; find the end and trim, _
+         also ensure it always ends in a slash (this can be inconsistent)
+        Let GetSpecialFolder = Lib.EndSlash(Left$( _
             Result, InStr(1, Result, vbNullChar) - 1 _
-        )
+        ))
     End If
 End Function
 

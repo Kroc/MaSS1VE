@@ -31,7 +31,7 @@ Private Sub Main()
     Let blu.UserMode = True
     
     'Set `Run.Path` so that program output goes to the BUILD folder when in IDE
-    Let Run.Path = App.Path & IIf(Run.InIDE, "\BUILD\", "\")
+    Let Run.Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "BUILD\", "")
         
     'Allow Windows to theme VB's controls
     'NOTE: This works because "CompiledInResources.res" contains a manifest file, _
@@ -42,13 +42,26 @@ Private Sub Main()
         
     'Check for Sonic 1 ROM _
      ----------------------------------------------------------------------------------
-'    Load frmROM: Call frmROM.Show
-
-    Let ROM.Path = Run.Path & "Sonic the Hedgehog (1991)(Sega).sms"
-    Call ROM.Import
+    'MaSS1VE requires access to an original Sonic 1 ROM when starting a new project _
+     or exporting to a new ROM. Rather than just save a path to a ROM file located _
+     somewhere in the user's files (which might get moved), we will keep a copy in _
+     the app path or the user's app data so there's less chance of it going missing
+    'MaSS1VE doesn't come with a Sonic 1 ROM, the user has to provide their own, so _
+     display a form where they can drag-and-drop one if we can't find it
     
-    Load mdiMain: Call mdiMain.Show
-    Load frmEditor: Call frmEditor.Show
+    'Check the two common locations for a ROM
+    Let ROM.Path = ROM.Locate
+    'If no ROM was found, ask the user for it
+    If ROM.Path = vbNullString Then
+        Load frmROM: Call frmROM.Show
+    
+    Else
+        'We have the ROM, we can start MaSS1VE proper
+        Call ROM.Import
+        Load mdiMain: Call mdiMain.Show
+        Load frmEditor: Call frmEditor.Show
+        
+    End If
 End Sub
 
 'InIDE : Are we running the code from the Visual Basic IDE? _
