@@ -24,8 +24,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       WIN32.bas
-'Last Updated       13-AUG-13
-'Last Update        Added some error checking to `Load` and `Save`
+'Last Updated       28-AUG-13
+'Last Update        Error check in CRC if the file is shorter than the length requested
 
 'The CRC function of this class is from "Calculating CRC32 With VB" by Steve McMahon _
  <www.vbaccelerator.com/home/VB/Code/Libraries/CRC32/article.asp> which was _
@@ -157,8 +157,9 @@ End Sub
 'CRC : Perform a Cyclic-Redundancy-Check on all or part of the file _
  ======================================================================================
 Public Function CRC(Optional ByVal OffsetBegin As Long = 0, Optional ByVal Length As Long = 0) As Long
-    'If no length is provided, process through to the end of the file
-    If Length = 0 Then Let Length = UBound(Data) - OffsetBegin
+    'If no length is provided, process through to the end of the file, also _
+     if the length requested is longer than the file itself run through to the end
+    If Length = 0 Or Length > Me.LOF Then Let Length = UBound(Data) - OffsetBegin
     
     Dim i As Integer
     Dim iLookup As Integer
