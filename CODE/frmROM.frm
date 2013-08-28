@@ -222,35 +222,98 @@ Private Sub imgDrop_OLEDragDrop( _
 )
     'The `imgDrop_OLEDragOver` event handles verifying the ROM before the user lets _
      go of the mouse, we only need to action the drop
-    If ROMVerified = True Then
-        'Change the UI for importing the ROM:
-        
-        'Disable the drag and drop
-        Let imgDrop.Enabled = False
-        'Change the message
-        Let Me.lblStatus = "Importing Sonic 1 ROM..."
-        'Hide the control box buttons
-        Let Me.cbxClose.Visible = False
-        Let Me.cbxMin.Visible = False
-        'Clear the copy cursor otherwise it'll hang on screen
-        Let Effect = vbDropEffectNone
-        'Set the busy cursor instead
-        Let Me.MousePointer = VBRUN.MousePointerConstants.vbHourglass
-        'Refresh the screen
-        DoEvents
-        
-        'TODO: Copy the ROM to the app data
-        'Since we have no project management yet we just start one in memory. _
-         Later on we will show a form where the user can create / load projects
-        'TODO: Import errors will have to be handled gracefully
-        Call ROM.Import
-        'Show the main application form
-        Load mdiMain: Call mdiMain.Show
-        'Since there's no level select screen yet, jump right into the editing
-        Load frmEditor: Call frmEditor.Show
-        
-        Unload Me
+    If ROMVerified = False Then Exit Sub
+    
+    'Change the UI for importing the ROM: _
+     ----------------------------------------------------------------------------------
+    'Disable the drag and drop
+    Let imgDrop.Enabled = False
+    'Change the message
+    Let Me.lblStatus = "Importing Sonic 1 ROM..."
+    'Hide the control box buttons
+    Let Me.cbxClose.Visible = False
+    Let Me.cbxMin.Visible = False
+    'Clear the copy cursor otherwise it'll hang on screen
+    Let Effect = vbDropEffectNone
+    'Set the busy cursor instead
+    Let Me.MousePointer = VBRUN.MousePointerConstants.vbHourglass
+    'Refresh the screen
+    DoEvents
+    
+    'Copy the ROM to App Data: _
+     ----------------------------------------------------------------------------------
+    On Error Resume Next
+    'If possible, a "Data" folder will be created in the app's directory, this allows _
+     for portable installations, but will fail on Vista+ if the app is installed in a _
+     non-user area like "Program Files". Failing that, we will try use the user's _
+     `%APPDATA%` path
+     
+    'Does a "Data" folder exist in the app's directory?
+    If Lib.DirExists(Run.Path & "Data") = False Then
+        'Attempt to create the "Data" folder
+        Call VBA.MkDir(Run.Path & "Data")
+        'If that succeeded, we will attempt to copy the file there
+        If Err.Number = 0 Then GoTo AppDirCopy
+    
+    Else
+AppDirCopy: Err.Clear
+        'The app's own "Data" folder already exists, attempt to copy into it. This _
+         could fail if a previously portable installation was moved to a non-user _
+         area of the disk, or if the portable media is made read-only
+        Call VBA.FileCopy(ROM.Path, Run.Path & "Data\ROM.sms")
+        If Err.Number = 0 Then
+            'Update the location of the ROM path used here-in
+            Let ROM.Path = Run.Path & "Data\ROM.sms"
+            GoTo Continue
+        End If
     End If
+    
+    'If we were unable to copy to the application's directory (i.e. non-portable), _
+     attempt the user's `%APPDATA%` path
+    Dim AppData As String
+    Let AppData = WIN32.GetSpecialFolder(CSIDL_APPDATA)
+    'It's very unlikely, but that could have returned blank
+    If AppData = vbNullString Then GoTo CouldNotCopy
+    
+    'Does MaSS1VE's sub folder exist in there?
+    If Lib.DirExists(AppData & "MaSS1VE") = False Then
+        'Attempt to create the application folder
+        Call VBA.MkDir(AppData & "MaSS1VE")
+        'If that succeeded, we will attempt to copy the file there
+        If Err.Number = 0 Then GoTo AppDataCopy
+    
+    Else
+AppDataCopy:
+        Err.Clear
+        Call VBA.FileCopy(ROM.Path, AppData & "MaSS1VE\ROM.sms")
+        If Err.Number = 0 Then
+            'Update the location of the ROM path used here-in
+            Let ROM.Path = AppData & "MaSS1VE\ROM.sms"
+            GoTo Continue
+        Else
+            'That's all strategies exhausted...
+            GoTo CouldNotCopy
+        End If
+    End If
+
+CouldNotCopy:
+    'If we were not able to copy the ROM we can still continue, using the file's _
+     original location, but the user will have to repeat this process every time _
+     MaSS1VE is started. For now we will stave off an error message or other action
+    
+Continue:
+    On Error GoTo 0
+    
+    'Since we have no project management yet we just start one in memory. _
+     Later on we will show a form where the user can create / load projects
+    'TODO: Import errors will have to be handled gracefully
+    Call ROM.Import
+    'Show the main application form
+    Load mdiMain: Call mdiMain.Show
+    'Since there's no level select screen yet, jump right into the editing
+    Load frmEditor: Call frmEditor.Show
+    
+    Unload Me
 End Sub
 
 'EVENT imgDrop OLEDRAGOVER : A file is being dragged over the form _
