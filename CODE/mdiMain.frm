@@ -80,25 +80,6 @@ Begin VB.MDIForm mdiMain
          _ExtentX        =   847
          _ExtentY        =   847
       End
-      Begin MaSS1VE.bluLabel lblMaSS1VE 
-         Height          =   495
-         Left            =   3840
-         Top             =   0
-         Width           =   4455
-         _ExtentX        =   7858
-         _ExtentY        =   873
-         Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
-         Enabled         =   0   'False
-      End
-      Begin MaSS1VE.bluLabel lblGameTitle 
-         Height          =   480
-         Left            =   360
-         Top             =   0
-         Width           =   3135
-         _ExtentX        =   5530
-         _ExtentY        =   847
-         Caption         =   "Sonic the Hedgehog"
-      End
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
          Left            =   0
@@ -107,16 +88,6 @@ Begin VB.MDIForm mdiMain
          Width           =   1200
          _ExtentX        =   2117
          _ExtentY        =   873
-      End
-      Begin MaSS1VE.bluLabel lblTip 
-         Height          =   495
-         Left            =   10320
-         Top             =   495
-         Width           =   3855
-         _ExtentX        =   6800
-         _ExtentY        =   873
-         Caption         =   "The quick brown fox jumps over the lazy dog"
-         Enabled         =   0   'False
       End
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
@@ -147,6 +118,35 @@ Begin VB.MDIForm mdiMain
          _ExtentX        =   847
          _ExtentY        =   847
          Kind            =   2
+      End
+      Begin MaSS1VE.bluLabel lblMaSS1VE 
+         Height          =   495
+         Left            =   3840
+         Top             =   0
+         Width           =   4455
+         _ExtentX        =   7858
+         _ExtentY        =   873
+         Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
+         Enabled         =   0   'False
+      End
+      Begin MaSS1VE.bluLabel lblGameTitle 
+         Height          =   480
+         Left            =   360
+         Top             =   0
+         Width           =   3135
+         _ExtentX        =   5530
+         _ExtentY        =   847
+         Caption         =   "Sonic the Hedgehog"
+      End
+      Begin MaSS1VE.bluLabel lblTip 
+         Height          =   495
+         Left            =   10320
+         Top             =   495
+         Width           =   3855
+         _ExtentX        =   6800
+         _ExtentY        =   873
+         Caption         =   "The quick brown fox jumps over the lazy dog"
+         Enabled         =   0   'False
       End
       Begin VB.Image imgIcon 
          Appearance      =   0  'Flat
@@ -247,12 +247,11 @@ End Sub
  ======================================================================================
 Private Sub MDIForm_Resize()
     If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
-'    Call blu.LockRedraw(Me.hWnd)
     
     'The dimensions for aligned controls on an MDIForm are *completely* unreliable. _
      We'll use the WIN32 API to get the size of the MDIForm in a reliable fashion
     Dim FormSize As RECT
-    Call WIN32.user32_GetClientRect(Me.hWnd, FormSize)
+    Call WIN32.user32_GetClientRect(Me.HWND, FormSize)
     'WIN32 returns Pixels, so scale up to Twips
     Dim FormWidth As Long, FormHeight As Long
     Let FormWidth = blu.Xpx(FormSize.Right - FormSize.Left)
@@ -278,8 +277,6 @@ Private Sub MDIForm_Resize()
     Let Me.bluTab.Top = Me.toolbar.Height - Me.bluTab.Height
     Let Me.bluTab.Height = Me.toolbar.Height - Me.bluTab.Top
     
-    'NOTE: The Width property of the aligned picture box is highly unreliable _
-     and the ScaleWidth property of the MDI form excludes aligned pictureboxes
     Call Me.btnHelp.Move( _
         FormWidth - Me.btnHelp.Width, Me.toolbar.ScaleHeight - blu.Ypx(blu.Metric), _
         Me.btnHelp.Width, blu.Ypx(blu.Metric) _
@@ -291,15 +288,6 @@ Private Sub MDIForm_Resize()
         Call Me.picHelpToolbar.Move( _
             blu.Xpx, 0, Me.picHelp.ScaleWidth - blu.Xpx, blu.Ypx(blu.Metric) _
         )
-        
-'        'Resizing the MDI form quickly can throw off the reported sizes of aligned _
-'         controls, we need to use something else than the aligned control to size
-'        Call Me.webHelp.Move( _
-'            blu.Xpx, _
-'            Me.picHelpToolbar.Height, _
-'            Me.picHelp.Width - blu.Xpx, _
-'            FormHeight - Me.picHelpToolbar.Height _
-'        )
     End If
     
     Call lblTip.Move( _
@@ -307,8 +295,6 @@ Private Sub MDIForm_Resize()
         Me.btnHelp.Left - Me.bluTab.Left - Me.bluTab.Width, _
         blu.Ypx(blu.Metric) _
     )
-    
-'    Call blu.UnlockRedraw(Me.hWnd)
 End Sub
 
 'EVENT bluTab TABCHANGED : The top tabs have been clicked - change zone _
@@ -323,9 +309,9 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
     
     Select Case Index
         Case 0 'LEVELS ----------------------------------------------------------------
-            Load frmLevels
-            Let frmLevels.WindowState = vbMaximized
-            Call frmLevels.Show
+            Load frmEditor
+            Let frmEditor.WindowState = vbMaximized
+            Call frmEditor.Show
             
             'Don't keep the PLAY tab around
             Unload frmPlay

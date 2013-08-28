@@ -25,7 +25,6 @@ UserControl=CODE\Blu\bluViewport.ctl
 UserControl=CODE\Blu\bluWindow.ctl
 Form=CODE\mdiMain.frm
 Form=CODE\frmEditor.frm
-Form=CODE\frmLevels.frm
 Form=CODE\frmPlay.frm
 Form=CODE\frmWelcome.frm
 RelatedDoc=LICENCE.txt
