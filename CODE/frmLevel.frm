@@ -1,5 +1,5 @@
 VERSION 5.00
-Begin VB.Form frmEditor 
+Begin VB.Form frmLevel 
    Appearance      =   0  'Flat
    BackColor       =   &H00FFFFFF&
    Caption         =   "Level"
@@ -22,7 +22,7 @@ Begin VB.Form frmEditor
       ForeColor       =   &H80000008&
       Height          =   255
       Left            =   14400
-      Picture         =   "frmEditor.frx":0000
+      Picture         =   "frmLevel.frx":0000
       ScaleHeight     =   255
       ScaleWidth      =   255
       TabIndex        =   18
@@ -371,7 +371,7 @@ Begin VB.Form frmEditor
       End
    End
 End
-Attribute VB_Name = "frmEditor"
+Attribute VB_Name = "frmLevel"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
@@ -382,7 +382,7 @@ Option Explicit
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
-'FORM :: frmEditor
+'FORM :: frmLevel
 
 'View and edit a specific level
 
@@ -478,7 +478,7 @@ Private Sub Form_Load()
     'Set the zoom to default
     Let Me.Zoom = 1
     
-    Call frmEditor.Show
+    Call frmLevel.Show
     
     'Load the first level into the editor
     Set Me.Level = GAME.Levels(0)
@@ -898,7 +898,7 @@ Public Sub SetTheme( _
         Me, BaseColour, TextColour, ActiveColour, InertColour _
     )
     
-    'Some frmEditor specifics
+    'Some frmLevel specifics
     Let Me.picToolbar.BackColor = ActiveColour
     For i = 0 To Me.lineSplit.Count - 1
         Let Me.lineSplit(i).BorderColor = ActiveColour

@@ -189,7 +189,7 @@ Private Sub Command1_Click()
     If LevelIndex < UBound(GAME.Levels) - 1 Then
         Let LevelIndex = LevelIndex + 1
         Call TempSetTheme(LevelIndex)
-        Set frmEditor.Level = GAME.Levels(LevelIndex)
+        Set frmLevel.Level = GAME.Levels(LevelIndex)
     End If
 End Sub
 
@@ -197,7 +197,7 @@ Private Sub Command2_Click()
     If LevelIndex > 0 Then
         Let LevelIndex = LevelIndex - 1
         Call TempSetTheme(LevelIndex)
-        Set frmEditor.Level = GAME.Levels(LevelIndex)
+        Set frmLevel.Level = GAME.Levels(LevelIndex)
     End If
 End Sub
 
@@ -309,9 +309,9 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
     
     Select Case Index
         Case 0 'LEVELS ----------------------------------------------------------------
-            Load frmEditor
-            Let frmEditor.WindowState = vbMaximized
-            Call frmEditor.Show
+            Load frmLevel
+            Let frmLevel.WindowState = vbMaximized
+            Call frmLevel.Show
             
             'Don't keep the PLAY tab around
             Unload frmPlay
@@ -393,7 +393,7 @@ Private Sub TempSetTheme(ByVal LevelIndex As Long)
     )
      
     Call Me.SetTheme(, , ActiveColour, InertColour)
-    Call frmEditor.SetTheme(, , ActiveColour, InertColour)
+    Call frmLevel.SetTheme(, , ActiveColour, InertColour)
      
     DoEvents
 End Sub

@@ -311,7 +311,7 @@ Continue:
     'Show the main application form
     Load mdiMain: Call mdiMain.Show
     'Since there's no level select screen yet, jump right into the editing
-    Load frmEditor: Call frmEditor.Show
+    Load frmLevel: Call frmLevel.Show
     
     Unload Me
 End Sub
