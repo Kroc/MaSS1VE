@@ -28,7 +28,7 @@ Begin VB.Form frmWelcome
          Strikethrough   =   0   'False
       EndProperty
       ForeColor       =   &H00FFFFFF&
-      Height          =   1320
+      Height          =   960
       Left            =   480
       TabIndex        =   1
       Top             =   1200

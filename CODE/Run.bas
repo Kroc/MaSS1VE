@@ -62,8 +62,8 @@ Private Sub Main()
     Else
         'We have the ROM, we can start MaSS1VE proper
         Call ROM.Import
-        Load mdiMain: Call mdiMain.Show
-        Load frmLevel: Call frmLevel.Show
+        Load mdiMain
+        Call mdiMain.Show
         
     End If
 End Sub

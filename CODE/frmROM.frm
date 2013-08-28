@@ -309,9 +309,8 @@ Continue:
     'TODO: Import errors will have to be handled gracefully
     Call ROM.Import
     'Show the main application form
-    Load mdiMain: Call mdiMain.Show
-    'Since there's no level select screen yet, jump right into the editing
-    Load frmLevel: Call frmLevel.Show
+    Load mdiMain
+    Call mdiMain.Show
     
     Unload Me
 End Sub
