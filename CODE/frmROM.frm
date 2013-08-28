@@ -45,6 +45,7 @@ Begin VB.Form frmROM
       Top             =   5280
       _ExtentX        =   847
       _ExtentY        =   847
+      AlwaysOnTop     =   -1  'True
    End
    Begin VB.Image imgDrop 
       Appearance      =   0  'Flat

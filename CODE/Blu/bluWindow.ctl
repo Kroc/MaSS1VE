@@ -37,8 +37,8 @@ Option Explicit
 
 'Status             INCOMPLETE, DO NOT USE
 'Dependencies       blu.bas, Lib.bas, WIN32.bas
-'Last Updated       27-AUG-13
-'Last Update        Improved initialisation, comments
+'Last Updated       28-AUG-13
+'Last Update        Added `AlwaysOnTop` property
 
 '--------------------------------------------------------------------------------------
 
@@ -149,13 +149,20 @@ Private Declare Function user32_IsZoomed Lib "user32" Alias "IsZoomed" ( _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms633545%28v=vs.85%29.aspx>
 Private Declare Function user32_SetWindowPos Lib "user32" Alias "SetWindowPos" ( _
     ByVal hndWindow As Long, _
-    ByVal hndInsertAfter As Long, _
+    ByVal hndInsertAfter As HWND, _
     ByVal Left As Long, _
     ByVal Top As Long, _
     ByVal Width As Long, _
     ByVal Height As Long, _
     ByVal Flags As SWP _
 ) As BOOL
+
+Private Enum HWND
+    HWND_TOP = 0                    'Move window to the top
+    HWND_BOTTOM = 1                 'Move window to the bottom
+    HWND_TOPMOST = -1               'Keep the window always on top
+    HWND_NOTOPMOST = -2             'Undo the previous
+End Enum
 
 Private Enum SWP
     SWP_FRAMECHANGED = &H20         'Sends `WM_NCCALCSIZE` to calculate border area
@@ -239,7 +246,6 @@ Private Enum WS
     WS_EX_LAYERED = &H80000         'Layered, that is, can be translucent
     WS_EX_STATICEDGE = &H20000      '3D border for items that do not accept user input
     WS_EX_TOOLWINDOW = &H80
-    WS_EX_TOPMOST = &H8             'Always on top
     WS_EX_WINDOWEDGE = &H100        'Border with raised edge
 End Enum
 
@@ -416,6 +422,9 @@ Private My_MinHeight As Long
 Private My_MaxWidth As Long
 Private My_MaxHeight As Long
 
+'Keep the window always on top of other windows
+Private My_AlwaysOnTop As Boolean
+
 '/// PRIVATE DEFS /////////////////////////////////////////////////////////////////////
 
 'Our subclassing object
@@ -463,7 +472,7 @@ Event Deactivate()
 'CONTROL InitProperties : When a new instance of bluWindow gets plopped on a form _
  ======================================================================================
 Private Sub UserControl_InitProperties()
-    Let hndParentForm = GetUltimateParent().hWnd
+    Let hndParentForm = GetUltimateParent().HWND
     Let My_ChromaKey = &H123456
 End Sub
 
@@ -471,7 +480,7 @@ End Sub
  ======================================================================================
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     'Get the handle to the parent form, even if the control is in a container
-    Let hndParentForm = GetUltimateParent().hWnd
+    Let hndParentForm = GetUltimateParent().HWND
     
     'Proceed only if code is running (don't run in IDE's design mode)
     If blu.UserMode = True Then
@@ -534,6 +543,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     
     'Read and set up the ActiveX properties
     With PropBag
+        Let Me.AlwaysOnTop = .ReadProperty(Name:="AlwaysOnTop", DefaultValue:=False)
         'Apply the chroma key, fixing the transparent pixel row
         Let Me.ChromaKey = .ReadProperty(Name:="ChromaKey", DefaultValue:=&H123456)
         Let My_MinWidth = .ReadProperty(Name:="MinWidth", DefaultValue:=0)
@@ -587,6 +597,7 @@ End Sub
  ======================================================================================
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
     With PropBag
+        Call .WriteProperty(Name:="AlwaysOnTop", Value:=My_AlwaysOnTop, DefaultValue:=False)
         Call .WriteProperty(Name:="ChromaKey", Value:=My_ChromaKey, DefaultValue:=&H123456)
         Call .WriteProperty(Name:="MinWidth", Value:=My_MinWidth, DefaultValue:=0)
         Call .WriteProperty(Name:="MinHeight", Value:=My_MinHeight, DefaultValue:=0)
@@ -596,6 +607,26 @@ Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
 End Sub
 
 '/// PROPERTIES ///////////////////////////////////////////////////////////////////////
+
+'PROPERTY AlwaysOnTop _
+ ======================================================================================
+Public Property Get AlwaysOnTop() As Boolean: Let AlwaysOnTop = My_AlwaysOnTop: End Property
+Public Property Let AlwaysOnTop(ByVal State As Boolean)
+    Let My_AlwaysOnTop = State
+    'We don't want to do this during design-time
+    If blu.UserMode = True Then
+        'You can't set this with `WS_EX_TOPMOST`, use `SetWindowPos` instead, _
+         Thanks goes to Karl E. Petterson's CFormBorder class for alerting me to this _
+         <vb.mvps.org/samples/FormBdr/>
+        'NOTE: The form won't always stay on top when running from the IDE _
+         <support.microsoft.com/kb/192254>
+        Call user32_SetWindowPos( _
+            hndParentForm, IIf(State = True, HWND_TOPMOST, HWND_NOTOPMOST), _
+            0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE _
+        )
+    End If
+    Call UserControl.PropertyChanged("AlwaysOnTop")
+End Property
 
 'PROPERTY ChromaKey : Set what colour is transparent in the form _
  ======================================================================================
@@ -655,13 +686,13 @@ End Property
 'RegisterMoveHandler : Set a control to act as a title bar, moving the form _
  ======================================================================================
 Public Sub RegisterMoveHandler(ByVal Target As Object)
-    Call RegisterNonClientHandler(Target.hWnd, MoveHandler)
+    Call RegisterNonClientHandler(Target.HWND, MoveHandler)
 End Sub
 
 'RegisterSizeHandler : Set a control to act as a corner sizing box _
  ======================================================================================
 Public Sub RegisterSizeHandler(ByVal Target As Object)
-    Call RegisterNonClientHandler(Target.hWnd, SizeHandler)
+    Call RegisterNonClientHandler(Target.HWND, SizeHandler)
 End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
