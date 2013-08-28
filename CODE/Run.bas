@@ -50,7 +50,11 @@ Private Sub Main()
      display a form where they can drag-and-drop one if we can't find it
     
     'Check the two common locations for a ROM
-    Let ROM.Path = ROM.Locate
+    'WARNING: Incredibly, prefixing `Locate` with it's module, `ROM`, causes the _
+     compiler to crash. It's insane, yes. This is the only reference on the web _
+     I found about this rare bug: <bbs.csdn.net/topics/30000137>
+    Let ROM.Path = Locate()
+    
     'If no ROM was found, ask the user for it
     If ROM.Path = vbNullString Then
         Load frmROM: Call frmROM.Show
