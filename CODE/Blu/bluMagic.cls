@@ -25,7 +25,7 @@ Option Explicit
 'Dependencies       None (self-contained)
 'Last Updated       24-JUL-13
 
-'NOTE: I itend to tidy this code, format it in my style and generally make it a _
+'NOTE: I intend to tidy this code, format it in my style and generally make it a _
  little more understandable
 
 'The following documentation is slightly re-formatted from the original and not _

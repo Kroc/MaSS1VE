@@ -542,10 +542,10 @@ Continue_LevelPointers:
             Set SpriteArt = Import_Art(ROM_SPRITEART + Pointer, .SpritePalette, True)
             Let SpriteArt.ID = Hex(Pointer)
             
-            'Add this Level Art to the global stock
+            'Add this sprite Art to the global stock
             Call GAME.SpriteArt.Add(Item:=SpriteArt, Key:=SpriteArt.ID)
         End If
-        'Apply the Level Art to the level
+        'Apply the sprite Art to the level
         Set .SpriteArt = GAME.SpriteArt(Hex(Pointer))
         
         'Next level -- onwards and upwards!
@@ -661,6 +661,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
     Debug.Print "(Using original ROM: " & ROM.Path & ")"
     
     'Read the ROM into memory
+    'TODO: Check for missing file
     Set BIN = New BinaryFile
     Call BIN.Load(ROM.Path)
 
@@ -815,12 +816,27 @@ Public Function Locate() As String
     End If
 End Function
 
+'Verify : Is this a Sonic 1 ROM? _
+ ======================================================================================
+'NOTE: To my knowledge there is only one version of Sonic 1 for the Master System, _
+ and I hope I'm right, but if you're know otherwise, please contact me
+Public Function Verify(ByVal Path As String) As Boolean
+    Set BIN = New BinaryFile
+    
+    'TODO: Handle files < 512 bytes
+    Call BIN.Load(Path)
+    'Verify the first 512 bytes
+    Let Verify = (BIN.CRC(0, 512) = &HF150F769)
+    
+    Set BIN = Nothing
+End Function
+
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
 'Import_Art_Uncompressed _
  ======================================================================================
 Private Function Import_Art_Uncompressed( _
-    ByRef ROMOffset As Long, _
+    ByVal ROMOffset As Long, _
     ByVal NumberOfTiles As Long, _
     Optional ByRef Palette As S1Palette = Nothing, _
     Optional ByVal UseTransparency As Boolean = False, _
@@ -829,8 +845,7 @@ Private Function Import_Art_Uncompressed( _
     'Create a new tileset in the return field
     Set Import_Art_Uncompressed = New S1Tileset
     Call Import_Art_Uncompressed.Create( _
-        NumberOfTiles:=NumberOfTiles, Palette:=Palette, _
-        UseTransparency:=UseTransparency _
+        NumberOfTiles, Palette, UseTransparency _
     )
     'Fetch the image data as a byte array; easier/faster to manipulate
     Dim ImageData() As Byte
