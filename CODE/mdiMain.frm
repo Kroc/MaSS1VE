@@ -55,30 +55,14 @@ Begin VB.MDIForm mdiMain
       TabIndex        =   0
       Top             =   0
       Width           =   15120
-      Begin VB.CommandButton Command1 
-         Caption         =   ">"
-         Height          =   255
-         Left            =   2760
-         TabIndex        =   9
-         Top             =   120
-         Width           =   375
-      End
-      Begin VB.CommandButton Command2 
-         Caption         =   "<"
-         Height          =   255
-         Left            =   2400
-         TabIndex        =   8
-         Top             =   120
-         Width           =   375
-      End
       Begin MaSS1VE.bluControlBox cbxClose 
          Height          =   480
          Left            =   14640
          TabIndex        =   5
          Top             =   0
          Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
+         _extentx        =   847
+         _extenty        =   847
       End
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
@@ -86,8 +70,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   4
          Top             =   495
          Width           =   1200
-         _ExtentX        =   2117
-         _ExtentY        =   873
+         _extentx        =   2117
+         _extenty        =   873
       End
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
@@ -95,9 +79,9 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   3
          Top             =   495
          Width           =   975
-         _ExtentX        =   1720
-         _ExtentY        =   873
-         Caption         =   "HELP"
+         _extentx        =   1720
+         _extenty        =   873
+         caption         =   "HELP"
       End
       Begin MaSS1VE.bluControlBox cbxMin 
          Height          =   480
@@ -105,9 +89,9 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   6
          Top             =   0
          Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
-         Kind            =   1
+         _extentx        =   847
+         _extenty        =   847
+         kind            =   1
       End
       Begin MaSS1VE.bluControlBox cbxMax 
          Height          =   480
@@ -115,38 +99,38 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   7
          Top             =   0
          Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
-         Kind            =   2
+         _extentx        =   847
+         _extenty        =   847
+         kind            =   2
       End
       Begin MaSS1VE.bluLabel lblMaSS1VE 
          Height          =   495
          Left            =   3840
          Top             =   0
          Width           =   4455
-         _ExtentX        =   7858
-         _ExtentY        =   873
-         Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
-         Enabled         =   0   'False
+         _extentx        =   7858
+         _extenty        =   873
+         caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
+         enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblGameTitle 
          Height          =   480
          Left            =   360
          Top             =   0
          Width           =   3135
-         _ExtentX        =   5530
-         _ExtentY        =   847
-         Caption         =   "Sonic the Hedgehog"
+         _extentx        =   5530
+         _extenty        =   847
+         caption         =   "Sonic the Hedgehog"
       End
       Begin MaSS1VE.bluLabel lblTip 
          Height          =   495
          Left            =   10320
          Top             =   495
          Width           =   3855
-         _ExtentX        =   6800
-         _ExtentY        =   873
-         Caption         =   "The quick brown fox jumps over the lazy dog"
-         Enabled         =   0   'False
+         _extentx        =   6800
+         _extenty        =   873
+         caption         =   "The quick brown fox jumps over the lazy dog"
+         enabled         =   0   'False
       End
       Begin VB.Image imgIcon 
          Appearance      =   0  'Flat
@@ -160,8 +144,8 @@ Begin VB.MDIForm mdiMain
    Begin MaSS1VE.bluWindow bluWindow 
       Left            =   120
       Top             =   1200
-      _ExtentX        =   847
-      _ExtentY        =   847
+      _extentx        =   847
+      _extenty        =   847
    End
 End
 Attribute VB_Name = "mdiMain"
@@ -182,24 +166,6 @@ Option Explicit
 Private LevelIndex As Byte
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
-
-'These are temporary buttons to change the current level
-
-Private Sub Command1_Click()
-    If LevelIndex < UBound(GAME.Levels) - 1 Then
-        Let LevelIndex = LevelIndex + 1
-        Call TempSetTheme(LevelIndex)
-        Set frmLevel.Level = GAME.Levels(LevelIndex)
-    End If
-End Sub
-
-Private Sub Command2_Click()
-    If LevelIndex > 0 Then
-        Let LevelIndex = LevelIndex - 1
-        Call TempSetTheme(LevelIndex)
-        Set frmLevel.Level = GAME.Levels(LevelIndex)
-    End If
-End Sub
 
 'MDIFORM Load _
  ======================================================================================
@@ -223,15 +189,6 @@ Private Sub MDIForm_Load()
     
     Call Me.bluWindow.RegisterMoveHandler(Me.toolbar)
     
-'    webHelp.AddressBar = False
-'    webHelp.MenuBar = False
-'    webHelp.Resizable = False
-'    webHelp.Silent = True
-'    webHelp.StatusBar = False
-'    webHelp.TheaterMode = True
-'    webHelp.toolbar = False
-'    webHelp.Navigate "about:blank"
-    
     'If on a small screen, start up maximised (we need at least 1024x600)
     If Screen.Width \ Screen.TwipsPerPixelX <= 1024 Then
         Let mdiMain.WindowState = VBRUN.FormWindowStateConstants.vbMaximized
@@ -251,7 +208,7 @@ Private Sub MDIForm_Resize()
     'The dimensions for aligned controls on an MDIForm are *completely* unreliable. _
      We'll use the WIN32 API to get the size of the MDIForm in a reliable fashion
     Dim FormSize As RECT
-    Call WIN32.user32_GetClientRect(Me.HWND, FormSize)
+    Call WIN32.user32_GetClientRect(Me.hWnd, FormSize)
     'WIN32 returns Pixels, so scale up to Twips
     Dim FormWidth As Long, FormHeight As Long
     Let FormWidth = blu.Xpx(FormSize.Right - FormSize.Left)
@@ -331,7 +288,6 @@ Private Sub btnHelp_Click()
     If Me.picHelp.Visible = False Then
         Me.btnHelp.State = bluSTATE.Active
         Me.picHelp.Visible = True
-'        Me.webHelp.Navigate "http://127.0.0.1"
         Call MDIForm_Resize
     Else
         Me.btnHelp.State = bluSTATE.Inactive
@@ -364,36 +320,4 @@ Public Sub SetTheme( _
     'Specifics for this form
     Let Me.BackColor = ActiveColour
     Let Me.picHelpToolbar.BackColor = ActiveColour
-End Sub
-
-'Until we extract the level colour from the data, we're using hard coded colours
-Private Sub TempSetTheme(ByVal LevelIndex As Long)
-    Dim ActiveColour As Long
-    Dim InertColour As Long
-    Let InertColour = blu.InertColour
-    Dim HSLColour As HSL
-    
-    Select Case LevelIndex
-        Case 0 To 5, 18: Let ActiveColour = blu.ActiveColour
-        Case 6 To 8: Let ActiveColour = &H5000&
-        Case 9 To 10: Let ActiveColour = &HAFFF&
-        Case 11: Let ActiveColour = &H50AF00
-        Case 12 To 14, 20 To 25: Let ActiveColour = &HAFAF50
-        Case 15 To 16: Let ActiveColour = &H500000
-        Case 17, 26 To 27: Let ActiveColour = &HFFAF50
-        Case 28 To 35: Let ActiveColour = &H5000FF
-    End Select
-     
-    Let HSLColour = Lib.RGBToHSL(ActiveColour)
-    If HSLColour.Luminance < 100 Then Let HSLColour.Luminance = 85
-    Let HSLColour.Saturation = 27
-    
-    Let InertColour = Lib.HSLToRGB( _
-        HSLColour.Hue, HSLColour.Saturation, HSLColour.Luminance _
-    )
-     
-    Call Me.SetTheme(, , ActiveColour, InertColour)
-    Call frmLevel.SetTheme(, , ActiveColour, InertColour)
-     
-    DoEvents
 End Sub

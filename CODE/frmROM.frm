@@ -25,10 +25,10 @@ Begin VB.Form frmROM
       TabIndex        =   5
       Top             =   0
       Width           =   480
-      _ExtentX        =   847
-      _ExtentY        =   847
-      Style           =   1
-      Kind            =   1
+      _extentx        =   847
+      _extenty        =   847
+      style           =   1
+      kind            =   1
    End
    Begin MaSS1VE.bluControlBox cbxClose 
       Height          =   480
@@ -36,16 +36,16 @@ Begin VB.Form frmROM
       TabIndex        =   4
       Top             =   0
       Width           =   480
-      _ExtentX        =   847
-      _ExtentY        =   847
-      Style           =   1
+      _extentx        =   847
+      _extenty        =   847
+      style           =   1
    End
    Begin MaSS1VE.bluWindow bluWindow1 
       Left            =   6360
       Top             =   5280
-      _ExtentX        =   847
-      _ExtentY        =   847
-      AlwaysOnTop     =   -1  'True
+      _extentx        =   847
+      _extenty        =   847
+      alwaysontop     =   -1  'True
    End
    Begin VB.Image imgDrop 
       Appearance      =   0  'Flat

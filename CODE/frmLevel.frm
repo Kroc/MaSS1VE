@@ -25,14 +25,14 @@ Begin VB.Form frmLevel
       Picture         =   "frmLevel.frx":0000
       ScaleHeight     =   255
       ScaleWidth      =   255
-      TabIndex        =   18
+      TabIndex        =   17
       Top             =   8160
       Width           =   255
    End
    Begin MaSS1VE.bluViewport vwpLevel 
       Height          =   7935
       Left            =   3720
-      TabIndex        =   19
+      TabIndex        =   18
       Top             =   480
       Width           =   10935
       _ExtentX        =   19288
@@ -64,6 +64,26 @@ Begin VB.Form frmLevel
       TabIndex        =   3
       Top             =   0
       Width           =   14655
+      Begin VB.ComboBox cmbLevels 
+         Appearance      =   0  'Flat
+         BeginProperty Font 
+            Name            =   "Arial"
+            Size            =   9
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         Height          =   345
+         ItemData        =   "frmLevel.frx":0342
+         Left            =   60
+         List            =   "frmLevel.frx":0344
+         Style           =   2  'Dropdown List
+         TabIndex        =   20
+         Top             =   60
+         Width           =   3615
+      End
       Begin VB.PictureBox picRings 
          Appearance      =   0  'Flat
          AutoRedraw      =   -1  'True
@@ -129,7 +149,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnUndo 
          Height          =   480
          Left            =   4920
-         TabIndex        =   13
+         TabIndex        =   12
          Top             =   0
          Visible         =   0   'False
          Width           =   735
@@ -141,7 +161,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnRedo 
          Height          =   480
          Left            =   5760
-         TabIndex        =   14
+         TabIndex        =   13
          Top             =   0
          Visible         =   0   'False
          Width           =   735
@@ -153,7 +173,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnShare 
          Height          =   480
          Left            =   13680
-         TabIndex        =   15
+         TabIndex        =   14
          Top             =   0
          Width           =   975
          _ExtentX        =   1720
@@ -164,7 +184,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnCut 
          Height          =   480
          Left            =   6720
-         TabIndex        =   16
+         TabIndex        =   15
          Top             =   0
          Visible         =   0   'False
          Width           =   615
@@ -176,7 +196,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnCopy 
          Height          =   480
          Left            =   7440
-         TabIndex        =   17
+         TabIndex        =   16
          Top             =   0
          Visible         =   0   'False
          Width           =   735
@@ -195,17 +215,6 @@ Begin VB.Form frmLevel
          _ExtentX        =   1508
          _ExtentY        =   847
          Caption         =   "PASTE"
-         Style           =   1
-      End
-      Begin MaSS1VE.bluLabel lblTitle 
-         Height          =   495
-         Left            =   0
-         Top             =   0
-         Width           =   3615
-         _ExtentX        =   6376
-         _ExtentY        =   873
-         Caption         =   "Green Hill Act 1"
-         State           =   1
          Style           =   1
       End
       Begin MaSS1VE.bluLabel lblGrid 
@@ -288,7 +297,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluViewport vwpBlocks 
          Height          =   1575
          Left            =   0
-         TabIndex        =   20
+         TabIndex        =   19
          Top             =   1200
          Width           =   1575
          _ExtentX        =   2778
@@ -308,14 +317,6 @@ Begin VB.Form frmLevel
          TabIndex        =   8
          Top             =   0
          Width           =   3255
-         Begin VB.CommandButton Command3 
-            Caption         =   "ROM!"
-            Height          =   255
-            Left            =   2400
-            TabIndex        =   12
-            Top             =   0
-            Width           =   735
-         End
          Begin VB.PictureBox picBlockSelectRight 
             Appearance      =   0  'Flat
             AutoRedraw      =   -1  'True
@@ -457,8 +458,7 @@ Private My_Zoom As Long
  ======================================================================================
 Private Sub Form_Initialize()
     'Setup the look up tables
-    Dim i As Long
-    For i = 0 To 256: Let x32(i) = i * 32: Let x8(i) = i * 8: Next i
+    Dim i As Long: For i = 0 To 256: Let x32(i) = i * 32: Let x8(i) = i * 8: Next i
 End Sub
 
 'FORM Load _
@@ -466,19 +466,31 @@ End Sub
 Private Sub Form_Load()
     Call mdiMain.bluWindow.RegisterSizeHandler(Me.picSizer)
     
+    'Configure the tabstrip _
+     (I haven't coded in proper property storage for it yet)
     With Me.bluTab
-        .Style = bluSTYLE.Normal
-        .TabCount = 3
+        .TabCount = 4
         .Caption(0) = "Layout"
         .Caption(1) = "Objects"
-        .Caption(2) = "Properties"
+        .Caption(2) = "Palette"
+        .Caption(3) = "Properties"
         .CurrentTab = 0
     End With
     
+    'Populate the level select combobox
+    Dim i As Long
+    For i = LBound(GAME.Levels) To UBound(GAME.Levels)
+        'Exclude empty levels
+        If Not GAME.Levels(i) Is Nothing Then
+            'As we exclude the levels the combobox index does not match up with the _
+             level index, so we have to store that (awkwardly) in the `ItemData` array
+            Call cmbLevels.AddItem(GAME.Levels(i).Title)
+            Let cmbLevels.ItemData(cmbLevels.ListCount - 1) = i
+        End If
+    Next i
+    
     'Set the zoom to default
     Let Me.Zoom = 1
-    
-    Call frmLevel.Show
     
     'Load the first level into the editor
     Set Me.Level = GAME.Levels(0)
@@ -547,8 +559,11 @@ Private Sub Form_Resize()
     
     'Toolbar Buttons: _
      ----------------------------------------------------------------------------------
-    'The title of the level; this will eventually be a custom text box
-    Call Me.lblTitle.Move(0, 0, Me.bluTab.Width + Me.picSidePane(0).Width)
+    'The level select combobox; this will eventually be a custom text box
+    Call Me.cmbLevels.Move( _
+        blu.Xpx(4), (Me.picToolbar.ScaleHeight - Me.cmbLevels.Height) \ 2, _
+        Me.picSidePane(0).Width + Me.bluTab.Width - blu.Xpx(4) _
+    )
     
     With Me.lineSplit(0)
         Let .X1 = Me.picSidePane(0).Left + Me.picSidePane(0).Width: Let .X2 = .X1
@@ -703,6 +718,15 @@ Private Sub btnZoom1_Click(): Let Me.Zoom = 1: End Sub
 Private Sub btnZoom2_Click(): Let Me.Zoom = 2: End Sub
 Private Sub btnZoomTV_Click(): Let Me.Zoom = 3: End Sub
 
+'EVENT cmbLevels CLICK : The drop-down level list has changed value, load the level _
+ ======================================================================================
+Private Sub cmbLevels_Click()
+    If Me.cmbLevels.Enabled = False Then Exit Sub
+    Set Me.Level = GAME.Levels( _
+        cmbLevels.ItemData(cmbLevels.ListIndex) _
+    )
+End Sub
+
 'EVENT vwpLevel MOUSEOUT : Mouse has gone out of the level viewport _
  ======================================================================================
 Private Sub vwpLevel_MouseOut()
@@ -732,10 +756,6 @@ Private Sub vwpBlocks_MouseUp(Button As MouseButtonConstants, Shift As ShiftCons
             Let Me.BlockSelectRight = Index
         End If
     End If
-End Sub
-
-Private Sub Command3_Click()
-    Call ROM.Export(Run.Path & "MaSS1VE.sms", 0)
 End Sub
 
 '/// PROPERTIES ///////////////////////////////////////////////////////////////////////
@@ -776,8 +796,14 @@ Public Property Set Level(ByVal TheLevel As S1Level)
     
     'Is the selected level valid?
     If Not My_Level Is Nothing Then
-        'Set the level title
-        Let Me.lblTitle.Caption = My_Level.Title
+        'When the level form loads, the level select combobox text is blank, we need _
+         to set it but doing so would trigger the `Click` event, causing an infinite _
+         loop of trying to load the level
+        If Me.cmbLevels.Text = "" Then
+            Let Me.cmbLevels.Enabled = False
+            Let Me.cmbLevels.Text = My_Level.Title
+            Let Me.cmbLevels.Enabled = True
+        End If
         
         'Cache the block mappings for speedy painting of the level
         Call CacheBlocks
@@ -864,6 +890,44 @@ Public Property Set Level(ByVal TheLevel As S1Level)
                 Index:=i _
             )
         Next i
+        
+        'Set the app colour scheme: _
+         ------------------------------------------------------------------------------
+        Dim ActiveColour As Long, InertColour As Long
+        Dim HSLColour As HSL
+        
+        'For now this is hardcoded until such a time we allow changing of level themes
+        Select Case cmbLevels.ItemData(cmbLevels.ListIndex)
+            'Green Hill Zone (+End Sequence), Bridge
+            Case 0 To 5, 18: Let ActiveColour = blu.ActiveColour
+            'Jungle
+            Case 6 To 8: Let ActiveColour = &H5000&
+            'Labyrinth
+            Case 9 To 10: Let ActiveColour = &HAFFF&
+            'Sky Base Act 1
+            Case 11: Let ActiveColour = &H50AF00
+            'Sky Base Act 2 including Emerald Maze / Ballhog Area
+            Case 12 To 14, 20 To 25: Let ActiveColour = &HAFAF50
+            Case 15 To 16: Let ActiveColour = &H500000
+            'Sky Base Act 2 / 3 Interior
+            Case 17, 26 To 27: Let ActiveColour = &HFFAF50
+            'Special stages
+            Case 28 To 35: Let ActiveColour = &H5000FF
+        End Select
+        
+        'Calculate the inert text colour from the main active colour
+        Let HSLColour = Lib.RGBToHSL(ActiveColour)
+        'Use light text on dark background and dark text on light background
+        If HSLColour.Luminance < 100 Then Let HSLColour.Luminance = 85
+        'Duller colour
+        Let HSLColour.Saturation = 27
+        
+        Let InertColour = Lib.HSLToRGB( _
+            HSLColour.Hue, HSLColour.Saturation, HSLColour.Luminance _
+        )
+         
+        Call mdiMain.SetTheme(, , ActiveColour, InertColour)
+        Call Me.SetTheme(, , ActiveColour, InertColour)
     End If
 End Property
 
