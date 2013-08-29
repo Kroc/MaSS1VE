@@ -132,7 +132,7 @@ End Function
  ======================================================================================
 '<www.vbforums.com/showthread.php?473677-VB6-Sorting-algorithms-%28sort-array-sorting-arrays%29&p=2909248#post2909248>
 Public Sub CombSort(ByRef pvarArray As Variant)
-    Const ShrinkFactor = 1.3
+    Const ShrinkFactor As Single = 1.3
     Dim lngGap As Long
     Dim i As Long
     Dim iMin As Long

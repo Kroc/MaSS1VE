@@ -390,8 +390,8 @@ Option Explicit
 
 'A couple of look-up tables for, perhaps, no speed gain, but it's good practice. _
  We'll populate these in `Form_Initialize`
-Dim x32(0 To 256) As Long               'Multiples of 32 (for blocks)
-Dim x8(0 To 256) As Long                'Multiples of 8 (for tiles)
+Private x32(0 To 256) As Long               'Multiples of 32 (for blocks)
+Private x8(0 To 256) As Long                'Multiples of 8 (for tiles)
 
 'To speed things up we cache lots of calculations that don't change every frame
 Private Type CACHEVARS
@@ -422,7 +422,7 @@ Private Type CACHEVARS
      this is used so we know how to set the scrollbar
     BlockListHeight As Long
 End Type
-Dim c As CACHEVARS
+Private c As CACHEVARS
 
 'How wide the side-pane is measured in blocks
 Private Const PaneBlockWidth As Long = 7
@@ -431,12 +431,12 @@ Private Const PaneBlockWidth As Long = 7
  --------------------------------------------------------------------------------------
 'Cache the block mappings so we can repaint the level quickly _
  (it's far too slow to repaint tile-by-tile)
-Dim BlocksCache As bluImage
+Private BlocksCache As bluImage
 'An image of the water line across the width of the whole level _
  (this is quite slow to paint every time)
-Dim WaterLineCache As bluImage
+Private WaterLineCache As bluImage
 'This is a cache object to hold the sprites once constructed out of the tilesets
-Dim Sprites As S1Sprites
+Private Sprites As S1Sprites
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 

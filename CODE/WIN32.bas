@@ -672,11 +672,11 @@ End Enum
 '--------------------------------------------------------------------------------------
 'Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
 'Private Declare Function RedrawWindow Lib "user32" (ByVal hWnd As Long, lprcUpdate As RECT, ByVal hrgnUpdate As Long, ByVal fuRedraw As Long) As Long
-'Private Const WM_SETREDRAW = &HB
-'Private Const RDW_INVALIDATE = &H1
-'Private Const RDW_INTERNALPAINT = &H2
-'Private Const RDW_UPDATENOW = &H100
-'Private Const RDW_ALLCHILDREN = &H80
+'Private Const WM_SETREDRAW as Long = &HB
+'Private Const RDW_INVALIDATE as Long = &H1
+'Private Const RDW_INTERNALPAINT as Long = &H2
+'Private Const RDW_UPDATENOW as Long = &H100
+'Private Const RDW_ALLCHILDREN as Long = &H80
 '
 'Private Declare Function InvalidateRect Lib "user32" (ByVal hWnd As Long, lpRect As Any, ByVal bErase As Long) As Long
 '

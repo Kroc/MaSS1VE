@@ -31,21 +31,21 @@ Private BIN As BinaryFile
 
 'Where in the ROM the level pointers begin. the level headers begin afterwards, as _
  given by the destination of the first pointer
-Private Const ROM_LEVEL_POINTERS = &H15580
+Private Const ROM_LEVEL_POINTERS As Long = &H15580
 
 'Floor Layout: _
  --------------------------------------------------------------------------------------
 'The maximum number of bytes the level ("floor") layout data can occupy:
 'This begins at $16DEA, and in an original ROM ends at $1FBA1 with free space until _
  $1FFFF, providing 1'119 bytes for expansion
-Private Const ROM_FLOOR_SPACE = 37398
+Private Const ROM_FLOOR_SPACE As Long = 37398
 
 'Where in the ROM the level layout is relative to (this must be due to bank-switching)
-Private Const ROM_FLOORDATA = &H14000
+Private Const ROM_FLOORDATA As Long = &H14000
 'The actual location where layout data begins
-Private Const ROM_FLOORDATA_ABS = &H16DEA
+Private Const ROM_FLOORDATA_ABS As Long = &H16DEA
 'Pointers to layout data are relative from the beginning of the bank (#2DEA+)
-Private Const ROM_FLOORDATA_REL = ROM_FLOORDATA_ABS - ROM_FLOORDATA
+Private Const ROM_FLOORDATA_REL As Long = ROM_FLOORDATA_ABS - ROM_FLOORDATA
 
 'Block Mappings: _
  --------------------------------------------------------------------------------------
@@ -58,10 +58,10 @@ Private Const ROM_FLOORDATA_REL = ROM_FLOORDATA_ABS - ROM_FLOORDATA
 Private BlockMappings As New Collection
 
 'Where in the ROM the block mappings are found
-Private Const ROM_BLOCKMAPPINGS = &H10000
+Private Const ROM_BLOCKMAPPINGS As Long = &H10000
 
 'A relative pointer to the end of the block mappings in an original ROM
-Private Const ROM_BLOCKMAPPINGS_END = &H4CA0&
+Private Const ROM_BLOCKMAPPINGS_END As Long = &H4CA0&
 
 'ROM Level Art / Sprite Art Declarations: _
  --------------------------------------------------------------------------------------
@@ -70,22 +70,22 @@ Private Const ROM_BLOCKMAPPINGS_END = &H4CA0&
  contain a pointer that specifies that the level art can be found x number of bytes _
  from THIS address. In reality the level art data begins at $32FE6. _
  I imagine this has something to do with bank switching
-Private Const ROM_LEVELART = &H30000
+Private Const ROM_LEVELART As Long = &H30000
 'As with level art, sprite art data is a pointer
-Private Const ROM_SPRITEART = &H24000
+Private Const ROM_SPRITEART As Long = &H24000
 
 'ROM Palette Declarations: _
  --------------------------------------------------------------------------------------
 
 'Where in the ROM the palette pointers begin. these point to the 32-colour palettes _
  used for each tileset (Green Hill, Bridge, Jungle &c.)
-Private Const ROM_PALETTE_POINTERS = &H627C
+Private Const ROM_PALETTE_POINTERS As Long = &H627C
 
 'Object Layout Declarations: _
  --------------------------------------------------------------------------------------
 
 'The base address the object layout pointers are relative to
-Private Const ROM_OBJECTLAYOUT = &H15580
+Private Const ROM_OBJECTLAYOUT As Long = &H15580
 
 'The different allowable types of objects
 Public Enum OBJECT_TYPE
@@ -179,18 +179,18 @@ End Type
 
 'Misc. Declerations: _
  --------------------------------------------------------------------------------------
-Private Const ROM_UWPALETTE = &H24B             'The underwater palette
+Private Const ROM_UWPALETTE As Long = &H24B         'Underwater palette
 
-Private Const ROM_SONICART = &H20000            'Location of Sonic sprites
-Private Const ROM_POWERUPSART = &H15180         'Location of power-up sprites
-Private Const ROM_RINGART = &H2FD70             'Location of ring animation
-Private Const ROM_HUDART = &H2F92E              'Location of HUD art
+Private Const ROM_SONICART As Long = &H20000        'Sonic sprites
+Private Const ROM_POWERUPSART As Long = &H15180     'Power-up sprites
+Private Const ROM_RINGART As Long = &H2FD70         'Ring animation
+Private Const ROM_HUDART As Long = &H2F92E          'HUD art
 
-Private Const ROM_ENDSIGN_PALETTE = &H626C      'Location of palette for the end-sign
-Private Const ROM_ENDSIGN_ART = &H28294         'Location of end-sign sprite
+Private Const ROM_ENDSIGN_PALETTE As Long = &H626C  'Palette for the end-sign
+Private Const ROM_ENDSIGN_ART As Long = &H28294     'End-sign sprite
 
-Private Const ROM_BOSS_PALETTE = &H731C         'Location of palette for boss sprites
-Private Const ROM_BOSS_ART = &H2EEB1            'Location of boss sprites
+Private Const ROM_BOSS_PALETTE As Long = &H731C     'Palette for boss sprites
+Private Const ROM_BOSS_ART As Long = &H2EEB1        'Boss sprites
 
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////

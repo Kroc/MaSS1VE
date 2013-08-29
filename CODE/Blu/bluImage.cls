@@ -304,11 +304,11 @@ Public IsTransparent As Boolean         'Paint the background transparent?
 
 'We'll keep hold of the structure used to create the bitmap as this can be used to _
  get and set the data as a byte stream
-Dim BITMAP As BITMAPINFO
+Private BITMAP As BITMAPINFO
 
 'When we select the DIB into the DC, we need to keep hold of (and restore) the object _
  that might already be in the DC
-Dim hndOldDIB As Long
+Private hndOldDIB As Long
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 

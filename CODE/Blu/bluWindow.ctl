@@ -149,7 +149,7 @@ Private Declare Function user32_IsZoomed Lib "user32" Alias "IsZoomed" ( _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms633545%28v=vs.85%29.aspx>
 Private Declare Function user32_SetWindowPos Lib "user32" Alias "SetWindowPos" ( _
     ByVal hndWindow As Long, _
-    ByVal hndInsertAfter As HWND, _
+    ByVal hndInsertAfter As hWnd, _
     ByVal Left As Long, _
     ByVal Top As Long, _
     ByVal Width As Long, _
@@ -157,7 +157,7 @@ Private Declare Function user32_SetWindowPos Lib "user32" Alias "SetWindowPos" (
     ByVal Flags As SWP _
 ) As BOOL
 
-Private Enum HWND
+Private Enum hWnd
     HWND_TOP = 0                    'Move window to the top
     HWND_BOTTOM = 1                 'Move window to the bottom
     HWND_TOPMOST = -1               'Keep the window always on top
@@ -428,22 +428,22 @@ Private My_AlwaysOnTop As Boolean
 '/// PRIVATE DEFS /////////////////////////////////////////////////////////////////////
 
 'Our subclassing object
-Dim Magic As bluMagic
+Private Magic As bluMagic
 
 'We need to refer to the parent form's handle a lot and unbound lookups are slow
-Dim hndParentForm As Long
+Private hndParentForm As Long
 
 'If the form was borderless to begin with. In order to give an already borderless _
  form a shadow we have to add a border before we run our subclassing to remove it. _
  We need to remember if the form was originally borderless so that if DWM switches _
  off whilst the program is running (Theme changed to Aero Basic / High Contrast) _
  we don't want to add the temporary border back on
-Dim WasBorderless As Boolean
+Private WasBorderless As Boolean
 
 'Here we'll store the thickness of the window borders before we remove them, _
  if they have to be added back on during runtime (i.e. DWM switches off), we need to _
  resize and reposition the form to account for the borders we removed earlier
-Dim Borders As RECT
+Private Borders As RECT
 
 'A list of window handles that are also subclassed, which will act as fake title bars _
  (for moving the form) or fake sizer boxes (for resizing the form)
@@ -472,7 +472,7 @@ Event Deactivate()
 'CONTROL InitProperties : When a new instance of bluWindow gets plopped on a form _
  ======================================================================================
 Private Sub UserControl_InitProperties()
-    Let hndParentForm = GetUltimateParent().HWND
+    Let hndParentForm = GetUltimateParent().hWnd
     Let My_ChromaKey = &H123456
 End Sub
 
@@ -480,7 +480,7 @@ End Sub
  ======================================================================================
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     'Get the handle to the parent form, even if the control is in a container
-    Let hndParentForm = GetUltimateParent().HWND
+    Let hndParentForm = GetUltimateParent().hWnd
     
     'Proceed only if code is running (don't run in IDE's design mode)
     If blu.UserMode = True Then
@@ -686,13 +686,13 @@ End Property
 'RegisterMoveHandler : Set a control to act as a title bar, moving the form _
  ======================================================================================
 Public Sub RegisterMoveHandler(ByVal Target As Object)
-    Call RegisterNonClientHandler(Target.HWND, MoveHandler)
+    Call RegisterNonClientHandler(Target.hWnd, MoveHandler)
 End Sub
 
 'RegisterSizeHandler : Set a control to act as a corner sizing box _
  ======================================================================================
 Public Sub RegisterSizeHandler(ByVal Target As Object)
-    Call RegisterNonClientHandler(Target.HWND, SizeHandler)
+    Call RegisterNonClientHandler(Target.hWnd, SizeHandler)
 End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////

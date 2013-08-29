@@ -196,10 +196,10 @@ Private Declare Function user32_UpdateWindow Lib "user32" Alias "UpdateWindow" (
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
 'We'll need to subclass the control to listen into the scroll bar events
-Dim Magic As bluMagic
+Private Magic As bluMagic
 
 'This will track mouse in / out and mouse wheel events
-Dim WithEvents MouseEvents As bluMouseEvents
+Private WithEvents MouseEvents As bluMouseEvents
 Attribute MouseEvents.VB_VarHelpID = -1
 
 'bluViewport allows you to manage multiple layers for the whole image to minimise _
@@ -229,7 +229,7 @@ Private Type CACHEVARS
      the viewport, the destination size will be less than the viewport width / height
     Dst As SIZE
 End Type
-Dim c As CACHEVARS
+Private c As CACHEVARS
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 

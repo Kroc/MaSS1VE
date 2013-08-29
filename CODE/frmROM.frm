@@ -179,10 +179,10 @@ Option Explicit
 
 'When the user drags a ROM over the form we pre-verify that is indeed a Sonic 1 ROM _
  before they drop it so as to use responsive UI
-Dim ROMVerified As Boolean
+Private ROMVerified As Boolean
 
 'What set of UI to show depending on actions taken
-Dim My_UIState As frmROM_UIState
+Private My_UIState As frmROM_UIState
 Private Enum frmROM_UIState
     Default = 0                 'Before drag and when drag leaves the form
     ROMGood = 1                 'Dragging over the form, the ROM is verified
@@ -190,7 +190,7 @@ Private Enum frmROM_UIState
 End Enum
 
 'Where the Window was positioned before shaking
-Dim FormLeft As Long
+Private FormLeft As Long
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
