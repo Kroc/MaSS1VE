@@ -61,8 +61,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   5
          Top             =   0
          Width           =   480
-         _extentx        =   847
-         _extenty        =   847
+         _ExtentX        =   847
+         _ExtentY        =   847
       End
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
@@ -70,18 +70,19 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   4
          Top             =   495
          Width           =   1200
-         _extentx        =   2117
-         _extenty        =   873
+         _ExtentX        =   2117
+         _ExtentY        =   873
       End
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
          Left            =   14160
          TabIndex        =   3
          Top             =   495
+         Visible         =   0   'False
          Width           =   975
-         _extentx        =   1720
-         _extenty        =   873
-         caption         =   "HELP"
+         _ExtentX        =   1720
+         _ExtentY        =   873
+         Caption         =   "HELP"
       End
       Begin MaSS1VE.bluControlBox cbxMin 
          Height          =   480
@@ -89,9 +90,9 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   6
          Top             =   0
          Width           =   480
-         _extentx        =   847
-         _extenty        =   847
-         kind            =   1
+         _ExtentX        =   847
+         _ExtentY        =   847
+         Kind            =   1
       End
       Begin MaSS1VE.bluControlBox cbxMax 
          Height          =   480
@@ -99,38 +100,39 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   7
          Top             =   0
          Width           =   480
-         _extentx        =   847
-         _extenty        =   847
-         kind            =   2
+         _ExtentX        =   847
+         _ExtentY        =   847
+         Kind            =   2
       End
       Begin MaSS1VE.bluLabel lblMaSS1VE 
          Height          =   495
          Left            =   3840
          Top             =   0
          Width           =   4455
-         _extentx        =   7858
-         _extenty        =   873
-         caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
-         enabled         =   0   'False
+         _ExtentX        =   7858
+         _ExtentY        =   873
+         Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
+         Enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblGameTitle 
          Height          =   480
          Left            =   360
          Top             =   0
+         Visible         =   0   'False
          Width           =   3135
-         _extentx        =   5530
-         _extenty        =   847
-         caption         =   "Sonic the Hedgehog"
+         _ExtentX        =   5530
+         _ExtentY        =   847
+         Caption         =   "Sonic the Hedgehog"
       End
       Begin MaSS1VE.bluLabel lblTip 
          Height          =   495
          Left            =   10320
          Top             =   495
          Width           =   3855
-         _extentx        =   6800
-         _extenty        =   873
-         caption         =   "The quick brown fox jumps over the lazy dog"
-         enabled         =   0   'False
+         _ExtentX        =   6800
+         _ExtentY        =   873
+         Caption         =   "The quick brown fox jumps over the lazy dog"
+         Enabled         =   0   'False
       End
       Begin VB.Image imgIcon 
          Appearance      =   0  'Flat
@@ -138,14 +140,15 @@ Begin VB.MDIForm mdiMain
          Left            =   120
          Picture         =   "mdiMain.frx":0000
          Top             =   120
+         Visible         =   0   'False
          Width           =   240
       End
    End
    Begin MaSS1VE.bluWindow bluWindow 
       Left            =   120
       Top             =   1200
-      _extentx        =   847
-      _extenty        =   847
+      _ExtentX        =   847
+      _ExtentY        =   847
    End
 End
 Attribute VB_Name = "mdiMain"
@@ -267,7 +270,10 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
     Select Case Index
         Case 0 'LEVELS ----------------------------------------------------------------
             Load frmLevel
-            Let frmLevel.WindowState = vbMaximized
+            'The level editor will set the app colours since each level has a _
+             different colour scheme
+            Call frmLevel.SetTheme
+            Let frmLevel.WindowState = VBRUN.FormWindowStateConstants.vbMaximized
             Call frmLevel.Show
             
             'Don't keep the PLAY tab around
@@ -277,12 +283,16 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
             'The PLAY zone exports the project to a Master System ROM, this happens _
              automatically upon loading the form
             Load frmPlay
-            Let frmPlay.WindowState = vbMaximized
+            'Set the colour scheme to default, this will ensure that when changing _
+             from the level editor the tab colours won't mismatch
+            Call Me.SetTheme
+            Let frmPlay.WindowState = VBRUN.FormWindowStateConstants.vbMaximized
             Call frmPlay.Show
+            
     End Select
 End Sub
 
-'EVENT btnHelp CLICK _
+'EVENT btnHelp CLICK : Hide and show the help pane _
  ======================================================================================
 Private Sub btnHelp_Click()
     If Me.picHelp.Visible = False Then

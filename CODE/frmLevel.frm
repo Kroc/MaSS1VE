@@ -106,6 +106,7 @@ Begin VB.Form frmLevel
          Left            =   12480
          TabIndex        =   4
          Top             =   0
+         Visible         =   0   'False
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   847
@@ -117,6 +118,7 @@ Begin VB.Form frmLevel
          Left            =   12960
          TabIndex        =   5
          Top             =   0
+         Visible         =   0   'False
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   847
@@ -140,6 +142,7 @@ Begin VB.Form frmLevel
          Left            =   12000
          TabIndex        =   7
          Top             =   0
+         Visible         =   0   'False
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   847
@@ -175,6 +178,7 @@ Begin VB.Form frmLevel
          Left            =   13680
          TabIndex        =   14
          Top             =   0
+         Visible         =   0   'False
          Width           =   975
          _ExtentX        =   1720
          _ExtentY        =   847
@@ -233,6 +237,7 @@ Begin VB.Form frmLevel
          Height          =   480
          Left            =   11280
          Top             =   0
+         Visible         =   0   'False
          Width           =   735
          _ExtentX        =   1296
          _ExtentY        =   847
@@ -244,6 +249,7 @@ Begin VB.Form frmLevel
          BorderColor     =   &H00FFAF00&
          BorderStyle     =   3  'Dot
          Index           =   3
+         Visible         =   0   'False
          X1              =   13560
          X2              =   13560
          Y1              =   90
@@ -469,11 +475,11 @@ Private Sub Form_Load()
     'Configure the tabstrip _
      (I haven't coded in proper property storage for it yet)
     With Me.bluTab
-        .TabCount = 4
+        .TabCount = 1
         .Caption(0) = "Layout"
-        .Caption(1) = "Objects"
-        .Caption(2) = "Palette"
-        .Caption(3) = "Properties"
+'        .Caption(1) = "Objects"
+'        .Caption(2) = "Palette"
+'        .Caption(3) = "Properties"
         .CurrentTab = 0
     End With
     
@@ -891,43 +897,8 @@ Public Property Set Level(ByVal TheLevel As S1Level)
             )
         Next i
         
-        'Set the app colour scheme: _
-         ------------------------------------------------------------------------------
-        Dim ActiveColour As Long, InertColour As Long
-        Dim HSLColour As HSL
-        
-        'For now this is hardcoded until such a time we allow changing of level themes
-        Select Case cmbLevels.ItemData(cmbLevels.ListIndex)
-            'Green Hill Zone (+End Sequence), Bridge
-            Case 0 To 5, 18: Let ActiveColour = blu.ActiveColour
-            'Jungle
-            Case 6 To 8: Let ActiveColour = &H5000&
-            'Labyrinth
-            Case 9 To 10: Let ActiveColour = &HAFFF&
-            'Sky Base Act 1
-            Case 11: Let ActiveColour = &H50AF00
-            'Sky Base Act 2 including Emerald Maze / Ballhog Area
-            Case 12 To 14, 20 To 25: Let ActiveColour = &HAFAF50
-            Case 15 To 16: Let ActiveColour = &H500000
-            'Sky Base Act 2 / 3 Interior
-            Case 17, 26 To 27: Let ActiveColour = &HFFAF50
-            'Special stages
-            Case 28 To 35: Let ActiveColour = &H5000FF
-        End Select
-        
-        'Calculate the inert text colour from the main active colour
-        Let HSLColour = Lib.RGBToHSL(ActiveColour)
-        'Use light text on dark background and dark text on light background
-        If HSLColour.Luminance < 100 Then Let HSLColour.Luminance = 85
-        'Duller colour
-        Let HSLColour.Saturation = 27
-        
-        Let InertColour = Lib.HSLToRGB( _
-            HSLColour.Hue, HSLColour.Saturation, HSLColour.Luminance _
-        )
-         
-        Call mdiMain.SetTheme(, , ActiveColour, InertColour)
-        Call Me.SetTheme(, , ActiveColour, InertColour)
+        'Set the app colour scheme
+        Call Me.SetTheme
     End If
 End Property
 
@@ -949,27 +920,58 @@ End Property
 
 'SetTheme : Change the colour scheme of the form controls _
  ======================================================================================
-Public Sub SetTheme( _
-    Optional ByVal BaseColour As OLE_COLOR = blu.BaseColour, _
-    Optional ByVal TextColour As OLE_COLOR = blu.TextColour, _
-    Optional ByVal ActiveColour As OLE_COLOR = blu.ActiveColour, _
-    Optional ByVal InertColour As OLE_COLOR = blu.InertColour _
-)
-    Dim i As Long
+Public Sub SetTheme()
+    
+    Dim ActiveColour As Long, InertColour As Long
+    Dim HSLColour As HSL
+    
+    'For now this is hardcoded until such a time we allow changing of level themes
+    Select Case cmbLevels.ItemData(cmbLevels.ListIndex)
+        'Green Hill Zone (+End Sequence), Bridge
+        Case 0 To 5, 18: Let ActiveColour = blu.ActiveColour
+        'Jungle
+        Case 6 To 8: Let ActiveColour = &H5000&
+        'Labyrinth
+        Case 9 To 10: Let ActiveColour = &HAFFF&
+        'Sky Base Act 1
+        Case 11: Let ActiveColour = &H50AF00
+        'Sky Base Act 2 including Emerald Maze / Ballhog Area
+        Case 12 To 14, 20 To 25: Let ActiveColour = &HAFAF50
+        Case 15 To 16: Let ActiveColour = &H500000
+        'Sky Base Act 2 / 3 Interior
+        Case 17, 26 To 27: Let ActiveColour = &HFFAF50
+        'Special stages
+        Case 28 To 35: Let ActiveColour = &H5000FF
+    End Select
+    
+    'Calculate the inert text colour from the main active colour
+    Let HSLColour = Lib.RGBToHSL(ActiveColour)
+    'Use light text on dark background and dark text on light background
+    If HSLColour.Luminance < 100 Then Let HSLColour.Luminance = 85
+    'Duller colour
+    Let HSLColour.Saturation = 27
+    
+    Let InertColour = Lib.HSLToRGB( _
+        HSLColour.Hue, HSLColour.Saturation, HSLColour.Luminance _
+    )
+    
+    Call mdiMain.SetTheme(, , ActiveColour, InertColour)
     
     'Deal with all blu controls automatically
     Call blu.ApplyColoursToForm( _
-        Me, BaseColour, TextColour, ActiveColour, InertColour _
+        Me, blu.BaseColour, blu.TextColour, ActiveColour, InertColour _
     )
     
     'Some frmLevel specifics
     Let Me.picToolbar.BackColor = ActiveColour
+    Let Me.picBlocksToolbar.BackColor = ActiveColour
+    
+    Dim i As Long
     For i = 0 To Me.lineSplit.Count - 1
         Let Me.lineSplit(i).BorderColor = ActiveColour
         'For some reason, this is necessary otherwise the line can randomly disappear!
         Call Me.lineSplit(i).Refresh
     Next i
-    Let Me.picBlocksToolbar.BackColor = ActiveColour
     
     'Update the ring counter
     Let Me.picRings.BackColor = ActiveColour

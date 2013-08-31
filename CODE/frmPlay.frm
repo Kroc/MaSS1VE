@@ -147,7 +147,7 @@ Option Explicit
 
 Private Sub Form_Activate()
     'TODO: Use temp file for this
-    Call ROM.Export(Run.Path & "Sonic_the_hedgehog.sms")
+'    Call ROM.Export(Run.Path & "Sonic_the_hedgehog.sms")
     Let lblGenerating.Visible = False
     Let fraROM.Visible = True
 End Sub
