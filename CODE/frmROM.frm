@@ -25,10 +25,10 @@ Begin VB.Form frmROM
       TabIndex        =   5
       Top             =   0
       Width           =   480
-      _extentx        =   847
-      _extenty        =   847
-      style           =   1
-      kind            =   1
+      _ExtentX        =   847
+      _ExtentY        =   847
+      Style           =   1
+      Kind            =   1
    End
    Begin MaSS1VE.bluControlBox cbxClose 
       Height          =   480
@@ -36,16 +36,16 @@ Begin VB.Form frmROM
       TabIndex        =   4
       Top             =   0
       Width           =   480
-      _extentx        =   847
-      _extenty        =   847
-      style           =   1
+      _ExtentX        =   847
+      _ExtentY        =   847
+      Style           =   1
    End
    Begin MaSS1VE.bluWindow bluWindow1 
       Left            =   6360
       Top             =   5280
-      _extentx        =   847
-      _extenty        =   847
-      alwaysontop     =   -1  'True
+      _ExtentX        =   847
+      _ExtentY        =   847
+      AlwaysOnTop     =   -1  'True
    End
    Begin VB.Image imgDrop 
       Appearance      =   0  'Flat
@@ -175,19 +175,23 @@ Option Explicit
  (not required for compatibility AFAIK) and you try running MaSS1VE from the IDE _
  <social.msdn.microsoft.com/Forums/windowsdesktop/en-US/0ccf84fd-b78d-45b3-9b79-7366003cb19d/wmdropfiles-in-an-elevated-application-administrator>
 
+'/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
+
+'What set of UI to show depending on actions taken
+Private My_UIState As frmROM_UIState
+
+Public Enum frmROM_UIState
+    Default = 0                 'Before drag and when drag leaves the form
+    ROMGood = 1                 'Dragging over the form, the ROM is verified
+    ROMBad = 2                  'Dragging over the form, not a file or not a ROM
+    Importing = 3               'Currently importing the ROM
+End Enum
+
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
 'When the user drags a ROM over the form we pre-verify that is indeed a Sonic 1 ROM _
  before they drop it so as to use responsive UI
 Private ROMVerified As Boolean
-
-'What set of UI to show depending on actions taken
-Private My_UIState As frmROM_UIState
-Private Enum frmROM_UIState
-    Default = 0                 'Before drag and when drag leaves the form
-    ROMGood = 1                 'Dragging over the form, the ROM is verified
-    ROMBad = 2                  'Dragging over the form, not a file or not a ROM
-End Enum
 
 'Where the Window was positioned before shaking
 Private FormLeft As Long
@@ -226,17 +230,9 @@ Private Sub imgDrop_OLEDragDrop( _
     
     'Change the UI for importing the ROM: _
      ----------------------------------------------------------------------------------
-    'Disable the drag and drop
-    Let imgDrop.Enabled = False
-    'Change the message
-    Let Me.lblStatus = "Importing Sonic 1 ROM..."
-    'Hide the control box buttons
-    Let Me.cbxClose.Visible = False
-    Let Me.cbxMin.Visible = False
+    Let UIState = Importing
     'Clear the copy cursor otherwise it'll hang on screen
     Let Effect = vbDropEffectNone
-    'Set the busy cursor instead
-    Let Me.MousePointer = VBRUN.MousePointerConstants.vbHourglass
     'Refresh the screen
     DoEvents
     
@@ -377,12 +373,24 @@ Private Sub Shake_Timer()
     Let Me.Left = FormLeft + IIf(Me.Shake.Tag Mod 2 = 0, 30, -30)
 End Sub
 
-'/// PRIVATE PROPERTIES ///////////////////////////////////////////////////////////////
+'/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
 
 'PROPERTY UIState : Manage the UI changes between drag/drop actions _
  ======================================================================================
-Private Property Get UIState() As frmROM_UIState: Let UIState = My_UIState: End Property
-Private Property Let UIState(ByVal State As frmROM_UIState)
+Public Property Get UIState() As frmROM_UIState: Let UIState = My_UIState: End Property
+Public Property Let UIState(ByVal State As frmROM_UIState)
+    
+    'During importing various elements are hidden / disabled
+    Let Me.imgDrop.Enabled = (State <> Importing)       'Enable/Disable Drag-and-drop
+    Let Me.cbxClose.Visible = (State <> Importing)      'Show/Hide close button
+    Let Me.cbxMin.Visible = (State <> Importing)        'Show/Hide minimise button
+    'During importing you get the hourglass cursor
+    Let Me.MousePointer = IIf( _
+        State = Importing, _
+        VBRUN.MousePointerConstants.vbHourglass, _
+        VBRUN.MousePointerConstants.vbDefault _
+    )
+    
     Select Case State
         Case frmROM_UIState.Default:
             Let Me.lblStatus.Caption = "Drag & Drop a Sonic 1 ROM to begin"
@@ -394,7 +402,10 @@ Private Property Let UIState(ByVal State As frmROM_UIState)
             
         Case frmROM_UIState.ROMGood:
              Let Me.lblStatus.Caption = "ROM OK. Drop to begin"
-             
+            
+        Case frmROM_UIState.Importing:
+            Let Me.lblStatus = "Importing Sonic 1 ROM..."
+    
     End Select
     
     Let My_UIState = State

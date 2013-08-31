@@ -61,10 +61,17 @@ Private Sub Main()
     
     Else
         'We have the ROM, we can start MaSS1VE proper
+        'NOTE: At the moment we don't have UI for starting / loading projects, _
+         so we will utilise the ROM form for now
+        Load frmROM
+        Let frmROM.UIState = Importing
+        Call frmROM.Show
+        
         Call ROM.Import
         Load mdiMain
         Call mdiMain.Show
         
+        Unload frmROM
     End If
 End Sub
 
