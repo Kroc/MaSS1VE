@@ -35,8 +35,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), WIN32.bas
-'Last Updated       20-AUG-13
-'Last Update        Moved the text drawing to a shared function in blu.bas
+'Last Updated       31-AUG-13
+'Last Update        Colour not being set on new controls
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 
@@ -79,6 +79,8 @@ End Sub
 'CONTROL InitProperties _
  ======================================================================================
 Private Sub UserControl_InitProperties()
+    Let Me.BaseColour = blu.BaseColour
+    Let Me.ActiveColour = blu.ActiveColour
     Let Me.Caption = "bluButton"
     Let Me.Orientation = bluORIENTATION.Horizontal
     Let Me.Style = bluSTYLE.Normal
