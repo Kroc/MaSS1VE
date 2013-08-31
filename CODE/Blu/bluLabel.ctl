@@ -28,8 +28,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       blu.bas, WIN32.bas
-'Last Updated       20-AUG-13
-'Last Update        Now Windowless!
+'Last Updated       31-AUG-13
+'Last Update        Ignore errors in `Paint` procedure as `hDC` might not be available
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 
@@ -75,6 +75,9 @@ Private Sub UserControl_Click(): RaiseEvent Click: End Sub
 'CONTROL Paint _
  ======================================================================================
 Private Sub UserControl_Paint()
+    'In some instances, the hDC may not be available to us
+    On Error Resume Next
+    
     'Select the background colour
     Call WIN32.gdi32_SetDCBrushColor( _
         UserControl.hDC, UserControl.BackColor _
