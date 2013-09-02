@@ -37,8 +37,8 @@ Option Explicit
 
 'Status             INCOMPLETE, DO NOT USE
 'Dependencies       blu.bas, Lib.bas, WIN32.bas
-'Last Updated       28-AUG-13
-'Last Update        Added `AlwaysOnTop` property
+'Last Updated       02-SEP-13
+'Last Update        Fixed bug with right border missing when maximised
 
 '--------------------------------------------------------------------------------------
 
@@ -762,7 +762,7 @@ Private Function GetNonClientSize() As RECT
         Let .Bottom = WIN32.GetSystemMetric(SM_CYSIZEFRAME)
         Let .Top = .Bottom + WIN32.GetSystemMetric(SM_CYCAPTION)
         Let .Left = WIN32.GetSystemMetric(SM_CXSIZEFRAME)
-        Let .Right = .Right
+        Let .Right = WIN32.GetSystemMetric(SM_CXSIZEFRAME)
     End With
     
 '    Debug.Print "Borders: Top " & GetNonClientSize.Top & _
@@ -1046,8 +1046,12 @@ Private Sub SubclassWindowProcedure( _
     '`WM_NCLBUTTONDOWN` : Left mouse button down in the non-client (border) area _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms645620%28v=vs.85%29.aspx>
     ElseIf Message = WM_NCLBUTTONDOWN Then '-------------------------------------------
-        'www.codeproject.com/script/Content/ViewAssociatedFile.aspx?rzp=%2FKB%2Fvbscript%2Flavolpecw32%2Flvcw32h.zip&zep=DLLclasses%2FclsCustomWindow.cls&obid=11916&obtid=2&ovid=4
-        'www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeId=62605&lngWId=1
+        'When sending the window message to fake clicking the title bar or size box _
+         Windows repositions the mouse! To stop this we combine the action (`SC_MOVE`) _
+         with the non-client area (`HTCAPTION`). _
+         This criticaly important discovery due to this page, and it's project: _
+         <www.codeproject.com/script/Content/ViewAssociatedFile.aspx?rzp=%2FKB%2Fvbscript%2Flavolpecw32%2Flvcw32h.zip&zep=DLLclasses%2FclsCustomWindow.cls&obid=11916&obtid=2&ovid=4> _
+         <www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeId=62605&lngWId=1>
         If wParam = HT.HTCAPTION Then
             Call user32_PostMessage(hndParentForm, WM_SYSCOMMAND, SC_MOVE Or HT.HTCAPTION, lParam)
         ElseIf wParam = HT.HTBOTTOMRIGHT Then
