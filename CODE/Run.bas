@@ -14,6 +14,15 @@ Option Explicit
 'Like `App.Path`, but the same place ("BUILD" folder) for MaSS1VE in IDE / compiled
 Public Path As String
 
+'/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
+
+'PROPERTY VersionString : A friendly version number displayed in some places _
+ ======================================================================================
+Public Property Get VersionString() As String
+    Let VersionString = _
+        "v" & App.Major & "." & App.Minor & "." & App.Revision & " pre-alpha"
+End Property
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'MAIN : It all starts here! _

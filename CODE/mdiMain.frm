@@ -124,6 +124,17 @@ Begin VB.MDIForm mdiMain
          Caption         =   "The quick brown fox jumps over the lazy dog"
          Enabled         =   0   'False
       End
+      Begin MaSS1VE.bluLabel lblVersion 
+         Height          =   480
+         Left            =   12000
+         Top             =   0
+         Width           =   1815
+         _ExtentX        =   3201
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "v0.0.0"
+         Enabled         =   0   'False
+      End
    End
    Begin MaSS1VE.bluWindow bluWindow 
       Left            =   120
@@ -154,10 +165,20 @@ Private LevelIndex As Byte
 'MDIFORM Load _
  ======================================================================================
 Private Sub MDIForm_Load()
-    Call Me.SetTheme
+    'Make it so that the window can be dragged via the top area
+    Call Me.bluWindow.RegisterMoveHandler(Me.toolbar)
     
+    'Set the version number label
+    Let Me.lblVersion.Caption = Run.VersionString
+    
+    'Clear the help tip message _
+     (shows contextual help when mousing over things)
     Call SetTip
     
+    'Apply colour scheme
+    Call Me.SetTheme
+    
+    'Configure the tab strip
     With Me.bluTab
         .Border = False
         .AutoSize = True
@@ -168,13 +189,12 @@ Private Sub MDIForm_Load()
         .CurrentTab = -1
     End With
     
-    Call Me.bluWindow.RegisterMoveHandler(Me.toolbar)
-    
     'If on a small screen, start up maximised (we need at least 1024x600)
     If Screen.Width \ Screen.TwipsPerPixelX <= 1024 Then
         Let mdiMain.WindowState = VBRUN.FormWindowStateConstants.vbMaximized
     End If
     
+    'Load the welcome form into the MDI window so the user has something to look at
     Load frmWelcome
     Call frmWelcome.Show
 End Sub
@@ -203,6 +223,10 @@ Private Sub MDIForm_Resize()
     Let Me.cbxClose.Left = FormWidth - Me.cbxClose.Width
     Let Me.cbxMax.Left = Me.cbxClose.Left - Me.cbxMax.Width
     Let Me.cbxMin.Left = Me.cbxMax.Left - Me.cbxMin.Width
+    Call Me.lblVersion.Move( _
+        Me.cbxMin.Left - Me.lblVersion.Width, 0, _
+        Me.lblVersion.Width, blu.Ypx(blu.Metric) _
+    )
     
     Let Me.bluTab.Height = blu.Ypx(blu.Metric)
     Let Me.bluTab.Top = Me.toolbar.Height - Me.bluTab.Height
@@ -301,4 +325,5 @@ Public Sub SetTheme( _
     'Specifics for this form
     Let Me.BackColor = ActiveColour
     Let Me.picHelpToolbar.BackColor = ActiveColour
+    Let Me.lblVersion.TextColour = &HD0D0D0
 End Sub

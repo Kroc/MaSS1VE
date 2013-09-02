@@ -17,7 +17,7 @@ Begin VB.Form frmROM
       Enabled         =   0   'False
       Interval        =   50
       Left            =   5880
-      Top             =   5280
+      Top             =   4680
    End
    Begin MaSS1VE.bluControlBox cbxMin 
       Height          =   480
@@ -42,7 +42,7 @@ Begin VB.Form frmROM
    End
    Begin MaSS1VE.bluWindow bluWindow1 
       Left            =   6360
-      Top             =   5280
+      Top             =   4680
       _ExtentX        =   847
       _ExtentY        =   847
       AlwaysOnTop     =   -1  'True
@@ -109,7 +109,7 @@ Begin VB.Form frmROM
       Left            =   240
       TabIndex        =   2
       Top             =   5400
-      Width           =   6465
+      Width           =   5385
    End
    Begin VB.Label Label2 
       Appearance      =   0  'Flat
@@ -155,6 +155,29 @@ Begin VB.Form frmROM
       Top             =   360
       Width           =   1635
    End
+   Begin VB.Label lblVersion 
+      Alignment       =   1  'Right Justify
+      Appearance      =   0  'Flat
+      AutoSize        =   -1  'True
+      BackColor       =   &H80000005&
+      BackStyle       =   0  'Transparent
+      Caption         =   "v0.0.0"
+      BeginProperty Font 
+         Name            =   "Arial"
+         Size            =   8.25
+         Charset         =   0
+         Weight          =   400
+         Underline       =   0   'False
+         Italic          =   0   'False
+         Strikethrough   =   0   'False
+      EndProperty
+      ForeColor       =   &H00FFEABA&
+      Height          =   210
+      Left            =   6240
+      TabIndex        =   6
+      Top             =   5400
+      Width           =   450
+   End
 End
 Attribute VB_Name = "frmROM"
 Attribute VB_GlobalNameSpace = False
@@ -189,6 +212,9 @@ End Enum
 
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
+'Track mouse in / out events
+Private WithEvents MouseEvents As bluMouseEvents
+
 'When the user drags a ROM over the form we pre-verify that is indeed a Sonic 1 ROM _
  before they drop it so as to use responsive UI
 Private ROMVerified As Boolean
@@ -201,8 +227,15 @@ Private FormLeft As Long
 'FORM Load _
  ======================================================================================
 Private Sub Form_Load()
+    'Attach the mouse tracking
+    Set MouseEvents = New bluMouseEvents
+    Call MouseEvents.Attach(Me.hWnd)
+    
     'Set the colour scheme
     Me.BackColor = blu.ActiveColour
+    'Version number label
+    Let Me.lblVersion.ForeColor = blu.InertColour
+    Let Me.lblVersion.Caption = Run.VersionString
     'Add the current year to the copyright message
     Let Me.lblCopy.Caption = Replace(Me.lblCopy.Caption, "#YEAR", Year(Now))
 End Sub
@@ -214,6 +247,13 @@ Private Sub Form_Resize()
      drag in / out events if the user drags over labels &c. (The Z-ordering of this _
      control is important, it's above all the other controls, except the control box)
     Call Me.imgDrop.Move(0, 0, Me.ScaleWidth, Me.ScaleHeight)
+End Sub
+
+'FORM Unload _
+ ======================================================================================
+Private Sub Form_Unload(Cancel As Integer)
+    'Detacth the mouse tracking
+    Set MouseEvents = Nothing
 End Sub
 
 'EVENT imgDrop OLEDRAGDROP : A file has been dropped on the form _
@@ -348,6 +388,7 @@ Private Sub imgDrop_OLEDragOver( _
             Let UIState = ROMBad
         Else
             'The user is dragging in something other than file(s), this shall not pass
+            Let Effect = vbDropEffectNone
             Let ROMVerified = False
             Let ROM.Path = vbNullString
             Let UIState = ROMBad
@@ -356,10 +397,23 @@ Private Sub imgDrop_OLEDragOver( _
     
     'If the drag leaves the form, reset the UI
     ElseIf State = VBRUN.DragOverConstants.vbLeave Then
-        Let ROMVerified = False
-        Let ROM.Path = vbNullString
-        Let UIState = Default
-        
+        'There's a _strange_ bug / bit of behaviour in that if the the `vbOver` state _
+         below is handled (i.e. we set the effect value) then when the user drops _
+         this state fires, but if there's no code below, it won't!!! What we want is _
+         that when a user drops an invalid file the UI warning remains until the _
+         user mouses out of the form. Therefore, we need to avoid resetting the UI _
+         here if the drop was invalid
+        If ROMVerified = True Then
+            Let ROMVerified = False
+            Let ROM.Path = vbNullString
+            Let UIState = Default
+        End If
+    
+    'During continuous mouse drag over, keep the drag icon set _
+     it will default to copy, but we want to show the "No" cursor for invalid drags
+    ElseIf State = VBRUN.DragOverConstants.vbOver Then
+        If ROMVerified = False Then Let Effect = vbDropEffectNone
+    
     End If
 End Sub
 
@@ -371,6 +425,14 @@ Private Sub Shake_Timer()
     If Me.Shake.Tag = 0 Then Let Shake.Enabled = False
     'Move the form backwards and forwards alternatively
     Let Me.Left = FormLeft + IIf(Me.Shake.Tag Mod 2 = 0, 30, -30)
+End Sub
+
+'EVENT MouseEvents MOUSEOUT _
+ ======================================================================================
+Private Sub MouseEvents_MouseOut()
+    'If something other than a valid ROM is dropped on the form the UI is changed to _
+     warn the user. We want to revert this once the mouse moves back out of the window
+    If UIState = ROMBad Then Let UIState = Default
 End Sub
 
 '/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
