@@ -99,20 +99,22 @@ Public Sub DrawText( _
     ByVal Text As String, _
     ByVal Colour As OLE_COLOR, _
     Optional ByVal Alignment As VBRUN.AlignmentConstants, _
-    Optional ByVal Orientation As bluORIENTATION = Horizontal _
+    Optional ByVal Orientation As bluORIENTATION = Horizontal, _
+    Optional ByVal FontName As String = "Arial", _
+    Optional ByVal FontSizePx As Long = 15 _
 )
     'Create and set the font: _
      ----------------------------------------------------------------------------------
     'Create the GDI font object that describes our font properties
     Dim hndFont As Long
     Let hndFont = WIN32.gdi32_CreateFont( _
-        Height:=15, Width:=0, _
+        Height:=FontSizePx, Width:=0, _
         Escapement:=0, Orientation:=0, _
         Weight:=FW_NORMAL, Italic:=API_FALSE, Underline:=API_FALSE, _
         StrikeOut:=API_FALSE, CharSet:=DEFAULT_CHARSET, _
         OutputPrecision:=OUT_DEFAULT_PRECIS, ClipPrecision:=CLIP_DEFAULT_PRECIS, _
         Quality:=DEFAULT_QUALITY, PitchAndFamily:=VARIABLE_PITCH Or FF_DONTCARE, _
-        Face:="Arial" _
+        Face:=FontName _
     )
 
     'Select the font (remembering the previous object selected to clean up later)
