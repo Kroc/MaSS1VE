@@ -639,22 +639,6 @@ Private Sub Form_Resize()
             Me.picToolbar.Top + Me.picToolbar.Height + Me.picStatusbar.Height _
         ) _
     )
-        
-    'Set the minimum size of the form: _
-     ----------------------------------------------------------------------------------
-    'TODO: This isn't finalised. Should be done on mdiMain rather than from MDI child
-    
-    Let mdiMain.bluWindow.MinWidth = ( _
-        Me.bluTab.Width + Me.picSidePane(0).Width + _
-        Me.picRings.Width + _
-        Me.lblZoom.Width + Me.btnZoom1.Width + Me.btnZoom2.Width + Me.btnZoomTV.Width + _
-        Me.btnShare.Width _
-    ) \ Screen.TwipsPerPixelX
-    
-    Let mdiMain.bluWindow.MinHeight = ( _
-        mdiMain.toolbar.Height + Me.bluTab.Top + Me.bluTab.Height + _
-        Me.picStatusbar.Height _
-    ) \ Screen.TwipsPerPixelY
 End Sub
 
 'FORM Unload _

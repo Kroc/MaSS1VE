@@ -165,6 +165,10 @@ Private LevelIndex As Byte
 'MDIFORM Load _
  ======================================================================================
 Private Sub MDIForm_Load()
+    'Set the minimum allowed size of the form
+    Let Me.bluWindow.MinWidth = 512
+    Let Me.bluWindow.MinHeight = 320
+    
     'Make it so that the window can be dragged via the top area
     Call Me.bluWindow.RegisterMoveHandler(Me.toolbar)
     
