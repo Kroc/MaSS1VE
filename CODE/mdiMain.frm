@@ -154,9 +154,6 @@ Private LevelIndex As Byte
 'MDIFORM Load _
  ======================================================================================
 Private Sub MDIForm_Load()
-    Dim StartTime As Single
-    Let StartTime = Timer
-    
     Call Me.SetTheme
     
     Call SetTip
@@ -180,8 +177,6 @@ Private Sub MDIForm_Load()
     
     Load frmWelcome
     Call frmWelcome.Show
-    
-    Debug.Print "mdiMain: Load - " & Round(Timer - StartTime, 3)
 End Sub
 
 'MDIFORM Reisze _

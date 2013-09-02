@@ -55,10 +55,10 @@ Public Property Get Block(ByVal Index As Byte) As Byte()
     Let Block = Output
 End Property
 
-'Public Property Let Block(ByVal Index As Byte, ByRef Tiles() As Byte)
-'    Dim i As Long
-'    For i = 0 To 15: Blocks(i, Index) = Tiles(i): Next
-'End Property
+Public Property Let Block(ByVal Index As Byte, ByRef Tiles() As Byte)
+    Dim i As Long
+    For i = 0 To 15: Blocks(i, Index) = Tiles(i): Next
+End Property
 
 'PROPERTY Length : The number of block mappings _
  ======================================================================================
@@ -73,9 +73,6 @@ End Property
 'PROPERTY Tile : Read and write individual tiles within block mappings _
  ======================================================================================
 Public Property Get Tile(ByVal BlockIndex As Byte, ByVal TileIndex As Byte) As Byte
-    'WARNING: Special Stage uses block indexes out of range because the ring blocks _
-     are not defined
-    On Error Resume Next
     Let Tile = Blocks(TileIndex, BlockIndex)
 End Property
 

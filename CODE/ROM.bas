@@ -61,7 +61,7 @@ Private BlockMappings As New Collection
 Private Const ROM_BLOCKMAPPINGS As Long = &H10000
 
 'A relative pointer to the end of the block mappings in an original ROM
-Private Const ROM_BLOCKMAPPINGS_END As Long = &H4CA0&
+Private Const ROM_BLOCKMAPPINGS_END As Long = &H517F&   '($10000-$1517F)
 
 'ROM Level Art / Sprite Art Declarations: _
  --------------------------------------------------------------------------------------
@@ -418,7 +418,7 @@ Continue_LevelPointers:
                 Case &H3E5D5F18: Let FloorLayout.Title = "Scrap Brain Act 2 (Emerald Maze)"
                 Case &HA6627B27: Let FloorLayout.Title = "Scrap Brain Act 2 (Ballhog Area)"
                 Case &HDCF86937: Let FloorLayout.Title = "Special Stage 1 / 2 / 3 / 5 / 6 / 7"
-                Case Else: Let FloorLayout.Title = "Floor Layout (" & FloorLayout.ID & ")"
+                Case Else: Let FloorLayout.Title = "Floor Layout #" & FloorLayout.ID
             End Select
             
             'Fetch the Floor Layout data from the ROM (the size of the compressed data _
@@ -553,59 +553,15 @@ Continue_LevelPointers:
         Let LevelIndex = LevelIndex + 1
     Loop
     
-    'BLOCK MAPPINGS: _
+    'Fix Jungle Act 2 / Special Stage 4 & 8: _
      ==================================================================================
-    'Floor Layouts are made up of indicies to the block mappings - 4x4 tile blocks, _
-     selected out of the tile set. We will need to import these after the level _
-     headers have been read as we do not know the length of each block mapping until _
-     we know where one ends and another begins
-    'Begin by sorting the list of starting addresses we took from the level headers
-    Call Lib.CombSort(MappingLocations)
-    'Loop through it, working out the lengths in between _
-     (the last element is the end of the block mappings ROM space)
-    For i = LBound(MappingLocations) To UBound(MappingLocations) - 1
-        'Create our VB object for representing the block mappings
-        Dim BlockMapping As S1BlockMapping
-        Set BlockMapping = New S1BlockMapping
-        Let BlockMapping.ID = Hex(MappingLocations(i))
-        
-        'The length of the block mappings is based on where one level's block _
-         mappings end and the next begin
-        Let Length = MappingLocations(i + 1) - MappingLocations(i)
-        'Copy the block mappings over into the VB object
-        Let BlockMapping.Length = Length \ 16
-        For ii = 0 To Length
-            BlockMapping.Tile(BlockIndex:=ii \ 16, TileIndex:=ii Mod 16) = _
-                BIN.B(ROM_BLOCKMAPPINGS + MappingLocations(i) + ii)
-        Next ii
-        
-        'Add to the global stock
-        Call GAME.BlockMappings.Add(Item:=BlockMapping, Key:=BlockMapping.ID)
-        Set BlockMapping = Nothing
-    Next
-    
-    'Apply Block Mappings / Art to Level: _
-     ==================================================================================
-    For LevelIndex = LBound(GAME.Levels) To UBound(GAME.Levels)
-    If Not GAME.Levels(LevelIndex) Is Nothing Then
-    With GAME.Levels(LevelIndex)
-        Set .BlockMapping = GAME.BlockMappings(LevelBlockMappings(LevelIndex))
-        
-        Call GAME.Ring.ApplyPalette(.LevelPalette)
-        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 252 * 8, 0, 16)
-        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 253 * 8, 0, 17)
-        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 254 * 8, 0, 18)
-        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 255 * 8, 0, 19)
-    End With: End If
-    Next LevelIndex
-    
-    'Post Processing: _
-     ==================================================================================
-    'There are some oddities and wasted space in the original ROM that we can clean up:
-    
     'One of the biggest problems (as far as our editor is concerned) is that Special _
      stage 4 & 8 and Jungle Act 2 are on the same floor layout. This means that from _
      each level the other looks like garbage and the ring count is way off
+    'We have to do this before loading and applying the Block Mappings otherwise the _
+     blocks in Jungle Act 2 > 128 (the number of blocks in Special Stage 4 & 8) _
+     will cause errors
+    
     'Detect if the original Special Stage 4/8 and Jungle Act 2 levels exist:
     If GAME.Levels(7).FloorLayout.Title = "Jungle Act 2 / Special Stage 4 & 8" Then
         Debug.Print "Fixing Jungle Act 2 / Special Stage 4 & 8"
@@ -642,6 +598,67 @@ Continue_LevelPointers:
         Set FloorLayout1 = Nothing
         Set FloorLayout2 = Nothing
     End If
+    
+    'BLOCK MAPPINGS: _
+     ==================================================================================
+    Debug.Print "Block Mappings:"
+    'Floor Layouts are made up of indicies to the block mappings - 4x4 tile blocks, _
+     selected out of the tile set. We will need to import these after the level _
+     headers have been read as we do not know the length of each block mapping until _
+     we know where one ends and another begins
+    'Begin by sorting the list of starting addresses we took from the level headers
+    Call Lib.CombSort(MappingLocations)
+    'Loop through it, working out the lengths in between _
+     (the last element is the end of the block mappings ROM space)
+    For i = LBound(MappingLocations) To UBound(MappingLocations) - 1
+        'Create our VB object for representing the block mappings
+        Dim BlockMapping As S1BlockMapping
+        Set BlockMapping = New S1BlockMapping
+        Let BlockMapping.ID = Hex(MappingLocations(i))
+        
+        'The length of the block mappings is based on where one level's block _
+         mappings end and the next begin
+        Let Length = MappingLocations(i + 1) - MappingLocations(i)
+        
+        'Identify original ROM mappings
+        Select Case BIN.CRC(MappingLocations(i), Length)
+            Case &H85C3CED2: Let BlockMapping.Title = "Green Hill"
+            Case &H52E2B334: Let BlockMapping.Title = "Bridge"
+            Case &H7C8E4AB7: Let BlockMapping.Title = "Jungle"
+            Case &HE02904EF: Let BlockMapping.Title = "Labyrinth"
+            Case &HCED3907E: Let BlockMapping.Title = "Scrap Brain"
+            Case &H9E1CA699: Let BlockMapping.Title = "Sky Base Act 1 / 2"
+            Case &H744C3364: Let BlockMapping.Title = "Sky Base Act 2 / 3 Interior"
+            Case &H62535F09: Let BlockMapping.Title = "Special Stage"
+            Case Else: Let BlockMapping.Title = "Block Mapping #" & BlockMapping.ID
+        End Select
+        Debug.Print "- Block Mapping $" & Hex(MappingLocations(i)) & " (#" & BlockMapping.ID & ") & '" & BlockMapping.Title & "'"
+        
+        'Copy the block mappings over into the VB object
+        Let BlockMapping.Length = Length \ 16
+        For ii = 0 To Length
+            BlockMapping.Tile(BlockIndex:=ii \ 16, TileIndex:=ii Mod 16) = _
+                BIN.B(ROM_BLOCKMAPPINGS + MappingLocations(i) + ii)
+        Next ii
+        
+        'Add to the global stock
+        Call GAME.BlockMappings.Add(Item:=BlockMapping, Key:=BlockMapping.ID)
+        Set BlockMapping = Nothing
+    Next
+    
+    'Apply Block Mappings / Art to Level:
+    For LevelIndex = LBound(GAME.Levels) To UBound(GAME.Levels)
+    If Not GAME.Levels(LevelIndex) Is Nothing Then
+    With GAME.Levels(LevelIndex)
+        Set .BlockMapping = GAME.BlockMappings(LevelBlockMappings(LevelIndex))
+        
+        Call GAME.Ring.ApplyPalette(.LevelPalette)
+        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 252 * 8, 0, 16)
+        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 253 * 8, 0, 17)
+        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 254 * 8, 0, 18)
+        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 255 * 8, 0, 19)
+    End With: End If
+    Next LevelIndex
     
     'ROM imported!
     Let Import = True
@@ -769,7 +786,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
                 Let BIN.B(Pointer + 10) = .ROM_X4
                 Let BIN.B(Pointer + 11) = .ROM_X5
                 Let BIN.B(Pointer + 12) = .ROM_X6
-                Let BIN.B(Pointer + 23) = &H9&          'Always "9"
+                Let BIN.B(Pointer + 23) = 9             'Always "9"
             End With
         End If
     Next LevelIndex
