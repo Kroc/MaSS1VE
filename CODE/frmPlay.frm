@@ -2,16 +2,16 @@ VERSION 5.00
 Begin VB.Form frmPlay 
    BackColor       =   &H00FFAF00&
    Caption         =   "Play"
-   ClientHeight    =   7875
+   ClientHeight    =   8430
    ClientLeft      =   120
    ClientTop       =   465
-   ClientWidth     =   9510
+   ClientWidth     =   15120
    ControlBox      =   0   'False
    HasDC           =   0   'False
    LinkTopic       =   "Form1"
    MDIChild        =   -1  'True
-   ScaleHeight     =   7875
-   ScaleWidth      =   9510
+   ScaleHeight     =   8430
+   ScaleWidth      =   15120
    WindowState     =   2  'Maximized
    Begin VB.Frame fraROM 
       Appearance      =   0  'Flat
@@ -79,6 +79,17 @@ Begin VB.Form frmPlay
          Top             =   0
          Width           =   5580
       End
+   End
+   Begin MaSS1VE.bluControlBox cbxSizer 
+      Height          =   360
+      Left            =   14760
+      TabIndex        =   4
+      Top             =   8040
+      Width           =   360
+      _ExtentX        =   635
+      _ExtentY        =   635
+      Style           =   1
+      Kind            =   3
    End
    Begin VB.Label lblGenerating 
       Alignment       =   2  'Center
@@ -153,6 +164,10 @@ Private Sub Form_Activate()
 End Sub
 
 Private Sub Form_Resize()
+    Call Me.cbxSizer.Move( _
+        Me.ScaleWidth - Me.cbxSizer.Width, Me.ScaleHeight - Me.cbxSizer.Height _
+    )
+    
     Let Me.lblGenerating.Left = (Me.ScaleWidth - Me.lblGenerating.Width) \ 2
 '    Call Me.lblGenerating.Move( _
 '        (Me.ScaleWidth - Me.lblGenerating.Width) \ 2, _

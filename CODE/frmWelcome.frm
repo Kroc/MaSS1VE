@@ -13,6 +13,17 @@ Begin VB.Form frmWelcome
    ScaleHeight     =   8430
    ScaleWidth      =   15120
    WindowState     =   2  'Maximized
+   Begin MaSS1VE.bluControlBox cbxSizer 
+      Height          =   360
+      Left            =   14760
+      TabIndex        =   2
+      Top             =   8040
+      Width           =   360
+      _ExtentX        =   635
+      _ExtentY        =   635
+      Style           =   1
+      Kind            =   3
+   End
    Begin VB.Label Label2 
       Appearance      =   0  'Flat
       BackColor       =   &H80000005&
@@ -67,3 +78,9 @@ Option Explicit
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
 'FORM :: frmWelcome
+
+Private Sub Form_Resize()
+    Call Me.cbxSizer.Move( _
+        Me.ScaleWidth - Me.cbxSizer.Width, Me.ScaleHeight - Me.cbxSizer.Height _
+    )
+End Sub

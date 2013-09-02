@@ -14,34 +14,119 @@ Begin VB.Form frmLevel
    ScaleWidth      =   14655
    Visible         =   0   'False
    WindowState     =   2  'Maximized
-   Begin VB.PictureBox picSizer 
+   Begin VB.PictureBox picStatusbar 
       Appearance      =   0  'Flat
-      AutoRedraw      =   -1  'True
-      BackColor       =   &H00F0F0F0&
+      BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   255
-      Left            =   14400
-      Picture         =   "frmLevel.frx":0000
-      ScaleHeight     =   255
-      ScaleWidth      =   255
-      TabIndex        =   17
-      Top             =   8160
-      Width           =   255
+      HasDC           =   0   'False
+      Height          =   360
+      Left            =   0
+      ScaleHeight     =   360
+      ScaleWidth      =   14655
+      TabIndex        =   16
+      Top             =   8040
+      Width           =   14655
+      Begin MaSS1VE.bluControlBox cbxSizer 
+         Height          =   360
+         Left            =   14280
+         TabIndex        =   21
+         Top             =   0
+         Width           =   360
+         _ExtentX        =   635
+         _ExtentY        =   635
+         Kind            =   3
+      End
+      Begin MaSS1VE.bluButton btnZoom2 
+         Height          =   360
+         Left            =   13320
+         TabIndex        =   17
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   495
+         _ExtentX        =   873
+         _ExtentY        =   635
+         Caption         =   "2×"
+      End
+      Begin MaSS1VE.bluButton btnZoomTV 
+         Height          =   360
+         Left            =   13800
+         TabIndex        =   18
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   495
+         _ExtentX        =   873
+         _ExtentY        =   635
+         Caption         =   "TV"
+      End
+      Begin MaSS1VE.bluButton btnGrid 
+         Height          =   360
+         Left            =   11640
+         TabIndex        =   19
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   615
+         _ExtentX        =   1085
+         _ExtentY        =   635
+         Caption         =   "OFF"
+      End
+      Begin MaSS1VE.bluButton btnZoom1 
+         Height          =   360
+         Left            =   12840
+         TabIndex        =   20
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   495
+         _ExtentX        =   873
+         _ExtentY        =   635
+         Caption         =   "1×"
+      End
+      Begin MaSS1VE.bluLabel lblMemory 
+         Height          =   375
+         Left            =   240
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   3735
+         _ExtentX        =   6588
+         _ExtentY        =   661
+         Caption         =   "1,319 bytes floor layout memory free"
+      End
+      Begin MaSS1VE.bluLabel lblZoom 
+         Height          =   360
+         Left            =   12120
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   735
+         _ExtentX        =   1296
+         _ExtentY        =   635
+         Alignment       =   1
+         Caption         =   "zoom"
+      End
+      Begin MaSS1VE.bluLabel lblGrid 
+         Height          =   360
+         Left            =   11040
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   615
+         _ExtentX        =   1085
+         _ExtentY        =   635
+         Alignment       =   1
+         Caption         =   "grid"
+      End
    End
    Begin MaSS1VE.bluViewport vwpLevel 
-      Height          =   7935
+      Height          =   7575
       Left            =   3720
-      TabIndex        =   18
+      TabIndex        =   13
       Top             =   480
       Width           =   10935
       _ExtentX        =   19288
-      _ExtentY        =   13996
+      _ExtentY        =   13361
    End
    Begin MaSS1VE.bluTab bluTab 
       Height          =   1200
       Left            =   0
-      TabIndex        =   11
+      TabIndex        =   7
       Top             =   480
       Width           =   495
       _ExtentX        =   873
@@ -76,11 +161,11 @@ Begin VB.Form frmLevel
             Strikethrough   =   0   'False
          EndProperty
          Height          =   345
-         ItemData        =   "frmLevel.frx":0342
+         ItemData        =   "frmLevel.frx":0000
          Left            =   60
-         List            =   "frmLevel.frx":0344
+         List            =   "frmLevel.frx":0002
          Style           =   2  'Dropdown List
-         TabIndex        =   20
+         TabIndex        =   15
          Top             =   60
          Width           =   3615
       End
@@ -101,58 +186,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Width           =   735
       End
-      Begin MaSS1VE.bluButton btnZoom2 
-         Height          =   480
-         Left            =   12480
-         TabIndex        =   4
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   847
-         Caption         =   "2×"
-         Style           =   1
-      End
-      Begin MaSS1VE.bluButton btnZoomTV 
-         Height          =   480
-         Left            =   12960
-         TabIndex        =   5
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   847
-         Caption         =   "TV"
-         Style           =   1
-      End
-      Begin MaSS1VE.bluButton btnGrid 
-         Height          =   480
-         Left            =   10800
-         TabIndex        =   6
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   615
-         _ExtentX        =   1085
-         _ExtentY        =   847
-         Caption         =   "OFF"
-         Style           =   1
-      End
-      Begin MaSS1VE.bluButton btnZoom1 
-         Height          =   480
-         Left            =   12000
-         TabIndex        =   7
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   847
-         Caption         =   "1×"
-         Style           =   1
-      End
       Begin MaSS1VE.bluButton btnUndo 
          Height          =   480
          Left            =   4920
-         TabIndex        =   12
+         TabIndex        =   8
          Top             =   0
          Visible         =   0   'False
          Width           =   735
@@ -164,7 +201,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnRedo 
          Height          =   480
          Left            =   5760
-         TabIndex        =   13
+         TabIndex        =   9
          Top             =   0
          Visible         =   0   'False
          Width           =   735
@@ -176,7 +213,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnShare 
          Height          =   480
          Left            =   13680
-         TabIndex        =   14
+         TabIndex        =   10
          Top             =   0
          Visible         =   0   'False
          Width           =   975
@@ -188,7 +225,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnCut 
          Height          =   480
          Left            =   6720
-         TabIndex        =   15
+         TabIndex        =   11
          Top             =   0
          Visible         =   0   'False
          Width           =   615
@@ -200,7 +237,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnCopy 
          Height          =   480
          Left            =   7440
-         TabIndex        =   16
+         TabIndex        =   12
          Top             =   0
          Visible         =   0   'False
          Width           =   735
@@ -220,40 +257,6 @@ Begin VB.Form frmLevel
          _ExtentY        =   847
          Caption         =   "PASTE"
          Style           =   1
-      End
-      Begin MaSS1VE.bluLabel lblGrid 
-         Height          =   480
-         Left            =   10200
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   615
-         _ExtentX        =   1085
-         _ExtentY        =   847
-         Alignment       =   1
-         Caption         =   "grid"
-         Style           =   1
-      End
-      Begin MaSS1VE.bluLabel lblZoom 
-         Height          =   480
-         Left            =   11280
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   735
-         _ExtentX        =   1296
-         _ExtentY        =   847
-         Alignment       =   1
-         Caption         =   "zoom"
-         Style           =   1
-      End
-      Begin VB.Line lineSplit 
-         BorderColor     =   &H00FFAF00&
-         BorderStyle     =   3  'Dot
-         Index           =   3
-         Visible         =   0   'False
-         X1              =   13560
-         X2              =   13560
-         Y1              =   90
-         Y2              =   360
       End
       Begin VB.Line lineSplit 
          BorderColor     =   &H00FFAF00&
@@ -303,7 +306,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluViewport vwpBlocks 
          Height          =   1575
          Left            =   0
-         TabIndex        =   19
+         TabIndex        =   14
          Top             =   1200
          Width           =   1575
          _ExtentX        =   2778
@@ -320,7 +323,7 @@ Begin VB.Form frmLevel
          Left            =   0
          ScaleHeight     =   1200
          ScaleWidth      =   3255
-         TabIndex        =   8
+         TabIndex        =   4
          Top             =   0
          Width           =   3255
          Begin VB.PictureBox picBlockSelectRight 
@@ -334,7 +337,7 @@ Begin VB.Form frmLevel
             ScaleHeight     =   34
             ScaleMode       =   3  'Pixel
             ScaleWidth      =   34
-            TabIndex        =   10
+            TabIndex        =   6
             TabStop         =   0   'False
             Top             =   600
             Width           =   510
@@ -350,7 +353,7 @@ Begin VB.Form frmLevel
             ScaleHeight     =   34
             ScaleMode       =   3  'Pixel
             ScaleWidth      =   34
-            TabIndex        =   9
+            TabIndex        =   5
             TabStop         =   0   'False
             Top             =   0
             Width           =   510
@@ -470,16 +473,14 @@ End Sub
 'FORM Load _
  ======================================================================================
 Private Sub Form_Load()
-    Call mdiMain.bluWindow.RegisterSizeHandler(Me.picSizer)
-    
     'Configure the tabstrip _
      (I haven't coded in proper property storage for it yet)
     With Me.bluTab
-        .TabCount = 1
+        .TabCount = 3
         .Caption(0) = "Layout"
-'        .Caption(1) = "Objects"
-'        .Caption(2) = "Palette"
-'        .Caption(3) = "Properties"
+        .Caption(1) = "Objects"
+        .Caption(2) = "Theme"
+        .TabCount = 1
         .CurrentTab = 0
     End With
     
@@ -513,6 +514,30 @@ Private Sub Form_Resize()
         0, 0, Me.ScaleWidth, blu.Ypx(blu.Metric) _
     )
     
+    'Statusbar: _
+     ----------------------------------------------------------------------------------
+    'Size the status bar along the bottom
+    Call Me.picStatusbar.Move( _
+        0, Me.ScaleHeight - blu.Ypx(24), _
+        Me.ScaleWidth, blu.Ypx(24) _
+    )
+    'Put the sizing box in the corner, _
+     make it square according to the statusbar height
+    Call cbxSizer.Move( _
+        Me.picStatusbar.ScaleWidth - Me.picStatusbar.ScaleHeight, _
+        0, Me.picStatusbar.ScaleHeight, Me.picStatusbar.ScaleHeight _
+    )
+    
+    Let Me.lblMemory.Left = Me.bluTab.Width - blu.Xpx(8)
+    'Zoom levels
+    Let Me.btnZoomTV.Left = Me.cbxSizer.Left - Me.btnZoomTV.Width
+    Let Me.btnZoom2.Left = Me.btnZoomTV.Left - Me.btnZoom2.Width
+    Let Me.btnZoom1.Left = Me.btnZoom2.Left - Me.btnZoom1.Width
+    Let Me.lblZoom.Left = Me.btnZoom1.Left - Me.lblZoom.Width
+    'Grid ON/OFF
+    Let Me.btnGrid.Left = Me.lblZoom.Left - Me.btnGrid.Width
+    Let Me.lblGrid.Left = Me.btnGrid.Left - Me.lblGrid.Width
+    
     'Side Pane Area: _
      ----------------------------------------------------------------------------------
     'Move the vertical tab strip into place
@@ -530,7 +555,9 @@ Private Sub Form_Resize()
             (x32(PaneBlockWidth) + PaneBlockWidth) + _
             WIN32.GetSystemMetric(SM_CXVSCROLL) _
         ), _
-        Me.ScaleHeight - (Me.picToolbar.Top + Me.picToolbar.Height) _
+        Me.ScaleHeight - ( _
+            Me.picToolbar.Top + Me.picToolbar.Height + Me.picStatusbar.Height _
+        ) _
     ): Next i
     
     'Blocks (Layout) Side Pane: _
@@ -554,13 +581,14 @@ Private Sub Form_Resize()
 '            Let .Top = Me.picBlockSelectLeft.Top
 '            Let .Left = Me.picBlockSelectLeft.Left + Me.picBlockSelectLeft.Height + blu.Xpx(7)
 '        End With
-    'Position the block picker
     
+    'Position the block picker
     Call Me.vwpBlocks.Move( _
         0, Me.picBlocksToolbar.Top + Me.picBlocksToolbar.Height + blu.Ypx, _
         Me.picSidePane(0).Width, _
-        Me.picSidePane(0).Height _
-        - (Me.picBlocksToolbar.Top + Me.picBlocksToolbar.Height + blu.Ypx) _
+        Me.picSidePane(0).Height - ( _
+            Me.picBlocksToolbar.Top + Me.picBlocksToolbar.Height + blu.Ypx _
+        ) _
     )
     
     'Toolbar Buttons: _
@@ -596,19 +624,8 @@ Private Sub Form_Resize()
     Let Me.btnCopy.Left = Me.btnCut.Left + Me.btnCut.Width
     Let Me.btnPaste.Left = Me.btnCopy.Left + Me.btnCopy.Width
     
-    'Right-hand aligned buttons (working backwards from the right):
+    'Share button, aligned to the right
     Let Me.btnShare.Left = Me.picToolbar.Width - Me.btnShare.Width
-    With Me.lineSplit(3)
-        Let .X1 = Me.btnShare.Left - blu.Xpx(8): Let .X2 = .X1
-    End With
-    'Zoom levels
-    Let Me.btnZoomTV.Left = Me.lineSplit(3).X1 - blu.Xpx(8) - Me.btnZoomTV.Width
-    Let Me.btnZoom2.Left = Me.btnZoomTV.Left - Me.btnZoom2.Width
-    Let Me.btnZoom1.Left = Me.btnZoom2.Left - Me.btnZoom1.Width
-    Let Me.lblZoom.Left = Me.btnZoom1.Left - Me.lblZoom.Width
-    'Grid ON/OFF
-    Let Me.btnGrid.Left = Me.lblZoom.Left - Me.btnGrid.Width
-    Let Me.lblGrid.Left = Me.btnGrid.Left - Me.lblGrid.Width
     
     'Level viewport: _
      ----------------------------------------------------------------------------------
@@ -617,11 +634,9 @@ Private Sub Form_Resize()
         Me.picSidePane(0).Left + Me.picSidePane(0).Width, _
         Me.picToolbar.Top + Me.picToolbar.Height, _
         Me.ScaleWidth - (Me.picSidePane(0).Left + Me.picSidePane(0).Width), _
-        Me.ScaleHeight - (Me.picToolbar.Top + Me.picToolbar.Height) _
-    )
-    Call picSizer.Move( _
-        Me.ScaleWidth - Me.picSizer.Width, _
-        Me.ScaleHeight - Me.picSizer.Height _
+        Me.ScaleHeight - ( _
+            Me.picToolbar.Top + Me.picToolbar.Height + Me.picStatusbar.Height _
+        ) _
     )
         
     'Set the minimum size of the form: _
@@ -636,7 +651,8 @@ Private Sub Form_Resize()
     ) \ Screen.TwipsPerPixelX
     
     Let mdiMain.bluWindow.MinHeight = ( _
-        mdiMain.toolbar.Height + Me.bluTab.Top + Me.bluTab.Height _
+        mdiMain.toolbar.Height + Me.bluTab.Top + Me.bluTab.Height + _
+        Me.picStatusbar.Height _
     ) \ Screen.TwipsPerPixelY
 End Sub
 

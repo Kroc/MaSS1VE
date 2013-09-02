@@ -42,13 +42,31 @@ Option Explicit
  which must have an aligning picturebox if you want to place anything on the MDIForm
 
 'Status             Ready, awaiting refactoring
-'Dependencies       blu.bas, bluButton.ctl (bluLabel.ctl), WIN32.bas
-'Last Updated       24-JUL-13
+'Dependencies       blu.bas, bluButton.ctl (bluLabel.ctl), Lib.bas, WIN32.bas
+'Last Updated       02-SEP-13
+'Last Update        Added sizer (corner size gripper), _
+                    Mouse can be released outside of the button to cancel the click
 
 'NOTE: This is due to be rewritten to not depend upon nested controls. The plan is _
  also for this control to act not as one control box button, but as the entire set, _
  where we will detect from the parent form which buttons (min / max / close) should _
  be available
+
+'/// API DEFS /////////////////////////////////////////////////////////////////////////
+
+'Send a message from one window to another _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms644950%28v=vs.85%29.aspx>
+Private Declare Function user32_SendMessage Lib "user32" Alias "SendMessageA" ( _
+    ByVal hndWindow As Long, _
+    ByVal Message As Long, _
+    ByVal wParam As Long, _
+    ByVal lParam As Long _
+) As Long
+
+'All mouse events can be trapped by one window. VB apparently does this behind the _
+ scenes, so we need to release the capture in order to resize the form from the control _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms646261%28v=vs.85%29.aspx>
+Private Declare Function user32_ReleaseCapture Lib "user32" Alias "ReleaseCapture" () As Long
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 
@@ -59,6 +77,7 @@ Public Enum bluControlBox_Kind
     Quit = 0
     Minimize = 1
     Maximize = 2
+    Sizer = 3
 End Enum
 Private My_Kind As bluControlBox_Kind
 
@@ -81,21 +100,64 @@ Private ParentForm As Object
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
-'The label in the button is already subclassed and will provide MouseIn/Out events _
- which we can then expose to the button controller
-Event Click()
-Event MouseIn()
-Event MouseOut()
-
-'CONTROL Click _
+'CONTROL InitProperties : When a new control is placed on the form _
  ======================================================================================
-Private Sub UserControl_Click()
-    'What kind of action do we need to take?
+Private Sub UserControl_InitProperties()
+    Let Me.ActiveColour = blu.ActiveColour
+    Let Me.BaseColour = blu.BaseColour
+    Set ParentForm = Lib.GetParentForm(UserControl.Parent)
+End Sub
+
+'CONTROL MouseDown _
+ ======================================================================================
+Private Sub UserControl_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    If IsMouseDown = False Then
+        Let IsMouseDown = True
+        Call Refresh
+    End If
+    
+    If Button = VBRUN.MouseButtonConstants.vbLeftButton And My_Kind = Sizer Then
+        Const WM_NCLBUTTONDOWN As Long = &HA1
+        Const HTBOTTOMRIGHT As Long = 17
+        
+        'With thanks to the following page for alerting me to the need to use _
+         `ReleaseCapture` to get this to work! _
+         <www.vbforums.com/showthread.php?250431-VB-Flexible-Shangle-%28window-resizing-grip%29>
+        Call user32_ReleaseCapture
+        'Simulate clicking on the lower-right window border
+        Call user32_SendMessage( _
+            Lib.GetParentForm(UserControl.Parent, True).hWnd, _
+            WM_NCLBUTTONDOWN, HTBOTTOMRIGHT, 0 _
+        )
+    End If
+End Sub
+
+'CONTROL MouseUp _
+ ======================================================================================
+Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    If IsMouseDown = True Then
+        Let IsMouseDown = False
+        Call Refresh
+    End If
+    
+    'If you hold the mouse button down inside the control but release the button _
+     outside then it doesn't count (allows you to escape from an accidental close)
+    Dim ClientRECT As RECT
+    Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    If WIN32.user32_PtInRect(ClientRECT, X, Y) = API_FALSE Then Exit Sub
+    
+    'Only left button applies to action
+    If Button <> 1 Then Exit Sub
+    
+    'What kind of action do we need to take? _
+     (the sizer is handled in `Mouse_Down`)
     Select Case My_Kind
         Case bluControlBox_Kind.Quit
             Unload ParentForm
+            
         Case bluControlBox_Kind.Minimize
             Let ParentForm.WindowState = VBRUN.FormWindowStateConstants.vbMinimized
+            
         Case bluControlBox_Kind.Maximize
             Let ParentForm.WindowState = IIf( _
                 Expression:=ParentForm.WindowState = VBRUN.FormWindowStateConstants.vbNormal, _
@@ -105,104 +167,81 @@ Private Sub UserControl_Click()
     End Select
 End Sub
 
-'CONTROL InitProperties : When a new control is placed on the form _
- ======================================================================================
-Private Sub UserControl_InitProperties()
-    Let Me.ActiveColour = blu.ActiveColour
-    Let Me.BaseColour = blu.BaseColour
-    Set ParentForm = GetUltimateParent()
-End Sub
-
-'CONTROL MouseDown _
- ======================================================================================
-Private Sub UserControl_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
-    If IsMouseDown = False Then
-        Let IsMouseDown = True
-        Call UserControl_Paint
-    End If
-End Sub
-
-'CONTROL MouseUp _
- ======================================================================================
-Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
-    If IsMouseDown = True Then
-        Let IsMouseDown = False
-        Call UserControl_Paint
-    End If
-End Sub
-
 'CONTROL Paint _
  ======================================================================================
 Private Sub UserControl_Paint()
-    'Clear the current button display
-    Call UserControl.Cls
-
     'Set the colours: _
      ----------------------------------------------------------------------------------
     Dim BackColour As OLE_COLOR
     Dim ForeColour As OLE_COLOR
     
-    Select Case My_Style
-        Case bluSTYLE.Invert
-            Let BackColour = My_ActiveColour
-            Let ForeColour = My_BaseColour
-            
-        Case Else
-            If IsMouseDown = True Then
-                If My_Kind = bluControlBox_Kind.Quit Then
-                    Let BackColour = blu.ClosePressColour
-                Else
-                    Let BackColour = My_ActiveColour
-                End If
-                Let ForeColour = My_BaseColour
-                
-            ElseIf IsHovered = True Then
-                If My_Kind = bluControlBox_Kind.Quit Then
-                    Let BackColour = blu.CloseHoverColour
-                    Let ForeColour = My_BaseColour
-                Else
-                    Let BackColour = blu.BaseHoverColour
-                    Let ForeColour = blu.TextHoverColour
-                End If
-                
+    Select Case My_Kind
+        'A size box in the corner to resize the window
+        Case bluControlBox_Kind.Sizer
+            If My_Style = Invert Then
+                Let BackColour = My_ActiveColour
+                Let ForeColour = blu.InertColour
             Else
                 Let BackColour = My_BaseColour
                 Let ForeColour = blu.TextColour
             End If
+            
+        Case Else
+            'Close / Min / Max buttons
+            Select Case My_Style
+                Case bluSTYLE.Invert
+                    Let BackColour = My_ActiveColour
+                    Let ForeColour = My_BaseColour
+                    
+                Case Else
+                    If IsMouseDown = True Then
+                        If My_Kind = bluControlBox_Kind.Quit Then
+                            Let BackColour = blu.ClosePressColour
+                        Else
+                            Let BackColour = My_ActiveColour
+                        End If
+                        Let ForeColour = My_BaseColour
+                        
+                    ElseIf IsHovered = True Then
+                        If My_Kind = bluControlBox_Kind.Quit Then
+                            Let BackColour = blu.CloseHoverColour
+                            Let ForeColour = My_BaseColour
+                        Else
+                            Let BackColour = blu.BaseHoverColour
+                            Let ForeColour = blu.TextHoverColour
+                        End If
+                        
+                    Else
+                        Let BackColour = My_BaseColour
+                        Let ForeColour = blu.TextColour
+                    End If
+            End Select
     End Select
     
+    'Clear the background: _
+     ----------------------------------------------------------------------------------
     'Set the background colour. I don't know if it is actually any slower to _
      set the background colour every paint, but it seems stupid to do so
     If UserControl.BackColor <> BackColour Then _
         Let UserControl.BackColor = BackColour
-    'Set the text colour
-    Call WIN32.gdi32_SetTextColor( _
-        hndDeviceContext:=UserControl.hDC, _
-        Color:=WIN32.OLETranslateColor(ForeColour) _
+    'Select the background colour
+    Call WIN32.gdi32_SetDCBrushColor( _
+        UserControl.hDC, UserControl.BackColor _
     )
-    
-    'Set text alignment
-    Call WIN32.gdi32_SetTextAlign(UserControl.hDC, TA_TOPCENTER)
-    
-    'Set the font: _
-     ----------------------------------------------------------------------------------
-    Dim hndFont As Long
-    Let hndFont = WIN32.gdi32_CreateFont( _
-        Height:=14, Width:=0, _
-        Escapement:=0, Orientation:=0, _
-        Weight:=FW_NORMAL, Italic:=API_FALSE, Underline:=API_FALSE, StrikeOut:=API_FALSE, _
-        CharSet:=DEFAULT_CHARSET, _
-        OutputPrecision:=OUT_DEFAULT_PRECIS, ClipPrecision:=CLIP_DEFAULT_PRECIS, _
-        Quality:=DEFAULT_QUALITY, PitchAndFamily:=VARIABLE_PITCH Or FF_DONTCARE, _
-        Face:="Marlett" _
+    'Get the dimensions of the control
+    Dim ClientRECT As RECT
+    Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    'Then use those to fill with the selected background colour
+    Call WIN32.user32_FillRect( _
+        UserControl.hDC, ClientRECT, _
+        WIN32.gdi32_GetStockObject(DC_BRUSH) _
     )
-    Dim hndOld As Long
-    Let hndOld = WIN32.gdi32_SelectObject(UserControl.hDC, hndFont)
 
     'Draw the text! _
      ----------------------------------------------------------------------------------
     Dim Letter As String
     Select Case My_Kind
+        Case bluControlBox_Kind.Sizer: Let Letter = "p"
         Case bluControlBox_Kind.Quit: Let Letter = "r"
         Case bluControlBox_Kind.Minimize: Let Letter = "0"
         Case bluControlBox_Kind.Maximize
@@ -212,23 +251,19 @@ Private Sub UserControl_Paint()
             )
     End Select
     
-    Call WIN32.gdi32_TextOut( _
-        hndDeviceContext:=UserControl.hDC, _
-        X:=UserControl.ScaleWidth \ 2, _
-        Y:=(UserControl.ScaleHeight - 14) \ 2, _
-        Text:=Letter, Length:=Len(Letter) _
+    'Use the shared text drawing procedure to save effort
+    Call blu.DrawText( _
+        hndDeviceContext:=UserControl.hDC, BoundingBox:=ClientRECT, _
+        Text:=Letter, Colour:=ForeColour, Alignment:=vbCenter, Orientation:=Horizontal, _
+        FontName:="Marlett", FontSizePx:=14 _
     )
-    
-    'Clean up
-    Call WIN32.gdi32_SelectObject(hndDeviceContext:=UserControl.hDC, hndGdiObject:=hndOld)
-    Call WIN32.gdi32_DeleteObject(hndGdiObject:=hndFont)
 End Sub
 
 'CONTROL ReadProperties _
  ======================================================================================
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     'Find the parent form we need to control
-    Set ParentForm = GetUltimateParent()
+    Set ParentForm = Lib.GetParentForm(UserControl.Parent)
     
     With PropBag
         Let Me.ActiveColour = .ReadProperty(Name:="ActiveColour", DefaultValue:=blu.ActiveColour)
@@ -240,7 +275,14 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     'Attach the mouse tracking
     If blu.UserMode = True Then
         Set MouseEvents = New bluMouseEvents
-        Let MouseEvents.MousePointer = IDC_HAND
+        'If a sizing control,
+        If My_Kind = Sizer Then
+            'Show the diagonal arrow,
+            Let MouseEvents.MousePointer = IDC_SIZENWSE
+        Else
+            'Otherwise all other controls show the hand pointer
+            Let MouseEvents.MousePointer = IDC_HAND
+        End If
         Call MouseEvents.Attach(Me.hWnd)
     End If
 End Sub
@@ -248,14 +290,15 @@ End Sub
 'CONTROL Resize : The developers is resizing the control on the form design _
  ======================================================================================
 Private Sub UserControl_Resize()
-    'Don't allow this control to be resized
-    Let UserControl.Width = blu.Xpx(blu.Metric)
-    Let UserControl.Height = blu.Ypx(blu.Metric)
+    'Don't allow this control to be resized _
+     (The size box is smaller though)
+    Let UserControl.Width = blu.Xpx(IIf(My_Kind = Sizer, 24, blu.Metric))
+    Let UserControl.Height = blu.Ypx(IIf(My_Kind = Sizer, 24, blu.Metric))
 End Sub
 
 'CONTROL Show : The control has become visible, we should repaint _
  ======================================================================================
-Private Sub UserControl_Show(): Call UserControl_Paint: End Sub
+Private Sub UserControl_Show(): Call Refresh: End Sub
 
 'CONTROL Terminate _
  ======================================================================================
@@ -278,21 +321,17 @@ End Sub
 'EVENT MouseEvents MOUSEIN : The mouse has entered the control _
  ======================================================================================
 Private Sub MouseEvents_MouseIn()
-    'The mouse is in the button, we'll cause a hover effect as long as the button is _
-     not locked into an active state
+    'The mouse is in the button, we'll cause a hover effect
     Let IsHovered = True: Let IsMouseDown = False
-    Call UserControl_Paint
-    RaiseEvent MouseIn
+    Call Refresh
 End Sub
 
 'EVENT MouseEvents MOUSEOUT : The mouse has gone out of the control _
  ======================================================================================
 Private Sub MouseEvents_MouseOut()
-    'The mouse has left the button, we need to undo the hover effect, as long as the _
-     button is not locked into an active state
+    'The mouse has left the button, we need to undo the hover effect
     Let IsHovered = False: Let IsMouseDown = False
-    Call UserControl_Paint
-    RaiseEvent MouseOut
+    Call Refresh
 End Sub
 
 '/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
@@ -302,7 +341,7 @@ End Sub
 Public Property Get ActiveColour() As OLE_COLOR: Let ActiveColour = My_ActiveColour: End Property
 Public Property Let ActiveColour(ByVal NewColour As OLE_COLOR)
     Let My_ActiveColour = NewColour
-    Call UserControl_Paint
+    Call Refresh
     Call UserControl.PropertyChanged("ActiveColour")
 End Property
 
@@ -311,7 +350,7 @@ End Property
 Public Property Get BaseColour() As OLE_COLOR: Let BaseColour = My_BaseColour: End Property
 Public Property Let BaseColour(ByVal NewColour As OLE_COLOR)
     Let My_BaseColour = NewColour
-    Call UserControl_Paint
+    Call Refresh
     Call UserControl.PropertyChanged("BaseColour")
 End Property
 
@@ -324,7 +363,7 @@ Public Property Get hWnd() As Long: Let hWnd = UserControl.hWnd: End Property
 Public Property Get Style() As bluSTYLE: Let Style = My_Style: End Property
 Public Property Let Style(ByVal NewStyle As bluSTYLE)
     Let My_Style = NewStyle
-    Call UserControl_Paint
+    Call Refresh
     Call UserControl.PropertyChanged("Style")
 End Property
 
@@ -333,19 +372,20 @@ End Property
 Public Property Get Kind() As bluControlBox_Kind: Let Kind = My_Kind: End Property
 Public Property Let Kind(ByVal NewKind As bluControlBox_Kind)
     Let My_Kind = NewKind
-    Call UserControl_Paint
+    'The size of the control is fixed, when changing types call `Resize` to set the _
+     correct size for the kind of control
+    Call UserControl_Resize
+    Call Refresh
     Call UserControl.PropertyChanged("Kind")
 End Property
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
-'GetUltimateParent : Recurses through the parent objects until we hit the top form _
+'Refresh _
  ======================================================================================
-Private Function GetUltimateParent() As Object
-    Set GetUltimateParent = UserControl.Parent
-    Do
-        On Error GoTo Fail
-        Set GetUltimateParent = GetUltimateParent.Parent
-    Loop
-Fail:
-End Function
+Private Sub Refresh()
+    'This isn't public as there's nothing the user can change that would require a _
+     manual refresh. This is just here to force a repaint when properties are changed
+    Call UserControl_Paint
+    Call UserControl.Refresh
+End Sub
