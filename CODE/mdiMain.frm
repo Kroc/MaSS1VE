@@ -114,16 +114,6 @@ Begin VB.MDIForm mdiMain
          Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
          Enabled         =   0   'False
       End
-      Begin MaSS1VE.bluLabel lblGameTitle 
-         Height          =   480
-         Left            =   360
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   3135
-         _ExtentX        =   5530
-         _ExtentY        =   847
-         Caption         =   "Sonic the Hedgehog"
-      End
       Begin MaSS1VE.bluLabel lblTip 
          Height          =   495
          Left            =   10320
@@ -133,15 +123,6 @@ Begin VB.MDIForm mdiMain
          _ExtentY        =   873
          Caption         =   "The quick brown fox jumps over the lazy dog"
          Enabled         =   0   'False
-      End
-      Begin VB.Image imgIcon 
-         Appearance      =   0  'Flat
-         Height          =   240
-         Left            =   120
-         Picture         =   "mdiMain.frx":0000
-         Top             =   120
-         Visible         =   0   'False
-         Width           =   240
       End
    End
    Begin MaSS1VE.bluWindow bluWindow 
@@ -227,11 +208,6 @@ Private Sub MDIForm_Resize()
     Let Me.cbxClose.Left = FormWidth - Me.cbxClose.Width
     Let Me.cbxMax.Left = Me.cbxClose.Left - Me.cbxMax.Width
     Let Me.cbxMin.Left = Me.cbxMax.Left - Me.cbxMin.Width
-    
-    Call Me.lblGameTitle.Move( _
-        Me.imgIcon.Left + Me.imgIcon.Width, 0, _
-        lblGameTitle.Width, blu.Ypx(blu.Metric) _
-    )
     
     Let Me.bluTab.Height = blu.Ypx(blu.Metric)
     Let Me.bluTab.Top = Me.toolbar.Height - Me.bluTab.Height
