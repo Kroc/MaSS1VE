@@ -13,27 +13,37 @@ Begin VB.Form frmPlay
    ScaleHeight     =   8430
    ScaleWidth      =   15120
    WindowState     =   2  'Maximized
-   Begin VB.Frame fraROM 
+   Begin MaSS1VE.bluControlBox cbxSizer 
+      Height          =   360
+      Left            =   14760
+      TabIndex        =   3
+      Top             =   8040
+      Width           =   360
+      _ExtentX        =   635
+      _ExtentY        =   635
+      Style           =   1
+      Kind            =   3
+   End
+   Begin VB.PictureBox picROM 
       Appearance      =   0  'Flat
       BackColor       =   &H00FFAF00&
       BorderStyle     =   0  'None
-      Caption         =   "Frame1"
       ForeColor       =   &H80000008&
+      HasDC           =   0   'False
       Height          =   3495
-      Left            =   2520
+      Left            =   240
+      ScaleHeight     =   3495
+      ScaleWidth      =   5655
       TabIndex        =   0
-      Top             =   1440
-      Visible         =   0   'False
-      Width           =   5775
-      Begin VB.Label lblStatus 
+      Top             =   240
+      Width           =   5655
+      Begin VB.Label lblExporting 
          Alignment       =   2  'Center
-         Appearance      =   0  'Flat
-         BackColor       =   &H80000005&
          BackStyle       =   0  'Transparent
-         Caption         =   "sonic the hedgehog.sms"
+         Caption         =   "Please Wait..."
          BeginProperty Font 
             Name            =   "Arial"
-            Size            =   8.25
+            Size            =   12
             Charset         =   0
             Weight          =   400
             Underline       =   0   'False
@@ -41,28 +51,16 @@ Begin VB.Form frmPlay
             Strikethrough   =   0   'False
          EndProperty
          ForeColor       =   &H00FFFFFF&
-         Height          =   330
-         Left            =   1440
-         TabIndex        =   2
-         Top             =   3120
-         UseMnemonic     =   0   'False
-         Width           =   2580
-         WordWrap        =   -1  'True
-      End
-      Begin VB.Image Image1 
-         Appearance      =   0  'Flat
-         Enabled         =   0   'False
-         Height          =   1920
-         Left            =   1800
-         Picture         =   "frmPlay.frx":0000
-         Stretch         =   -1  'True
-         Top             =   960
-         Width           =   1920
+         Height          =   495
+         Left            =   0
+         TabIndex        =   4
+         Top             =   120
+         Width           =   5580
       End
       Begin VB.Label lblWhatToDo 
          Alignment       =   2  'Center
          BackStyle       =   0  'Transparent
-         Caption         =   "Drag and drop the cartridge below to a folder to save, or double-click it to launch it in an emulator"
+         Caption         =   "Drag and drop the cartridge below to a folder, or double-click it to launch it in an emulator"
          BeginProperty Font 
             Name            =   "Arial"
             Size            =   12
@@ -74,45 +72,47 @@ Begin VB.Form frmPlay
          EndProperty
          ForeColor       =   &H00FFFFFF&
          Height          =   735
+         Left            =   360
+         TabIndex        =   2
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   4860
+      End
+      Begin VB.Image imgROM 
+         Appearance      =   0  'Flat
+         Height          =   1920
+         Left            =   1800
+         Picture         =   "frmPlay.frx":0000
+         Stretch         =   -1  'True
+         Top             =   960
+         Visible         =   0   'False
+         Width           =   1920
+      End
+      Begin VB.Label lblFileName 
+         Alignment       =   2  'Center
+         Appearance      =   0  'Flat
+         BackColor       =   &H80000005&
+         BackStyle       =   0  'Transparent
+         Caption         =   "Sonic_the_Hedgehog_MaSS1VE.sms"
+         BeginProperty Font 
+            Name            =   "Arial"
+            Size            =   8.25
+            Charset         =   0
+            Weight          =   400
+            Underline       =   0   'False
+            Italic          =   0   'False
+            Strikethrough   =   0   'False
+         EndProperty
+         ForeColor       =   &H00FFFFFF&
+         Height          =   330
          Left            =   0
          TabIndex        =   1
-         Top             =   0
+         Top             =   3120
+         UseMnemonic     =   0   'False
+         Visible         =   0   'False
          Width           =   5580
+         WordWrap        =   -1  'True
       End
-   End
-   Begin MaSS1VE.bluControlBox cbxSizer 
-      Height          =   360
-      Left            =   14760
-      TabIndex        =   4
-      Top             =   8040
-      Width           =   360
-      _ExtentX        =   635
-      _ExtentY        =   635
-      Style           =   1
-      Kind            =   3
-   End
-   Begin VB.Label lblGenerating 
-      Alignment       =   2  'Center
-      Appearance      =   0  'Flat
-      AutoSize        =   -1  'True
-      BackColor       =   &H80000005&
-      BackStyle       =   0  'Transparent
-      Caption         =   "Generating Master System ROM..."
-      BeginProperty Font 
-         Name            =   "Arial Black"
-         Size            =   15.75
-         Charset         =   0
-         Weight          =   900
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      ForeColor       =   &H00FFFFFF&
-      Height          =   450
-      Left            =   2490
-      TabIndex        =   3
-      Top             =   840
-      Width           =   5835
    End
 End
 Attribute VB_Name = "frmPlay"
@@ -130,52 +130,108 @@ Option Explicit
 
 'ROM export screen
 
-'http://www.vbforums.com/showthread.php?629147-RESOLVED-Drag-and-Drop-vbCFFiles-know-the-destination-folder
+'WARNING: Drag and Drop will not work if the app is running as Administrator (elevated, _
+ on Vista and above). I may fix this in the future, but MaSS1VE doesn't need to run _
+ elevated; you might run into this problem if you have set the VB6 IDE to run elevated _
+ (not required for compatibility AFAIK) and you try running MaSS1VE from the IDE _
+ <social.msdn.microsoft.com/Forums/windowsdesktop/en-US/0ccf84fd-b78d-45b3-9b79-7366003cb19d/wmdropfiles-in-an-elevated-application-administrator>
 
-'Private Sub picOLEROM_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
-'    If Button = 1 Then
-'        Call picOLEROM.OLEDrag
-'    End If
-'End Sub
-'
-'Private Sub picOLEROM_OLECompleteDrag(Effect As Long)
-'    Debug.Print "Dropped"
-'End Sub
-'
-'Private Sub picOLEROM_OLEDragOver(Data As DataObject, Effect As Long, Button As Integer, Shift As Integer, X As Single, Y As Single, State As Integer)
-'    Let Effect = VBRUN.OLEDropEffectConstants.vbDropEffectCopy
-'End Sub
-'
-'Private Sub picOLEROM_OLEStartDrag(Data As DataObject, AllowedEffects As Long)
-'    Let AllowedEffects = VBRUN.OLEDropEffectConstants.vbDropEffectCopy
-'    Call Data.Files.Add(Run.Path & "Sonic the Hedgehog (1991)(Sega).sms")
-'    Call Data.SetData(, VBRUN.ClipBoardConstants.vbCFFiles)
-''    Call Data.SetData( _
-''        Run.Path & "Sonic the Hedgehog (1991)(Sega).sms", _
-''        VBRUN.ClipBoardConstants.vbCFFiles _
-''    )
-'End Sub
+'/// API DEFS /////////////////////////////////////////////////////////////////////////
 
+'Launch a file with its associated application _
+ <msdn.microsoft.com/en-us/library/windows/desktop/bb762153%28v=vs.85%29.aspx>
+Private Declare Function shell32_ShellExecute Lib "shell32" Alias "ShellExecuteA" ( _
+    ByVal hndWindow As Long, _
+    ByVal Operation As String, _
+    ByVal File As String, _
+    ByVal Parameters As String, _
+    ByVal Directory As String, _
+    ByVal ShowCmd As SW _
+) As Long
+
+Private Enum SW
+    SW_HIDE = 0
+    SW_SHOWNORMAL = 1
+    SW_SHOWMINIMIZED = 2
+    SW_SHOWMAXIMIZED = 3
+    SW_SHOWNOACTIVATE = 4
+    SW_SHOW = 5
+    SW_MINIMIZE = 6
+    SW_SHOWMINNOACTIVE = 7
+    SW_SHOWNA = 8
+    SW_RESTORE = 9
+    SW_SHOWDEFAULT = 10
+End Enum
+
+'/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
+
+'This will hold the path to the temporary ROM we've cretaed
+Private TempFile As String
+
+'/// EVENTS ///////////////////////////////////////////////////////////////////////////
+
+'FORM Activate : _
+ ======================================================================================
 Private Sub Form_Activate()
-    'TODO: Use temp file for this
-'    Call ROM.Export(Run.Path & "Sonic_the_hedgehog.sms")
-    Let lblGenerating.Visible = False
-    Let fraROM.Visible = True
+    'Show as busy
+    Let Me.MousePointer = VBRUN.MousePointerConstants.vbHourglass
+    'Force a screen refresh here otherwise the form hangs until the export is complete
+    DoEvents
+    'Export to the temporary folder, when the user drags and drops, it will copy it
+    Let TempFile = WIN32.GetTemporaryFolder() & "Sonic_the_Hedgehog_MaSS1VE.sms"
+    'Export the ROM
+    Call ROM.Export(TempFile)
+    'Ready
+    Let Me.lblExporting.Visible = False
+    Let Me.lblWhatToDo.Visible = True
+    Let Me.lblFileName.Visible = True
+    Let Me.imgROM.Visible = True
+    Let Me.MousePointer = VBRUN.MousePointerConstants.vbDefault
 End Sub
 
+'FORM Resize _
+ ======================================================================================
 Private Sub Form_Resize()
+    'Position the sizing box in the corner
     Call Me.cbxSizer.Move( _
         Me.ScaleWidth - Me.cbxSizer.Width, Me.ScaleHeight - Me.cbxSizer.Height _
     )
     
-    Let Me.lblGenerating.Left = (Me.ScaleWidth - Me.lblGenerating.Width) \ 2
-'    Call Me.lblGenerating.Move( _
-'        (Me.ScaleWidth - Me.lblGenerating.Width) \ 2, _
-'        (Me.ScaleHeight - Me.lblGenerating.Height) \ 2 _
-'    )
     'Centre the cartridge icon and message, though slightly up looks better
-    Call Me.fraROM.Move( _
-        (Me.ScaleWidth - Me.fraROM.Width) \ 2, _
-        ((Me.ScaleHeight - Me.fraROM.Height) \ 2) - lblWhatToDo.Height _
+    Call Me.picROM.Move( _
+        (Me.ScaleWidth - Me.picROM.Width) \ 2, _
+        ((Me.ScaleHeight - Me.picROM.Height) \ 2) - lblWhatToDo.Height _
     )
+End Sub
+
+'EVENT imgROM DBLCLICK : Launch the ROM in an emulator _
+ ======================================================================================
+Private Sub imgROM_DblClick()
+    'Change the mouse pointer to background-working whilst we launch the ROM
+    Let mdiMain.MousePointer = VBRUN.MousePointerConstants.vbArrowHourglass
+    'Open the ROM file using explorer, if no file association is set, _
+     the 'choose a program' window should appear
+    Call shell32_ShellExecute( _
+        mdiMain.hWnd, vbNullString, TempFile, vbNullString, vbNullString, _
+        SW_SHOWNORMAL _
+    )
+    'Reset the mouse pointer back to normal
+    Let mdiMain.MousePointer = VBRUN.MousePointerConstants.vbDefault
+End Sub
+
+'EVENT imgROM MOUSEMOVE _
+ ======================================================================================
+Private Sub imgROM_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    'Initiate the drag and drop
+    If Button = VBRUN.MouseButtonConstants.vbLeftButton Then
+        Call imgROM.OLEDrag
+    End If
+End Sub
+
+'EVENT imgROM OLESTARTDRAG : The user has begun dragging the ROM off the form _
+ ======================================================================================
+Private Sub imgROM_OLEStartDrag(Data As DataObject, AllowedEffects As Long)
+    Let AllowedEffects = VBRUN.OLEDropEffectConstants.vbDropEffectCopy
+    Call Data.Files.Add(TempFile)
+    Call Data.SetData(, VBRUN.ClipBoardConstants.vbCFFiles)
 End Sub

@@ -11,8 +11,8 @@ Option Explicit
 
 'Status             In Flux
 'Dependencies       Lib.bas
-'Last Updated       27-AUG-13
-'Last Update        Tiny change to `GetSpecialFolder`
+'Last Updated       02-SEP-13
+'Last Update        Add `GetTemporaryFolder\File` functions
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -239,6 +239,13 @@ Private Enum SHGFP
     SHGFP_TYPE_CURRENT = 0      'Retrieve the folder's current path (it may have moved)
     SHGFP_TYPE_DEFAULT = 1      'Get the default path
 End Enum
+
+'Get the location of the temporary files folder _
+ <msdn.microsoft.com/en-us/library/windows/desktop/aa364992%28v=vs.85%29.aspx>
+Private Declare Function kernel32_GetTempPath Lib "kernel32" Alias "GetTempPathA" ( _
+    ByVal BufferLength As Long, _
+    ByVal Buffer As String _
+) As Long
 
 'Convert a system color (such as "button face" or "inactive window") to a RGB value _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms694353%28v=vs.85%29.aspx>
@@ -780,6 +787,45 @@ End Function
  ======================================================================================
 Public Function GetSystemMetric(ByVal Metric As SM) As Long
     Let GetSystemMetric = user32_GetSystemMetrics(Metric)
+End Function
+
+'GetTemporaryFolder : Get the path to the temporary files folder _
+ ======================================================================================
+Public Function GetTemporaryFolder() As String
+    'Return null should this fail
+    Let GetTemporaryFolder = vbNullString
+    
+    'Fill a buffer to receive the path
+    Dim Result As String
+    Let Result = String$(260, " ")
+    
+    If kernel32_GetTempPath(Len(Result), Result) > 0 Then
+        'The string will be null-terminated; find the end and trim, _
+         also ensure it always ends in a slash (this can be inconsistent)
+        Let GetTemporaryFolder = Lib.EndSlash(Left$( _
+            Result, InStr(1, Result, vbNullChar) - 1 _
+        ))
+    End If
+End Function
+
+'GetTemporaryFile : Get a unique file name in the temporary files folder _
+ ======================================================================================
+Public Function GetTemporaryFile() As String
+    'The Windows `GetTempFileName` API is not reliable, it has a limit of 65'535 files _
+     which could be hit if we generate a lot and the user doesn't clear their cache. _
+     Instead we'll use a timestamp that should be sufficient enough
+        
+    'Generate a unique file name
+    Let GetTemporaryFile = WIN32.GetTemporaryFolder _
+        & App.EXEName & "_" _
+        & Year(Now) _
+        & Right("0" & Month(Now), 2) _
+        & Right("0" & Day(Now), 2) _
+        & Right("0" & Hour(Now), 2) _
+        & Right("0" & Minute(Now), 2) _
+        & Right("0" & Second(Now), 2) _
+        & "_" & Timer _
+        & ".tmp"
 End Function
 
 'InitCommonControls : Enable Windows themeing on controls (application wide) _
