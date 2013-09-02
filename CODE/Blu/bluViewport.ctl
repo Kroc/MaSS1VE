@@ -33,8 +33,8 @@ Option Explicit
 
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
-'Last Updated       26-AUG-13
-'Last Update        Increased the speed of the horizontal wheel scroll
+'Last Updated       02-SEP-13
+'Last Update        Switched to using our shared function for getting the parent form
 
 'This was made with the help of "Adding Scroll Bars to Forms, PictureBoxes and _
  User Controls" by Steve McMahon, though my own work _
@@ -362,7 +362,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         'Attach the mouse events to look for mouse enter / leave / wheel
         Set MouseEvents = New bluMouseEvents
         Call MouseEvents.Attach( _
-            UserControl.hWnd, GetParentForm_hWnd(UserControl.Parent) _
+            UserControl.hWnd, Lib.GetParentForm(UserControl.Parent, True).hWnd _
         )
         'Subclass the control to listen to scroll bar events
         Set Magic = New bluMagic
@@ -661,31 +661,6 @@ Public Sub SetImageProperties( _
 End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
-
-'GetParentForm_hWnd : Recurses through the parent objects until we hit the top form _
- ======================================================================================
-Private Function GetParentForm_hWnd(ByRef StartWith As Object) As Long
-    Do
-        On Error GoTo NowCheckMDI
-        Set StartWith = StartWith.Parent
-    Loop
-NowCheckMDI:
-    On Error GoTo Complete
-    'There is no built in way to find the MDI parent of a child form, though of _
-     course you can only have one MDI form in the app, but I wouldn't want to have to _
-     reference that by name here, yours might be named something else. What we do is _
-     use Win32 to go up through the "MDIClient" window (that isn't exposed to VB) _
-     which acts as the viewport of the MDI form and then up again to hit the MDI form
-    If StartWith.MDIChild = True Then
-        Let GetParentForm_hWnd = _
-            WIN32.user32_GetParent( _
-            WIN32.user32_GetParent(StartWith.hWnd) _
-        )
-        Exit Function
-    End If
-Complete:
-    Let GetParentForm_hWnd = StartWith.hWnd
-End Function
 
 'InitScrollBars _
  ======================================================================================

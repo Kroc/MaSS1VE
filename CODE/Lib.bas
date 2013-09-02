@@ -312,3 +312,45 @@ Public Function DirExists(ByVal Path As String) As Boolean
     Let DirExists = CBool(Dir$(Path, vbDirectory) <> "")
 End Function
 
+'GetParentForm : Recurses through the parent objects until we hit the top form _
+ ======================================================================================
+Public Function GetParentForm( _
+    ByRef StartWith As Object, _
+    Optional ByVal MDIParent As Boolean = False _
+) As Object
+    'Begin with the provided starting object
+    Set GetParentForm = StartWith
+    'Walk up the parent tree as far as we can
+    Do
+        On Error GoTo NowCheckMDI
+        Set GetParentForm = GetParentForm.Parent
+    Loop
+NowCheckMDI:
+    On Error GoTo Complete
+    'Have been asked to negotiate from the MDI child into the MDI parent?
+    If MDIParent = False Then Exit Function
+    
+    'There is no built in way to find the MDI parent of a child form, though of _
+     course you can only have one MDI form in the app, but I wouldn't want to have to _
+     reference that by name here, yours might be named something else. What we do is _
+     use Win32 to go up through the "MDIClient" window (that isn't exposed to VB) _
+     which acts as the viewport of the MDI form and then up again to hit the MDI form
+    If StartWith.MDIChild = True Then
+        Dim MDIParent_hWnd As Long
+        Let MDIParent_hWnd = _
+            WIN32.user32_GetParent( _
+            WIN32.user32_GetParent(GetParentForm.hWnd) _
+        )
+        'Once we have the handle, check the list of loaded VB forms to find the _
+         MDI form it belongs to
+        Dim Frm As Object
+        For Each Frm In VB.Forms
+            If Frm.hWnd = MDIParent_hWnd Then
+                Set GetParentForm = Frm
+                Exit Function
+            End If
+        Next Frm
+    End If
+Complete:
+End Function
+
