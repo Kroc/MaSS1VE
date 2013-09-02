@@ -34,15 +34,17 @@ Option Explicit
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
 'Last Updated       02-SEP-13
-'Last Update        Switched to using our shared function for getting the parent form
+'Last Update        Added `Centre` property to enable/disable centering of image
+
+'--------------------------------------------------------------------------------------
 
 'This was made with the help of "Adding Scroll Bars to Forms, PictureBoxes and _
  User Controls" by Steve McMahon, though my own work _
  <www.vbaccelerator.com/article.asp?id=2185>
  
- 'NOTE: The `AutoRedraw` property of this control is False. Since we are handling _
-  `WM_PAINT` ourselves, we do not need to use VB's backbuffer
-  
+'NOTE: The `AutoRedraw` property of this control is False. Since we are handling _
+ `WM_PAINT` ourselves, we do not need to use VB's backbuffer
+
 '"If AutoRedraw is set to True for a form or PictureBox container, hDC acts as a _
   handle to the device context of the persistent graphic. When AutoRedraw is False, _
   hDC is the actual hDC value of the Form window or the PictureBox container." _
@@ -242,6 +244,8 @@ Private My_ScrollAmount(0 To 1) As Long 'Amount to scroll clicking scroll arrow 
 Private My_ScrollLineSize As Long       'Size of a "line" for mouse wheel scrolling
 Private My_ScrollCharSize As Long       'Size of a "char" for horizontal mouse wheel
 
+Private My_Centre As Boolean            'Centre the image if smaller than the viewport?
+
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
 'When the mouse leaves the viewport
@@ -331,18 +335,21 @@ End Sub
 'CONTROL MouseDown _
  ======================================================================================
 Private Sub UserControl_MouseDown(ByRef Button As Integer, ByRef Shift As Integer, ByRef X As Single, ByRef Y As Single)
+    'TODO: Provide Image X / Y coords
     RaiseEvent MouseDown(Button, Shift, X, Y)
 End Sub
 
 'CONTROL MouseMove _
  ======================================================================================
 Private Sub UserControl_MouseMove(ByRef Button As Integer, ByRef Shift As Integer, ByRef X As Single, ByRef Y As Single)
+    'TODO: Provide Image X / Y coords
     RaiseEvent MouseMove(Button, Shift, X, Y)
 End Sub
 
 'CONTROL MouseUp _
  ======================================================================================
 Private Sub UserControl_MouseUp(ByRef Button As Integer, ByRef Shift As Integer, ByRef X As Single, ByRef Y As Single)
+    'TODO: Provide Image X / Y coords
     RaiseEvent MouseUp(Button, Shift, X, Y)
 End Sub
 
@@ -351,6 +358,7 @@ End Sub
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     With PropBag
         Let Me.BackColor = .ReadProperty(Name:="BackColor", DefaultValue:=VBRUN.SystemColorConstants.vbApplicationWorkspace)
+        Let Me.Centre = .ReadProperty(Name:="Centre", DefaultValue:=True)
         Let Me.ScrollAmountH = .ReadProperty(Name:="ScrollAmountH", DefaultValue:=32)
         Let Me.ScrollAmountV = .ReadProperty(Name:="ScrollAmountV", DefaultValue:=32)
         Let Me.ScrollLineSize = .ReadProperty(Name:="ScrollLineSize", DefaultValue:=16)
@@ -362,7 +370,8 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         'Attach the mouse events to look for mouse enter / leave / wheel
         Set MouseEvents = New bluMouseEvents
         Call MouseEvents.Attach( _
-            UserControl.hWnd, Lib.GetParentForm(UserControl.Parent, True).hWnd _
+            UserControl.hWnd, _
+            Lib.GetParentForm(StartWith:=UserControl.Parent, MDIParent:=True).hWnd _
         )
         'Subclass the control to listen to scroll bar events
         Set Magic = New bluMagic
@@ -405,6 +414,7 @@ End Sub
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
     With PropBag
         Call .WriteProperty(Name:="BackColor", Value:=UserControl.BackColor, DefaultValue:=VBRUN.SystemColorConstants.vbApplicationWorkspace)
+        Call .WriteProperty(Name:="Centre", Value:=My_Centre, DefaultValue:=True)
         Call .WriteProperty(Name:="ScrollAmountH", Value:=My_ScrollAmount(HORZ), DefaultValue:=32)
         Call .WriteProperty(Name:="ScrollAmountV", Value:=My_ScrollAmount(VERT), DefaultValue:=32)
         Call .WriteProperty(Name:="ScrollLineSize", Value:=My_ScrollLineSize, DefaultValue:=16)
@@ -475,6 +485,16 @@ Public Property Let BackColor(ByVal Color As OLE_COLOR)
     End If
     Call Me.Refresh
     Call UserControl.PropertyChanged("BackColor")
+End Property
+
+'PROPERTY Centre : Whether to centre the image if smaller than the viewport _
+ ======================================================================================
+Public Property Get Centre() As Boolean: Let Centre = My_Centre: End Property
+Public Property Let Centre(ByVal State As Boolean)
+    Let My_Centre = State
+    Call InitScrollBars
+    Call Me.Refresh
+    Call UserControl.PropertyChanged("Centre")
 End Property
 
 'PROPERTY hDC : Handle to the device context for the image layer - not the control _
@@ -694,7 +714,7 @@ Private Sub InitScrollBars()
     )
     
     'If the image is narrower than than the viewport then centre it horizontally
-    If c.ImageRECT.Right < c.ClientRECT.Right Then
+    If My_Centre = True And c.ImageRECT.Right < c.ClientRECT.Right Then
         Let c.Centre.X = (c.ClientRECT.Right - c.ImageRECT.Right) \ 2
         Let c.Dst.Width = c.ImageRECT.Right
     Else
@@ -703,7 +723,7 @@ Private Sub InitScrollBars()
     End If
         
     'If the image is shorter than the viewport then centre it vertically
-    If c.ImageRECT.Bottom < c.ClientRECT.Bottom Then
+    If My_Centre = True And c.ImageRECT.Bottom < c.ClientRECT.Bottom Then
         Let c.Centre.Y = (c.ClientRECT.Bottom - c.ImageRECT.Bottom) \ 2
         Let c.Dst.Height = c.ImageRECT.Bottom
     Else
@@ -868,10 +888,11 @@ Private Sub SubclassWindowProcedure( _
                     Case SB.SB_LINERIGHT, SB.SB_LINEDOWN
                         Let .Pos = .Pos + My_ScrollAmount(Bar)
                     
-                    'Page left
+                    'Page left / up
                     Case SB.SB_PAGELEFT, SB.SB_PAGEUP
                         Let .Pos = .Pos - .Page
                         
+                    'Page right / down
                     Case SB.SB_PAGERIGHT, SB.SB_PAGEDOWN
                         Let .Pos = .Pos + .Page
                     

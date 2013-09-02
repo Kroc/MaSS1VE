@@ -311,6 +311,7 @@ Begin VB.Form frmLevel
          Width           =   1575
          _ExtentX        =   2778
          _ExtentY        =   2778
+         Centre          =   0   'False
       End
       Begin VB.PictureBox picBlocksToolbar 
          Appearance      =   0  'Flat
