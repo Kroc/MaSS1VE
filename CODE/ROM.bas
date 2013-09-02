@@ -840,10 +840,8 @@ End Function
 Public Function Verify(ByVal Path As String) As Boolean
     Set BIN = New BinaryFile
     
-    'TODO: Handle files < 512 bytes
     Call BIN.Load(Path)
-    'Verify the first 512 bytes
-    Let Verify = (BIN.CRC(0, 512) = &HF150F769)
+    Let Verify = (BIN.CRC() = &HC64D72D5)
     
     Set BIN = Nothing
 End Function

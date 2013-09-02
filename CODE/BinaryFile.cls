@@ -24,8 +24,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       WIN32.bas
-'Last Updated       28-AUG-13
-'Last Update        Error check in CRC if the file is shorter than the length requested
+'Last Updated       02-SEP-13
+'Last Update        Fix integer limit in CRC procedure
 
 'The CRC function of this class is from "Calculating CRC32 With VB" by Steve McMahon _
  <www.vbaccelerator.com/home/VB/Code/Libraries/CRC32/article.asp> which was _
@@ -161,7 +161,7 @@ Public Function CRC(Optional ByVal OffsetBegin As Long = 0, Optional ByVal Lengt
      if the length requested is longer than the file itself run through to the end
     If Length = 0 Or Length > Me.LOF Then Let Length = UBound(Data) - OffsetBegin
     
-    Dim i As Integer
+    Dim i As Long
     Dim iLookup As Integer
     
     Let CRC = &HFFFFFFFF
