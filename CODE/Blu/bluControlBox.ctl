@@ -42,10 +42,10 @@ Option Explicit
  which must have an aligning picturebox if you want to place anything on the MDIForm
 
 'Status             Ready, awaiting refactoring
-'Dependencies       blu.bas, bluButton.ctl (bluLabel.ctl), Lib.bas, WIN32.bas
-'Last Updated       02-SEP-13
-'Last Update        Added sizer (corner size gripper), _
-                    Mouse can be released outside of the button to cancel the click
+'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), Lib.bas, WIN32.bas
+'Last Updated       03-SEP-13
+'Last Update        If control kind is sizer, will hide itself when the parent form _
+                    maximises
 
 'NOTE: This is due to be rewritten to not depend upon nested controls. The plan is _
  also for this control to act not as one control box button, but as the entire set, _
@@ -90,13 +90,21 @@ Private My_Style As bluSTYLE
 Private WithEvents MouseEvents As bluMouseEvents
 Attribute MouseEvents.VB_VarHelpID = -1
 
+'The form the control belongs too, so excluding any picturebox / frame containers
+Private ParentForm As Object
+
+'If we listen into the events of the parent form then we can automatically hide a _
+ sizer control when the form is maximised. Unfortunately VB6 does not expose a common _
+ class interface shared by regular Forms and MDIForms so we have to do both
+Private WithEvents ParentForm_Events As Form
+Attribute ParentForm_Events.VB_VarHelpID = -1
+Private WithEvents ParentMDIForm_Events As MDIForm
+Attribute ParentMDIForm_Events.VB_VarHelpID = -1
+
 'If the button is a hovered state
 Private IsHovered As Boolean
 'If the mouse is held down, so as to do the clicked effect
 Private IsMouseDown As Boolean
-
-'The form the control belongs too, so excluding any picturebox / frame containers
-Private ParentForm As Object
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
@@ -105,17 +113,20 @@ Private ParentForm As Object
 Private Sub UserControl_InitProperties()
     Let Me.ActiveColour = blu.ActiveColour
     Let Me.BaseColour = blu.BaseColour
-    Set ParentForm = Lib.GetParentForm(UserControl.Parent)
+    Call ReferenceParentForm
 End Sub
 
 'CONTROL MouseDown _
  ======================================================================================
 Private Sub UserControl_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    'Remember when the mouse is down so that any calls to repaint keep the clicked _
+     effect in place
     If IsMouseDown = False Then
         Let IsMouseDown = True
         Call Refresh
     End If
     
+    'If the kind of the control is a sizer, allow resizing of the form by it
     If Button = VBRUN.MouseButtonConstants.vbLeftButton And My_Kind = Sizer Then
         Const WM_NCLBUTTONDOWN As Long = &HA1
         Const HTBOTTOMRIGHT As Long = 17
@@ -135,10 +146,9 @@ End Sub
 'CONTROL MouseUp _
  ======================================================================================
 Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
-    If IsMouseDown = True Then
-        Let IsMouseDown = False
-        Call Refresh
-    End If
+    'When letting go of the mouse, refresh, removing the click effect
+    Let IsMouseDown = False
+    Call Refresh
     
     'If you hold the mouse button down inside the control but release the button _
      outside then it doesn't count (allows you to escape from an accidental close)
@@ -147,7 +157,7 @@ Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single
     If WIN32.user32_PtInRect(ClientRECT, X, Y) = API_FALSE Then Exit Sub
     
     'Only left button applies to action
-    If Button <> 1 Then Exit Sub
+    If Button <> VBRUN.MouseButtonConstants.vbLeftButton Then Exit Sub
     
     'What kind of action do we need to take? _
      (the sizer is handled in `Mouse_Down`)
@@ -172,6 +182,7 @@ End Sub
 Private Sub UserControl_Paint()
     'Set the colours: _
      ----------------------------------------------------------------------------------
+    'TODO: TextColour / InertColour are hard coded
     Dim BackColour As OLE_COLOR
     Dim ForeColour As OLE_COLOR
     
@@ -262,8 +273,7 @@ End Sub
 'CONTROL ReadProperties _
  ======================================================================================
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
-    'Find the parent form we need to control
-    Set ParentForm = Lib.GetParentForm(UserControl.Parent)
+    Call ReferenceParentForm
     
     With PropBag
         Let Me.ActiveColour = .ReadProperty(Name:="ActiveColour", DefaultValue:=blu.ActiveColour)
@@ -305,6 +315,10 @@ Private Sub UserControl_Show(): Call Refresh: End Sub
 Private Sub UserControl_Terminate()
     'Detatch the mouse tracking subclassing
     Set MouseEvents = Nothing
+    'Derefernce the parent form
+    Set ParentForm = Nothing
+    Set ParentForm_Events = Nothing
+    Set ParentMDIForm_Events = Nothing
 End Sub
 
 'CONTROL WriteProperties _
@@ -332,6 +346,18 @@ Private Sub MouseEvents_MouseOut()
     'The mouse has left the button, we need to undo the hover effect
     Let IsHovered = False: Let IsMouseDown = False
     Call Refresh
+End Sub
+
+'EVENT Parent[MDI]Form_Events RESIZE _
+ ======================================================================================
+Private Sub ParentForm_Events_Resize(): Call ParentMDIForm_Events_Resize: End Sub
+Private Sub ParentMDIForm_Events_Resize()
+    'If the window maximised, hide this control if it's a sizer
+    If My_Kind = Sizer Then
+        Let UserControl.Extender.Visible = _
+            Not ParentMDIForm_Events.WindowState = _
+            VBRUN.FormWindowStateConstants.vbMaximized
+    End If
 End Sub
 
 '/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
@@ -380,6 +406,30 @@ Public Property Let Kind(ByVal NewKind As bluControlBox_Kind)
 End Property
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
+
+'ReferenceParentForm : Set the references to the parent form & parent MDI form (if exists) _
+ ======================================================================================
+Private Sub ReferenceParentForm()
+    'Find the parent form we need to control
+    'NOTE: If your form is an MDI child, this will get the MDI parent. bluControlBox _
+     only supports MDI interfaces in so much as a means to split functionality up _
+     between forms rather than having your entire app on one form. It is assumed _
+     that any MDI child is always maximised and that the child form is just one _
+     interface of the whole app and not a 'document' window (don't use borderless UI _
+     for that). Therefore bluControlBox will control the MDI parent, not the child _
+     form when it comes to min / max / close / sizer
+    Set ParentForm = Lib.GetParentForm(UserControl.Parent, True)
+    
+    'NOTE: During compilation, the events won't bind, so we need to skip
+    If blu.UserMode = False Then Exit Sub
+    
+    'Listen into the form events. For example, when the form is maximised, we can _
+     hide the control if it's a size-box
+    If TypeOf ParentForm Is MDIForm _
+        Then Set ParentMDIForm_Events = ParentForm _
+        Else Set ParentForm_Events = ParentForm
+Fail:
+End Sub
 
 'Refresh _
  ======================================================================================

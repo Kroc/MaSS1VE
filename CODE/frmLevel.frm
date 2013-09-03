@@ -645,7 +645,7 @@ End Sub
  ======================================================================================
 Private Sub Form_Unload(Cancel As Integer)
     'Detatch the current level from the form
-    Set Level = Nothing
+    Set My_Level = Nothing
     Set Sprites = Nothing
 End Sub
 
