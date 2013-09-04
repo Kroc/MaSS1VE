@@ -121,6 +121,7 @@ Begin VB.MDIForm mdiMain
          Width           =   3855
          _ExtentX        =   6800
          _ExtentY        =   873
+         Alignment       =   1
          Caption         =   "The quick brown fox jumps over the lazy dog"
          Enabled         =   0   'False
       End

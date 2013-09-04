@@ -34,7 +34,9 @@ Option Explicit
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
 'Last Updated       04-SEP-13
-'Last Update        Added ImageWidth/Height properties
+'Last Update        Made `MouseMove` event fire whenever the viewport scrolls _
+                    (so that the new `ImageX/Y` values can be seen by the controller). _
+                    This is incomplete as the mouse button / key state is not included
 
 '--------------------------------------------------------------------------------------
 
@@ -448,6 +450,7 @@ End Sub
 'EVENT MouseEvents MOUSEHSCROLL _
  ======================================================================================
 Private Sub MouseEvents_MouseHScroll(ByVal CharsScrolled As Single, ByVal Button As MouseButtonConstants, ByVal Shift As ShiftConstants, ByVal X As Single, ByVal Y As Single)
+    'Scroll the viewport...
     With c.Info(HORZ)
         Let .Mask = SIF_POS
         Let .Pos = Lib.Range( _
@@ -456,13 +459,21 @@ Private Sub MouseEvents_MouseHScroll(ByVal CharsScrolled As Single, ByVal Button
         )
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, HORZ, c.Info(HORZ), API_TRUE)
-    Call Me.Refresh
     RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
+    
+    'Raise a mouse move event since the pointer is no longer under the part of the _
+     image it was before and the controller might need the new ImageX/Y values
+    RaiseEvent MouseMove(Button, Shift, X, Y, GetImageX(X), GetImageY(Y))
+    
+    'The viewport is refreshed _after_ the events fire so that your controller _
+     does *not* have to call `Refresh` itself, saving repaints
+    Call Me.Refresh
 End Sub
 
 'EVENT MouseEvents MOUSEVSCROLL _
  ======================================================================================
 Private Sub MouseEvents_MouseVScroll(ByVal LinesScrolled As Single, ByVal Button As MouseButtonConstants, ByVal Shift As ShiftConstants, ByVal X As Single, ByVal Y As Single)
+    'Scroll the viewport...
     With c.Info(VERT)
         Let .Mask = SIF_POS
         Let .Pos = Lib.Range( _
@@ -471,8 +482,15 @@ Private Sub MouseEvents_MouseVScroll(ByVal LinesScrolled As Single, ByVal Button
         )
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
-    Call Me.Refresh
     RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
+    
+    'Raise a mouse move event since the pointer is no longer under the part of the _
+     image it was before and the controller might need the new ImageX/Y values
+    RaiseEvent MouseMove(Button, Shift, X, Y, GetImageX(X), GetImageY(Y))
+    
+    'The viewport is refreshed _after_ the events fire so that your controller _
+     does *not* have to call `Refresh` itself, saving repaints
+    Call Me.Refresh
 End Sub
 
 '/// PROPERTIES ///////////////////////////////////////////////////////////////////////
@@ -502,6 +520,9 @@ Public Property Get Centre() As Boolean: Let Centre = My_Centre: End Property
 Public Property Let Centre(ByVal State As Boolean)
     Let My_Centre = State
     Call InitScrollBars
+    'WARNING: You shouldn't change this property at runtime because if the mouse is _
+     over the viewport when you change this, a mouse move event won't fire to reflect _
+     the new ImageX/Y position under the cursor (we don't have mouse info here)
     Call Me.Refresh
     Call UserControl.PropertyChanged("Centre")
 End Property
@@ -514,11 +535,11 @@ Public Property Get CentreX() As Long: Let CentreX = c.Centre.X: End Property
  ======================================================================================
 Public Property Get CentreY() As Long: Let CentreY = c.Centre.Y: End Property
 
-'PROPERTY hDC : Handle to the device context for the image layer - not the control _
+'PROPERTY hDC : Handle to the device context for the image layer -- not the control _
  ======================================================================================
-Public Property Get hDC( _
-    Optional ByVal Layer As Long = 0 _
-) As Long
+Public Property Get hDC(Optional ByVal Layer As Long = 0) As Long
+    'If you want to paint directly on the viewport use the viewport's `Paint` event, _
+     this is double-buffered so you won't get any flicker
     If NumberOfLayers <> 0 And Layer < NumberOfLayers Then
         Let hDC = Layers(Layer).Image.hDC
     End If
@@ -551,11 +572,9 @@ End Property
 
 'PROPERTY ScrollAmountH : The amount to scroll when clicking the scroll arrows once _
  ======================================================================================
-Public Property Get ScrollAmountH() As Long
+Public Property Get ScrollAmountH() As Long: Let ScrollAmountH = My_ScrollAmount(HORZ): End Property
 Attribute ScrollAmountH.VB_Description = "The amount to scroll (horizontally) clicking the scroll arrow once"
 Attribute ScrollAmountH.VB_ProcData.VB_Invoke_Property = ";Behavior"
-    Let ScrollAmountH = My_ScrollAmount(HORZ)
-End Property
 Public Property Let ScrollAmountH(ByVal Value As Long)
     Let My_ScrollAmount(HORZ) = Value
     Call UserControl.PropertyChanged("ScrollAmountH")
@@ -563,11 +582,9 @@ End Property
 
 'PROPERTY ScrollAmountV : The amount to scroll when clicking the scroll arrows once _
  ======================================================================================
-Public Property Get ScrollAmountV() As Long
+Public Property Get ScrollAmountV() As Long: Let ScrollAmountV = My_ScrollAmount(VERT): End Property
 Attribute ScrollAmountV.VB_Description = "The amount to scroll (vertically) clicking the scroll arrow once"
 Attribute ScrollAmountV.VB_ProcData.VB_Invoke_Property = ";Behavior"
-    Let ScrollAmountV = My_ScrollAmount(VERT)
-End Property
 Public Property Let ScrollAmountV(ByVal Value As Long)
     Let My_ScrollAmount(VERT) = Value
     Call UserControl.PropertyChanged("ScrollAmountV")
@@ -575,11 +592,9 @@ End Property
 
 'PROPERTY ScrollLineSize : The size of a "line" for mouse wheel scrolling _
  ======================================================================================
-Public Property Get ScrollLineSize() As Long
+Public Property Get ScrollLineSize() As Long: Let ScrollLineSize = My_ScrollLineSize: End Property
 Attribute ScrollLineSize.VB_Description = "The size (in px) of a ""line"" for vertical mouse wheel scrolling."
 Attribute ScrollLineSize.VB_ProcData.VB_Invoke_Property = ";Behavior"
-    Let ScrollLineSize = My_ScrollLineSize
-End Property
 Public Property Let ScrollLineSize(ByVal Value As Long)
     Let My_ScrollLineSize = Value
     Call UserControl.PropertyChanged("ScrollLineSize")
@@ -587,11 +602,9 @@ End Property
 
 'PROPERTY ScrollCharSize : The size of a "char" for horizontal wheel scrolling _
  ======================================================================================
-Public Property Get ScrollCharSize() As Long
+Public Property Get ScrollCharSize() As Long: Let ScrollCharSize = My_ScrollCharSize: End Property
 Attribute ScrollCharSize.VB_Description = "The size (in px) of a ""char"" for horizontal mouse wheel scrolling."
 Attribute ScrollCharSize.VB_ProcData.VB_Invoke_Property = ";Behavior"
-    Let ScrollCharSize = My_ScrollCharSize
-End Property
 Public Property Let ScrollCharSize(ByVal Value As Long)
     Let My_ScrollCharSize = Value
     Call UserControl.PropertyChanged("ScrollCharSize")
@@ -601,26 +614,52 @@ End Property
  ======================================================================================
 Public Property Get ScrollX() As Long: Let ScrollX = c.Info(HORZ).Pos: End Property
 Public Property Let ScrollX(ByVal Value As Long)
+    'Scroll the viewport...
     With c.Info(HORZ)
         Let .Mask = SIF_POS
         Let .Pos = Lib.Max(.Pos, Me.ScrollMax(HORZ))
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, HORZ, c.Info(HORZ), API_TRUE)
-    Call Me.Refresh
     RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
+    
+    'Raise a mouse move event since the pointer is no longer under the part of the _
+     image it was before and the controller might need the new ImageX/Y values
+    Dim MousePos As POINT
+    Let MousePos = GetMousePos()
+    'TODO: Get mouse button / key state
+    RaiseEvent MouseMove( _
+        0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
+    )
+    
+    'The viewport is refreshed _after_ the events fire so that your controller _
+     does *not* have to call `Refresh` itself, saving repaints
+    Call Me.Refresh
 End Property
 
 'PROPERTY ScrollY : Scroll the viewport to a specific place vertically _
  ======================================================================================
 Public Property Get ScrollY() As Long: Let ScrollY = c.Info(VERT).Pos: End Property
 Public Property Let ScrollY(ByVal Value As Long)
+    'Scroll the viewport...
     With c.Info(VERT)
         Let .Mask = SIF_POS
         Let .Pos = Lib.Max(.Pos, Me.ScrollMax(VERT))
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
-    Call Me.Refresh
     RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
+    
+    'Raise a mouse move event since the pointer is no longer under the part of the _
+     image it was before and the controller might need the new ImageX/Y values
+    Dim MousePos As POINT
+    Let MousePos = GetMousePos()
+    'TODO: Get mouse button / key state
+    RaiseEvent MouseMove( _
+        0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
+    )
+    
+    'The viewport is refreshed _after_ the events fire so that your controller _
+     does *not* have to call `Refresh` itself, saving repaints
+    Call Me.Refresh
 End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
@@ -684,10 +723,21 @@ Public Sub ScrollTo(ByVal X As Long, ByVal Y As Long)
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
     
-    'Repaint to see the new location
-    Call Me.Refresh
-    
+    'Alert the controller to the scroll happening
     RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
+    
+    'Raise a mouse move event since the pointer is no longer under the part of the _
+     image it was before and the controller might need the new ImageX/Y values
+    Dim MousePos As POINT
+    Let MousePos = GetMousePos()
+    'TODO: Get mouse button / key state
+    RaiseEvent MouseMove( _
+        0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
+    )
+    
+    'The viewport is refreshed _after_ the events fire so that your controller _
+     does *not* have to call `Refresh` itself, saving repaints
+    Call Me.Refresh
 End Sub
 
 'SetImageProperties : Set the size of the back buffer image to scroll around _
@@ -723,6 +773,19 @@ End Function
  ======================================================================================
 Private Function GetImageY(ByVal Y As Long) As Long
     Let GetImageY = c.Info(VERT).Pos + (Y - c.Centre.Y)
+End Function
+
+'GetMousePos : Get the mouse position within the viewport _
+ ======================================================================================
+Private Function GetMousePos() As POINT
+    'When the viewport is scrolled by keyboard or by the controller (`ScrollTo`), _
+     then we want to fire a `MouseMove` event to say that the mouse pointer is under _
+     a different part of the image than before (`ImageX/Y`), but the mouse position _
+     is not always immediately available to us in that event (e.g. keyboard scrolling).
+    'This function retrieves the mouse position on the viewport for those purposes, _
+     just be warned that the X/Y values could be negative!
+    Call WIN32.user32_GetCursorPos(GetMousePos)
+    Call WIN32.user32_ScreenToClient(UserControl.hWnd, GetMousePos)
 End Function
 
 'InitScrollBars _
@@ -953,18 +1016,30 @@ Private Sub SubclassWindowProcedure( _
                 Let ScrollBy(Bar) = ScrollBy(Bar) - .Pos
             End With
             
+            'Update the scroll bar
+            Call user32_SetScrollInfo(UserControl.hWnd, Bar, c.Info(Bar), API_TRUE)
+            
+            'Alert the owner of the move
+            RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
+            
+            'Raise a mouse move event since the pointer is no longer under the part _
+             of the image it was before and the controller might need the new _
+             ImageX/Y values
+            Dim MousePos As POINT
+            Let MousePos = GetMousePos()
+            'TODO: Get mouse button / key state
+            RaiseEvent MouseMove( _
+                0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
+            )
+            
             'Scroll the pixels in the window
             Call user32_ScrollWindowEx( _
                 UserControl.hWnd, ScrollBy(HORZ), ScrollBy(VERT), _
                 0, 0, 0, 0, SW_INVALIDATE _
             )
-            'Send `WM_PAINT` to fill in the empty area
+            'The viewport is refreshed _after_ the events fire so that your controller _
+             does *not* have to call `Refresh` itself, saving repaints
             Call user32_UpdateWindow(UserControl.hWnd)
-            
-            'Update the scroll bar
-            Call user32_SetScrollInfo(UserControl.hWnd, Bar, c.Info(Bar), API_TRUE)
-            'Alert the owner of the move
-            RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
             
             Let ReturnValue = 0
             Let Handled = True

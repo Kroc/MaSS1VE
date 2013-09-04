@@ -11,8 +11,8 @@ Option Explicit
 
 'Status             In Flux
 'Dependencies       Lib.bas
-'Last Updated       03-SEP-13
-'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
+'Last Updated       04-SEP-13
+'Last Update        Added `GetCursorPos`, `ScreenToClient` & `FrameRect` calls
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -285,6 +285,19 @@ Public Declare Function user32_OffsetRect Lib "user32" Alias "OffsetRect" ( _
     ByVal Y As Long _
 ) As BOOL
 
+'Get mouse position in screen coordinates _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms648390%28v=vs.85%29.aspx>
+Public Declare Function user32_GetCursorPos Lib "user32" Alias "GetCursorPos" ( _
+    ByRef Pos As POINT _
+) As BOOL
+
+'Convert an X/Y point on the screen to local coordinates of a window area _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162952%28v=vs.85%29.aspx>
+Public Declare Function user32_ScreenToClient Lib "user32" Alias "ScreenToClient" ( _
+    ByVal hndWindow As Long, _
+    ByRef ScreenPoint As POINT _
+) As BOOL
+
 'Is a point in the rectangle? e.g. check if mouse is within a window _
  <msdn.microsoft.com/en-us/library/windows/desktop/dd162882%28v=vs.85%29.aspx>
 Public Declare Function user32_PtInRect Lib "user32" Alias "PtInRect" ( _
@@ -389,7 +402,15 @@ Public Declare Function gdi32_SetWorldTransform Lib "gdi32" Alias "SetWorldTrans
  <msdn.microsoft.com/en-us/library/windows/desktop/dd162719%28v=vs.85%29.aspx>
 Public Declare Function user32_FillRect Lib "user32" Alias "FillRect" ( _
     ByVal hndDeviceContext As Long, _
-    ByRef ptrRECT As RECT, _
+    ByRef Rectangle As RECT, _
+    ByVal hndBrush As Long _
+) As Long
+
+'Paint a square box (without fill) _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd144838%28v=vs.85%29.aspx>
+Public Declare Function user32_FrameRect Lib "user32" Alias "FrameRect" ( _
+    ByVal hndDeviceContext As Long, _
+    ByRef Rectangle As RECT, _
     ByVal hndBrush As Long _
 ) As Long
 

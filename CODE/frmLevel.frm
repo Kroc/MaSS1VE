@@ -34,9 +34,9 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   360
-         _extentx        =   635
-         _extenty        =   635
-         kind            =   3
+         _ExtentX        =   635
+         _ExtentY        =   635
+         Kind            =   3
       End
       Begin MaSS1VE.bluButton btnZoom2 
          Height          =   360
@@ -45,9 +45,9 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   495
-         _extentx        =   873
-         _extenty        =   635
-         caption         =   "2×"
+         _ExtentX        =   873
+         _ExtentY        =   635
+         Caption         =   "2×"
       End
       Begin MaSS1VE.bluButton btnZoomTV 
          Height          =   360
@@ -56,9 +56,9 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   495
-         _extentx        =   873
-         _extenty        =   635
-         caption         =   "TV"
+         _ExtentX        =   873
+         _ExtentY        =   635
+         Caption         =   "TV"
       End
       Begin MaSS1VE.bluButton btnGrid 
          Height          =   360
@@ -67,9 +67,9 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _extentx        =   1085
-         _extenty        =   635
-         caption         =   "OFF"
+         _ExtentX        =   1085
+         _ExtentY        =   635
+         Caption         =   "OFF"
       End
       Begin MaSS1VE.bluButton btnZoom1 
          Height          =   360
@@ -78,18 +78,19 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   495
-         _extentx        =   873
-         _extenty        =   635
-         caption         =   "1×"
+         _ExtentX        =   873
+         _ExtentY        =   635
+         Caption         =   "1×"
       End
       Begin MaSS1VE.bluLabel lblMemory 
          Height          =   375
          Left            =   240
          Top             =   0
+         Visible         =   0   'False
          Width           =   3735
-         _extentx        =   6588
-         _extenty        =   661
-         caption         =   "1,319 bytes floor layout memory free"
+         _ExtentX        =   6588
+         _ExtentY        =   661
+         Caption         =   "1,319 bytes floor layout memory free"
       End
       Begin MaSS1VE.bluLabel lblZoom 
          Height          =   360
@@ -97,10 +98,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _extentx        =   1296
-         _extenty        =   635
-         alignment       =   1
-         caption         =   "zoom"
+         _ExtentX        =   1296
+         _ExtentY        =   635
+         Alignment       =   1
+         Caption         =   "zoom"
       End
       Begin MaSS1VE.bluLabel lblGrid 
          Height          =   360
@@ -108,10 +109,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _extentx        =   1085
-         _extenty        =   635
-         alignment       =   1
-         caption         =   "grid"
+         _ExtentX        =   1085
+         _ExtentY        =   635
+         Alignment       =   1
+         Caption         =   "grid"
       End
    End
    Begin MaSS1VE.bluViewport vwpLevel 
@@ -120,8 +121,8 @@ Begin VB.Form frmLevel
       TabIndex        =   13
       Top             =   480
       Width           =   10935
-      _extentx        =   19288
-      _extenty        =   13361
+      _ExtentX        =   19288
+      _ExtentY        =   13361
    End
    Begin MaSS1VE.bluTab bluTab 
       Height          =   1200
@@ -129,11 +130,11 @@ Begin VB.Form frmLevel
       TabIndex        =   7
       Top             =   480
       Width           =   495
-      _extentx        =   873
-      _extenty        =   2117
-      autosize        =   -1  'True
-      border          =   0   'False
-      orientation     =   1
+      _ExtentX        =   873
+      _ExtentY        =   2117
+      AutoSize        =   -1  'True
+      Border          =   0   'False
+      Orientation     =   1
    End
    Begin VB.PictureBox picToolbar 
       Appearance      =   0  'Flat
@@ -193,10 +194,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _extentx        =   1296
-         _extenty        =   847
-         caption         =   "UNDO"
-         style           =   1
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Caption         =   "UNDO"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnRedo 
          Height          =   480
@@ -205,10 +206,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _extentx        =   1296
-         _extenty        =   847
-         caption         =   "REDO"
-         style           =   1
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Caption         =   "REDO"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnShare 
          Height          =   480
@@ -217,10 +218,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   975
-         _extentx        =   1720
-         _extenty        =   847
-         caption         =   "SHARE"
-         style           =   1
+         _ExtentX        =   1720
+         _ExtentY        =   847
+         Caption         =   "SHARE"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnCut 
          Height          =   480
@@ -229,10 +230,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _extentx        =   1085
-         _extenty        =   847
-         caption         =   "CUT"
-         style           =   1
+         _ExtentX        =   1085
+         _ExtentY        =   847
+         Caption         =   "CUT"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnCopy 
          Height          =   480
@@ -241,10 +242,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _extentx        =   1296
-         _extenty        =   847
-         caption         =   "COPY"
-         style           =   1
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Caption         =   "COPY"
+         Style           =   1
       End
       Begin MaSS1VE.bluButton btnPaste 
          Height          =   480
@@ -253,10 +254,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   855
-         _extentx        =   1508
-         _extenty        =   847
-         caption         =   "PASTE"
-         style           =   1
+         _ExtentX        =   1508
+         _ExtentY        =   847
+         Caption         =   "PASTE"
+         Style           =   1
       End
       Begin VB.Line lineSplit 
          BorderColor     =   &H00FFAF00&
@@ -309,9 +310,9 @@ Begin VB.Form frmLevel
          TabIndex        =   14
          Top             =   1200
          Width           =   1575
-         _extentx        =   2778
-         _extenty        =   2778
-         centre          =   0   'False
+         _ExtentX        =   2778
+         _ExtentY        =   2778
+         Centre          =   0   'False
       End
       Begin VB.PictureBox picBlocksToolbar 
          Appearance      =   0  'Flat
@@ -364,20 +365,20 @@ Begin VB.Form frmLevel
             Left            =   480
             Top             =   0
             Width           =   615
-            _extentx        =   1085
-            _extenty        =   873
-            caption         =   "LMB"
-            style           =   1
+            _ExtentX        =   1085
+            _ExtentY        =   873
+            Caption         =   "LMB"
+            Style           =   1
          End
          Begin MaSS1VE.bluLabel lblRMB 
             Height          =   495
             Left            =   480
             Top             =   600
             Width           =   615
-            _extentx        =   1085
-            _extenty        =   873
-            caption         =   "RMB"
-            style           =   1
+            _ExtentX        =   1085
+            _ExtentY        =   873
+            Caption         =   "RMB"
+            Style           =   1
          End
       End
    End
@@ -404,36 +405,8 @@ Option Explicit
 Private x32(0 To 256) As Long               'Multiples of 32 (for blocks)
 Private x8(0 To 256) As Long                'Multiples of 8 (for tiles)
 
-'To speed things up we cache lots of calculations that don't change every frame
-Private Type CACHEVARS
-    'The size of a block, 32 normally, but multiplied for zooming
-    BlockSize As Long
-    'When the viewport is larger than the level, we centre the level in the viewport
-    Centre As POINT
-    'When centred, the portion of level to paint is smaller than the viewport, _
-     otherwise these will be the size of the viewport
-    Dest As SIZE
-    'The portion of the level to display in the viewport. At zoom level 1, this is _
-     the same as the DestWidth/Height, but zoomed in, it will be smaller
-    Src As SIZE
-    'The offset to the block in the upper left hand corner, that is, how far scrolled _
-     we are measured in blocks
-    Block As POINT
-    'Since we can scroll per-pixel, this is a cache of how many pixels offset we are _
-     from the nearest block (above)
-    BlockPxOffset As POINT
-    'The block offset of the mouse hover (to draw a rectangle around the current block)
-    Hover As POINT
-    
-    'The water line position, in pixels, in the object layout cache image _
-     (that is, where to paint the water line waves across the whole level)
-    WaterLevelPx As Long
-    
-    'The height in pixels of the block mappings image in the side pane, _
-     this is used so we know how to set the scrollbar
-    BlockListHeight As Long
-End Type
-Private c As CACHEVARS
+'The block offset of the mouse hover (to draw a rectangle around the current block)
+Private Hover As POINT
 
 'How wide the side-pane is measured in blocks
 Private Const PaneBlockWidth As Long = 7
@@ -705,9 +678,7 @@ End Sub
 'The level class will trigger this event when object &H40 is set which controls _
  where the water line is in the level (i.e. Labyrinth)
 Private Sub My_Level_WaterLevelChange()
-    'Recalculate where the water line exists on the level height
-    Let c.WaterLevelPx = x32(My_Level.ObjectLayout.WaterLevel) - 4
-    'And refresh
+    'Repaint the level
     Call RepaintLevel
 End Sub
 
@@ -753,15 +724,47 @@ Private Sub cmbLevels_Click()
     )
 End Sub
 
+'EVENT vwpLevel MOUSE[DOWN/MOVE/UP] : Mouse interacting with the level _
+ ======================================================================================
+Private Sub vwpLevel_MouseDown(ByVal Button As MouseButtonConstants, ByVal Shift As ShiftConstants, ByVal X As Single, ByVal Y As Single, ByVal ImageX As Long, ByVal ImageY As Long)
+    Call HandleMouse(Button, Shift, X, Y, ImageX, ImageY)
+End Sub
+Private Sub vwpLevel_MouseMove(ByVal Button As MouseButtonConstants, ByVal Shift As ShiftConstants, ByVal X As Single, ByVal Y As Single, ByVal ImageX As Long, ByVal ImageY As Long)
+    Call HandleMouse(Button, Shift, X, Y, ImageX, ImageY)
+End Sub
+Private Sub vwpLevel_MouseUp(ByVal Button As MouseButtonConstants, ByVal Shift As ShiftConstants, ByVal X As Single, ByVal Y As Single, ByVal ImageX As Long, ByVal ImageY As Long)
+    Call HandleMouse(Button, Shift, X, Y, ImageX, ImageY)
+End Sub
+
 'EVENT vwpLevel MOUSEOUT : Mouse has gone out of the level viewport _
  ======================================================================================
 Private Sub vwpLevel_MouseOut()
     Call mdiMain.SetTip
     'Clear the hover box
-    Let c.Hover.X = -1: Let c.Hover.Y = -1
+    Let Hover.X = -1: Let Hover.Y = -1
     
-    'TODO: Render selection rectangle on the viewport
-'   Call RepaintLevel
+    'Refresh the viewport so the hover rectangle disappears
+    Call vwpLevel.Refresh
+End Sub
+
+'EVENT vwpLevel PAINT : whenever the level viewport changes, paint on the selection _
+ ======================================================================================
+Private Sub vwpLevel_Paint(ByVal hDC As Long)
+    'If the mouse is not hovered over any block nor is there a selection, then skip
+    If Hover.X = -1 Then Exit Sub
+    
+    'Determine where in the viewport the selection rectangle begins
+    Dim X As Long, Y As Long
+    Let X = Me.vwpLevel.CentreX + ((Hover.X * 32) - Me.vwpLevel.ScrollX)
+    Let Y = Me.vwpLevel.CentreY + ((Hover.Y * 32) - Me.vwpLevel.ScrollY)
+    
+    Dim Box As RECT
+    Call WIN32.user32_SetRect(Box, X, Y, X + 35, Y + 35)
+    Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(BLACK_BRUSH))
+    Call WIN32.user32_SetRect(Box, X - 1, Y - 1, X + 33, Y + 33)
+    Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(WHITE_BRUSH))
+    Call WIN32.user32_SetRect(Box, X - 2, Y - 2, X + 34, Y + 34)
+    Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(WHITE_BRUSH))
 End Sub
 
 'EVENT vwpBlocks MOUSEUP _
@@ -770,8 +773,8 @@ Private Sub vwpBlocks_MouseUp(ByVal Button As MouseButtonConstants, ByVal Shift 
     'Which block was clicked?
     Dim Index As Long
     Let Index = _
-        ((Y \ 33) * PaneBlockWidth) _
-        + (X \ 33)
+        ((ImageY \ 33) * PaneBlockWidth) _
+        + (ImageX \ 33)
     
     'Only allow clicks within the block range
     If Index >= 0 Or Index = (Level.BlockMapping.Length - 1) Then
@@ -839,9 +842,6 @@ Public Property Set Level(ByVal TheLevel As S1Level)
         Let Me.BlockSelectLeft = 1
         Let Me.BlockSelectRight = 0
         
-        'Recalculate where the water line exists on the level height
-        Let c.WaterLevelPx = x32(My_Level.ObjectLayout.WaterLevel) - 4
-        
         'Cache an image of the water line across the whole level _
          (this is significantly faster than painting the line every repaint)
         Set WaterLineCache = New bluImage
@@ -892,20 +892,17 @@ Public Property Set Level(ByVal TheLevel As S1Level)
         
         'Block mappings side pane: _
          ------------------------------------------------------------------------------
+        'Create the blocks image in the viewport
+        Let vwpBlocks.BackColor = blu.BaseColour
         'Determine the height of the block list based on _
          a. the number of blocks in the mapping _
          b. the number of blocks in the width of the side pane
         'This is trickier than it sounds because of rounding problems where you need _
-         one extra row for one or two blocks
-        Let c.BlockListHeight = _
-            x32(Lib.RoundUp(Level.BlockMapping.Length / PaneBlockWidth)) + _
-            Lib.RoundUp(Level.BlockMapping.Length / PaneBlockWidth)
-        
-        'Create the blocks image in the viewport
-        Let vwpBlocks.BackColor = blu.BaseColour
+         one extra row for only one or two blocks (which would normally round down)
         Call vwpBlocks.SetImageProperties( _
             Width:=x32(PaneBlockWidth) + PaneBlockWidth - 1, _
-            Height:=c.BlockListHeight _
+            Height:=x32(Lib.RoundUp(Level.BlockMapping.Length / PaneBlockWidth)) + _
+                    Lib.RoundUp(Level.BlockMapping.Length / PaneBlockWidth) _
         )
         Dim i As Byte
         For i = 0 To My_Level.BlockMapping.Length - 1
@@ -928,12 +925,9 @@ Public Property Get Zoom() As Long: Let Zoom = My_Zoom: End Property
 Public Property Let Zoom(ByVal ZoomLevel As Long)
     Let My_Zoom = ZoomLevel
     
-    Let c.BlockSize = x32(My_Zoom)
     Me.btnZoom1.State = IIf(My_Zoom = 1, bluSTATE.Active, bluSTATE.Inactive)
     Me.btnZoom2.State = IIf(My_Zoom = 2, bluSTATE.Active, bluSTATE.Inactive)
     Me.btnZoomTV.State = IIf(My_Zoom = 3, bluSTATE.Active, bluSTATE.Inactive)
-    
-    Call Form_Resize
 End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
@@ -1036,70 +1030,78 @@ Private Sub CacheBlocks()
     Next i
 End Sub
 
-'HandleMouse : The MouseDown / Move / Up events are handled similarly _
+'HandleMouse : The MouseDown / Move / Up events are handled the same _
  ======================================================================================
-Private Sub HandleMouse(ByRef Button As Integer, ByRef Shift As Integer, ByRef X As Single, ByRef Y As Single)
-    Dim iX As Long, iY As Long
+Private Sub HandleMouse( _
+    ByVal Button As Integer, ByVal Shift As Integer, _
+    ByVal X As Single, ByVal Y As Single, _
+    ByVal ImageX As Long, ByVal ImageY As Long _
+)
+    Dim Block As POINT
     
     'If the level is thinner/shorter than the viewport it'll be centred; if the mouse _
-     is above / to the left of where the level is centred, there's no point going any _
-     further, skip ahead to "mouse out" now
-    If X - c.Centre.X <= 0 Then GoTo Invalid
-    If Y - c.Centre.Y <= 0 Then GoTo Invalid
+     is outside of where the level is centred, there's no point going any further, _
+     skip ahead to "mouse out" now
+    If ImageX < 0 Then GoTo Invalid
+    If ImageY < 0 Then GoTo Invalid
+    If ImageX >= Me.vwpLevel.ImageWidth Then GoTo Invalid
+    If ImageY >= Me.vwpLevel.ImageHeight Then GoTo Invalid
     
     'Calculate which block the mouse is over
-    Let iX = c.Block.X + (((X - c.Centre.X) + (c.BlockPxOffset.X * My_Zoom)) \ c.BlockSize)
-    Let iY = c.Block.Y + (((Y - c.Centre.Y) + (c.BlockPxOffset.Y * My_Zoom)) \ c.BlockSize)
+    Let Block.X = ImageX \ 32: Let Block.Y = ImageY \ 32
+    'Has the hover rectangle moved from one block to the next? _
+     (we want to ensure we repaint only when the mouse moves from one block to another _
+      and not with every single mouse move event)
+    Dim DoRefresh As Boolean
+    If Block.X <> Hover.X Or Block.Y <> Hover.Y Then Let DoRefresh = True
+    'Remember which block the mouse is over so that whenever the viewport repaints, _
+     we can draw the hover rectangle
+    Let Hover.X = Block.X: Let Hover.Y = Block.Y
     
-    'Is this within level boundaries? (If the level is centred in the viewport then _
-     there will be space below / to the right)
-    If iX >= 0 And iX < Level.Width And _
-       iY >= 0 And iY < Level.Height _
-    Then
-        'Just hovering, thanks
-        If Button = 0 Then
-            Call mdiMain.SetTip( _
-                "L/R CLICK: Set blocks CTRL: Select an area" _
-            )
-            
-        'Left Click:
-        ElseIf Button = 1 Then
-            'Change the block to the one set to the left mouse button. _
-             The `My_Level_BlockMappingChange` event will paint the changed block _
-             and refresh the viewport for us (we don't need to repaint the whole level)
-            Let Level.FloorLayout.Block(iX, iY) = BlockSelectLeft
-            
-        'Right Click:
-        ElseIf Button = 2 Then
-            'As above, but with the right mouse button
-            Let Level.FloorLayout.Block(iX, iY) = BlockSelectRight
-            
-        'Middle Click:
-        ElseIf Button = 4 Then
-            'Pick the current block under the mouse cursor
-            Let BlockSelectLeft = Level.FloorLayout.Block(iX, iY)
-            
-        End If
+    'Just hovering, thanks
+    If Button = 0 Then
+        Call mdiMain.SetTip( _
+            "L/R CLICK: Set blocks" _
+        )
         
-        'Is the mouse in a different block than it was last time?
-        Dim DoRender As Boolean
-        If iX <> c.Hover.X Or iY <> c.Hover.Y Then
-            Let c.Hover.X = iX: Let c.Hover.Y = iY
-            'TODO: Render the selection rectangle
-        End If
+    'Left Click:
+    ElseIf Button = VBRUN.MouseButtonConstants.vbLeftButton Then
+        'Change the block to the one set to the left mouse button. _
+         The `My_Level_FloorLayoutChange` event will paint the changed block _
+         and refresh the viewport for us (we don't need to repaint the whole level)
+        Let Level.FloorLayout.Block(Block.X, Block.Y) = BlockSelectLeft
+        'We can leave here; if the selection rectangle moved it will already have _
+         been redrawn with the above code causing a repaint
+        Exit Sub
         
-    Else
-Invalid:
-        'Clear the help tip when in the viewport, but not on a map block
-        Call mdiMain.SetTip
-        'The mouse is not over any block; if this is a change to previously, refresh
-        If iX <> -1 And iY <> -1 Then
-            Let c.Hover.X = -1: Let c.Hover.Y = -1
-            'TODO: Render the selection rectangle
-        Else
-            Let c.Hover.X = -1: Let c.Hover.Y = -1
-        End If
+    'Right Click:
+    ElseIf Button = VBRUN.MouseButtonConstants.vbRightButton Then
+        'As above, but with the right mouse button
+        Let Level.FloorLayout.Block(Block.X, Block.Y) = BlockSelectRight
+        Exit Sub
+        
+    'Middle Click:
+    ElseIf Button = VBRUN.MouseButtonConstants.vbMiddleButton Then
+        'Pick the current block under the mouse cursor
+        Let BlockSelectLeft = Level.FloorLayout.Block(Block.X, Block.Y)
+        
     End If
+    
+    'Is the mouse in a different block than it was last time?
+    If DoRefresh = True Then Call Me.vwpLevel.Refresh
+    
+    Exit Sub
+    
+Invalid:
+    'The mouse is not over any block; _
+     if this is a change to previously, refresh
+    If Hover.X <> -1 Then
+        'No hover rectangle
+        Let Hover.X = -1: Let Hover.Y = -1
+        Call Me.vwpLevel.Refresh
+    End If
+    'Clear the help tip when in the viewport, but not on a map block
+    Call mdiMain.SetTip
 End Sub
 
 'PaintBlock _
@@ -1274,24 +1276,11 @@ Private Sub RepaintLevel()
     
     If My_Level.IsUnderWater = True Then
         Call WaterLineCache.Paint( _
-            vwpLevel_hDC1, 0, c.WaterLevelPx _
+            vwpLevel_hDC1, 0, x32(MyLevel_ObjectLayout_WaterLevel) - 4 _
         )
     End If
     
     Debug.Print "Repaint Object Layout - " & Round(Timer - StartTimeO, 4)
-    
-'    'Mouse hover rectangle: _
-'     ----------------------------------------------------------------------------------
-'    'Is the mouse hovered over a block?
-'    If c.Hover.X <> -1 And c.Hover.Y <> -1 Then
-'        Dim px As Long, pY As Long
-'        Let px = c.Centre.X + ((c.Hover.X - c.Block.X) * c.BlockSize) - (c.BlockPxOffset.X * My_Zoom)
-'        Let pY = c.Centre.Y + ((c.Hover.Y - c.Block.Y) * c.BlockSize) - (c.BlockPxOffset.Y * My_Zoom)
-'
-'        Me.picRender.Line (px, pY)-(px + c.BlockSize + 2, pY + c.BlockSize + 2), &H202020, B
-'        Me.picRender.Line (px - 1, pY - 1)-(px + c.BlockSize, pY + c.BlockSize), &HF8F8F8, B
-'        Me.picRender.Line (px - 2, pY - 2)-(px + c.BlockSize + 1, pY + c.BlockSize + 1), &HF8F8F8, B
-'    End If
     
     Call Me.vwpLevel.Refresh
 End Sub
