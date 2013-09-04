@@ -42,13 +42,6 @@ Private Sub Main()
     'Set `Run.Path` so that program output goes to the BUILD folder when in IDE
     Let Run.Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "BUILD\", "")
         
-    'Allow Windows to theme VB's controls
-    'NOTE: This works because "CompiledInResources.res" contains a manifest file, _
-     see <www.vbforums.com/showthread.php?606736-VB6-XP-Vista-Win7-Manifest-Creator>
-    Call WIN32.InitCommonControls( _
-        ICC_STANDARD_CLASSES Or ICC_INTERNET_CLASSES _
-    )
-        
     'Check for Sonic 1 ROM _
      ----------------------------------------------------------------------------------
     'MaSS1VE requires access to an original Sonic 1 ROM when starting a new project _

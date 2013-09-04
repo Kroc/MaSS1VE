@@ -468,6 +468,16 @@ Private My_Zoom As Long
 'FORM Initialize _
  ======================================================================================
 Private Sub Form_Initialize()
+    'Allow Windows to theme VB's controls
+    'NOTE: This works because "CompiledInResources.res" contains a manifest file, _
+     see <www.vbforums.com/showthread.php?606736-VB6-XP-Vista-Win7-Manifest-Creator>
+    'We're doing this here, instead of in `Sub Main`, because other forms do not _
+     contain any common controls and this causes the EXE to crash on exit. _
+     See the below function comments for further details
+    Call WIN32.InitCommonControls( _
+        ICC_STANDARD_CLASSES Or ICC_INTERNET_CLASSES _
+    )
+    
     'Setup the look up tables
     Dim i As Long: For i = 0 To 256: Let x32(i) = i * 32: Let x8(i) = i * 8: Next i
 End Sub

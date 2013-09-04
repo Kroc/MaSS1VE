@@ -831,18 +831,29 @@ End Function
 'InitCommonControls : Enable Windows themeing on controls (application wide) _
  ======================================================================================
 Public Function InitCommonControls(Optional ByVal Types As ICC = ICC_STANDARD_CLASSES) As Boolean
+    'NOTE: Call this procedure from your `Sub Main` before loading any forms
+    
+    'NOTE: Your app must have a manifest file (either internal or external) in order _
+     for this to work, see the web page below for instructions
     'Thanks goes to LaVolpe and his manifest creator for the help _
      <www.vbforums.com/showthread.php?606736-VB6-XP-Vista-Win7-Manifest-Creator>
-    'NOTE: Your app must have a manifest file (either internal or external) in order _
-     for this to work, see the web page above for instructions
     
+    'WARNING: If your app never displays any common controls (a form containing them _
+     doesn't get loaded by the user), then YOUR EXE WILL CRASH ON EXIT. If there is _
+     any chance a user can start your app and close it before any common controls _
+     have been loaded then to prevent crashing you MUST either:
+    '1. Place a hidden ComboBox on any form that has no other common controls
+    '2. Delay calling this function until before a form containing common controls _
+        is loaded
+    
+    'Prepare the structure used for `InitCommonControlsEx`
     Dim ControlTypes As INITCOMMONCONTROLSEX
     Let ControlTypes.SizeOfMe = Len(ControlTypes)
     Let ControlTypes.Flags = Types
     
     On Error Resume Next
     Dim hndModule As Long
-    'LaVolpe tells us that XP can crash if we have custom controls when we call _
+    'LaVolpe tells us that XP can crash if we have user controls when we call _
      `InitCommonControlsEx` unless we pre-emptively connect to Shell32
     Let hndModule = kernel32_LoadLibrary("shell32.dll")
     'Return whether control initialisation was successful or not
