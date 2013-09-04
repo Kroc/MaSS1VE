@@ -518,8 +518,10 @@ End Sub
 'FORM Resize _
  ======================================================================================
 Private Sub Form_Resize()
-    'If the form is minimised then don't bother resizing
+    'If the form is invisible or minimised then don't bother resizing
     If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
+    'Ensure that the MDI child form always stays maximised when changing windows
+    If Me.WindowState <> vbMaximized Then Let Me.WindowState = vbMaximized: Exit Sub
     
     'Size the toolbar along the top, we need this to position everything below it
     Call Me.picToolbar.Move( _

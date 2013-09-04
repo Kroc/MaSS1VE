@@ -18,6 +18,7 @@ Begin VB.Form frmPlay
       Left            =   14760
       TabIndex        =   3
       Top             =   8040
+      Visible         =   0   'False
       Width           =   360
       _ExtentX        =   635
       _ExtentY        =   635
@@ -192,6 +193,11 @@ End Sub
 'FORM Resize _
  ======================================================================================
 Private Sub Form_Resize()
+    'If the form is invisible or minimised then don't bother resizing
+    If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
+    'Ensure that the MDI child form always stays maximised when changing windows
+    If Me.WindowState <> vbMaximized Then Let Me.WindowState = vbMaximized: Exit Sub
+    
     'Position the sizing box in the corner
     Call Me.cbxSizer.Move( _
         Me.ScaleWidth - Me.cbxSizer.Width, Me.ScaleHeight - Me.cbxSizer.Height _

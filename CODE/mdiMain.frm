@@ -305,7 +305,6 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
             'The level editor will set the app colours since each level has a _
              different colour scheme
             Call frmLevel.SetTheme
-            Let frmLevel.WindowState = VBRUN.FormWindowStateConstants.vbMaximized
             Call frmLevel.Show
             
             'Don't keep the PLAY tab around
@@ -318,7 +317,6 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
             'Set the colour scheme to default, this will ensure that when changing _
              from the level editor the tab colours won't mismatch
             Call Me.SetTheme
-            Let frmPlay.WindowState = VBRUN.FormWindowStateConstants.vbMaximized
             Call frmPlay.Show
             
     End Select

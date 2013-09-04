@@ -18,6 +18,7 @@ Begin VB.Form frmWelcome
       Left            =   14760
       TabIndex        =   2
       Top             =   8040
+      Visible         =   0   'False
       Width           =   360
       _ExtentX        =   635
       _ExtentY        =   635
@@ -80,6 +81,11 @@ Option Explicit
 'FORM :: frmWelcome
 
 Private Sub Form_Resize()
+    'If the form is invisible or minimised then don't bother resizing
+    If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
+    'Ensure that the MDI child form always stays maximised when changing windows
+    If Me.WindowState <> vbMaximized Then Let Me.WindowState = vbMaximized: Exit Sub
+    
     Call Me.cbxSizer.Move( _
         Me.ScaleWidth - Me.cbxSizer.Width, Me.ScaleHeight - Me.cbxSizer.Height _
     )
