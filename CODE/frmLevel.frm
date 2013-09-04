@@ -642,12 +642,19 @@ Private Sub Form_Resize()
     )
 End Sub
 
+'FORM Terminate _
+ ======================================================================================
+Private Sub Form_Terminate()
+    'Clear the lookup tables set up in `Form_Initialize`
+    Erase x8, x32
+End Sub
+
 'FORM Unload _
  ======================================================================================
 Private Sub Form_Unload(Cancel As Integer)
-    'Detatch the current level from the form
-    Set My_Level = Nothing
-    Set Sprites = Nothing
+    'Detatch the current level from the form _
+     (this will also clean up the caches)
+    Set Level = Nothing
 End Sub
 
 'EVENT My_Level BLOCKMAPPINGCHANGE : Something has modified the block mappings _
@@ -741,7 +748,7 @@ Private Sub vwpLevel_MouseOut()
     Call mdiMain.SetTip
     'Clear the hover box
     Let c.Hover.X = -1: Let c.Hover.Y = -1
-
+    
     'TODO: Render selection rectangle on the viewport
 '   Call RepaintLevel
 End Sub
@@ -927,24 +934,30 @@ Public Sub SetTheme()
     Dim ActiveColour As Long, InertColour As Long
     Dim HSLColour As HSL
     
-    'For now this is hardcoded until such a time we allow changing of level themes
-    Select Case cmbLevels.ItemData(cmbLevels.ListIndex)
-        'Green Hill Zone (+End Sequence), Bridge
-        Case 0 To 5, 18: Let ActiveColour = blu.ActiveColour
-        'Jungle
-        Case 6 To 8: Let ActiveColour = &H5000&
-        'Labyrinth
-        Case 9 To 10: Let ActiveColour = &HAFFF&
-        'Sky Base Act 1
-        Case 11: Let ActiveColour = &H50AF00
-        'Sky Base Act 2 including Emerald Maze / Ballhog Area
-        Case 12 To 14, 20 To 25: Let ActiveColour = &HAFAF50
-        Case 15 To 16: Let ActiveColour = &H500000
-        'Sky Base Act 2 / 3 Interior
-        Case 17, 26 To 27: Let ActiveColour = &HFFAF50
-        'Special stages
-        Case 28 To 35: Let ActiveColour = &H5000FF
-    End Select
+    'If no level is attached yet, we can't set the colour scheme based on the level
+    If My_Level Is Nothing Then
+        'Default to a grey colour
+        Let ActiveColour = VBRUN.SystemColorConstants.vbApplicationWorkspace
+    Else
+        'For now this is hardcoded until such a time we allow changing of level themes
+        Select Case cmbLevels.ItemData(cmbLevels.ListIndex)
+            'Green Hill Zone (+End Sequence), Bridge
+            Case 0 To 5, 18: Let ActiveColour = blu.ActiveColour
+            'Jungle
+            Case 6 To 8: Let ActiveColour = &H5000&
+            'Labyrinth
+            Case 9 To 10: Let ActiveColour = &HAFFF&
+            'Sky Base Act 1
+            Case 11: Let ActiveColour = &H50AF00
+            'Sky Base Act 2 including Emerald Maze / Ballhog Area
+            Case 12 To 14, 20 To 25: Let ActiveColour = &HAFAF50
+            Case 15 To 16: Let ActiveColour = &H500000
+            'Sky Base Act 2 / 3 Interior
+            Case 17, 26 To 27: Let ActiveColour = &HFFAF50
+            'Special stages
+            Case 28 To 35: Let ActiveColour = &H5000FF
+        End Select
+    End If
     
     'Calculate the inert text colour from the main active colour
     Let HSLColour = Lib.RGBToHSL(ActiveColour)
@@ -1049,7 +1062,7 @@ Private Sub HandleMouse(ByRef Button As Integer, ByRef Shift As Integer, ByRef X
         ElseIf Button = 2 Then
             'As above, but with the right mouse button
             Let Level.FloorLayout.Block(iX, iY) = BlockSelectRight
-        
+            
         'Middle Click:
         ElseIf Button = 4 Then
             'Pick the current block under the mouse cursor
@@ -1129,7 +1142,7 @@ Private Sub PaintObject(ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByV
             Call Sprites.Monitor_Cont.Paint(hDC, X + 4, Y - 7)
         Case OBJECT_TYPE.Emerald
             Call Sprites.Emerald.Paint(hDC, X + 8, Y)
-        
+            
         Case OBJECT_TYPE.END_SIGN
             Call Sprites.EndSign.Paint(hDC, X, Y + 9)
             
@@ -1197,7 +1210,7 @@ Private Sub RepaintLevel()
     Erase MyLevel_FloorLayout
     
     Debug.Print "Repaint Floor Layout - " & Round(Timer - StartTimeL, 4)
-
+    
     'Object Layout: _
      ----------------------------------------------------------------------------------
     Dim StartTimeO As Single
@@ -1229,7 +1242,7 @@ Private Sub RepaintLevel()
             End If
         End With
     Next i
-        
+    
     'Paint Sonic at the starting point. This will also require checking if above _
      or below the water line
     If My_Level.StartY < MyLevel_ObjectLayout_WaterLevel Then
@@ -1247,7 +1260,7 @@ Private Sub RepaintLevel()
         DestTop:=x32(My_Level.StartY) + 16, _
         DestWidth:=x8(3), DestHeight:=x8(4) _
     )
-        
+    
     If My_Level.IsUnderWater = True Then
         Call WaterLineCache.Paint( _
             vwpLevel_hDC1, 0, c.WaterLevelPx _
@@ -1268,7 +1281,7 @@ Private Sub RepaintLevel()
 '        Me.picRender.Line (px - 1, pY - 1)-(px + c.BlockSize, pY + c.BlockSize), &HF8F8F8, B
 '        Me.picRender.Line (px - 2, pY - 2)-(px + c.BlockSize + 1, pY + c.BlockSize + 1), &HF8F8F8, B
 '    End If
-        
+    
     Call Me.vwpLevel.Refresh
 End Sub
 

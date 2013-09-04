@@ -269,6 +269,26 @@ Private Sub MDIForm_Resize()
     )
 End Sub
 
+'MDIFORM Unload _
+ ======================================================================================
+Private Sub MDIForm_Unload(Cancel As Integer)
+    'We don't need to show the application whilst we clean up
+    Let Me.Visible = False
+    
+    'Unload any possible MDI children forms
+    Unload frmWelcome
+    Unload frmPlay
+    Unload frmLevel
+    
+    'Clean up the project in memory
+    Call GAME.Clear
+    
+    Dim VBForm As Form
+    For Each VBForm In VB.Forms
+        If VBForm.Name <> "mdiMain" Then Unload VBForm
+    Next VBForm
+End Sub
+
 'EVENT bluTab TABCHANGED : The top tabs have been clicked - change zone _
  ======================================================================================
 Private Sub bluTab_TabChanged(ByVal Index As Integer)
