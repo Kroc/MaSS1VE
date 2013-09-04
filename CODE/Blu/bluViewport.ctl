@@ -34,7 +34,7 @@ Option Explicit
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
 'Last Updated       04-SEP-13
-'Last Update        Image X / Y values are now provided in events
+'Last Update        Added ImageWidth/Height properties
 
 '--------------------------------------------------------------------------------------
 
@@ -522,6 +522,20 @@ Public Property Get hDC( _
     If NumberOfLayers <> 0 And Layer < NumberOfLayers Then
         Let hDC = Layers(Layer).Image.hDC
     End If
+End Property
+
+'PROPERTY ImageWidth _
+ ======================================================================================
+Public Property Get ImageWidth() As Long
+    If NumberOfLayers = 0 Then Exit Property
+    Let ImageWidth = Layers(0).Image.Width
+End Property
+
+'PROPERTY ImageHeight _
+ ======================================================================================
+Public Property Get ImageHeight() As Long
+    If NumberOfLayers = 0 Then Exit Property
+    Let ImageHeight = Layers(0).Image.Height
 End Property
 
 'PROPERTY ScrollMax : Return the maximum scroll value _
