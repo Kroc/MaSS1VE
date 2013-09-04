@@ -37,8 +37,8 @@ Option Explicit
 
 'Status             INCOMPLETE, DO NOT USE
 'Dependencies       blu.bas, Lib.bas, WIN32.bas
-'Last Updated       03-SEP-13
-'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
+'Last Updated       04-SEP-13
+'Last Update        Added double-click to maximise / restore parent form
 
 '--------------------------------------------------------------------------------------
 
@@ -144,6 +144,27 @@ Private Declare Function kernel32_GetProcAddress Lib "kernel32" Alias "GetProcAd
 Private Declare Function user32_IsZoomed Lib "user32" Alias "IsZoomed" ( _
     ByVal hndWindow As Long _
 ) As BOOL
+
+'Set the window state - show / hide / minimise / maximise &c. _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms633548%28v=vs.85%29.aspx>
+Private Declare Function user32_ShowWindow Lib "user32" Alias "ShowWindow" ( _
+    ByVal hndWindow As Long, _
+    ByVal ShowCmd As SW _
+) As BOOL
+
+Private Enum SW
+    SW_HIDE = 0
+    SW_SHOWNORMAL = 1
+    SW_SHOWMINIMIZED = 2
+    SW_SHOWMAXIMIZED = 3
+    SW_SHOWNOACTIVATE = 4
+    SW_SHOW = 5
+    SW_MINIMIZE = 6
+    SW_SHOWMINNOACTIVE = 7
+    SW_SHOWNA = 8
+    SW_RESTORE = 9
+    SW_SHOWDEFAULT = 10
+End Enum
 
 'Position a window _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms633545%28v=vs.85%29.aspx>
@@ -293,6 +314,7 @@ Private Enum WM
     WM_NCLBUTTONDOWN = &HA1             'Left mouse button is down in a non-client area
     WM_SYSCOMMAND = &H112               'System menu interaction (move / size &c.)
     WM_LBUTTONDOWN = &H201              'Left mouse button is down
+    WM_LBUTTONDBLCLK = &H203            'Left double-click
     WM_THEMECHANGED = &H31A             'Windows theme changed
     WM_DWMCOMPOSITIONCHANGED = &H31E    'DWM was enabled / disabled
 End Enum
@@ -520,7 +542,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
             hndParentForm, MSG_BEFORE, _
             WM_NCCALCSIZE, WM_GETMINMAXINFO, _
             WM_DWMCOMPOSITIONCHANGED, WM_THEMECHANGED, _
-            WM_ACTIVATE, WM_NCLBUTTONDOWN, WM_LBUTTONDOWN _
+            WM_ACTIVATE, WM_NCLBUTTONDOWN, WM_LBUTTONDOWN, WM_LBUTTONDBLCLK _
         )
         
         'When we remove the borders what we're really doing is expanding the form into _
@@ -571,7 +593,7 @@ Private Sub UserControl_Terminate()
             hndParentForm, MSG_BEFORE, _
             WM_NCCALCSIZE, WM_GETMINMAXINFO, _
             WM_DWMCOMPOSITIONCHANGED, WM_THEMECHANGED, _
-            WM_ACTIVATE, WM_NCLBUTTONDOWN, WM_LBUTTONDOWN _
+            WM_ACTIVATE, WM_NCLBUTTONDOWN, WM_LBUTTONDOWN, WM_LBUTTONDBLCLK _
         )
         Call Magic.ssc_UnSubclass(hndParentForm)
         
@@ -582,7 +604,8 @@ Private Sub UserControl_Terminate()
         Dim i As Long
         For i = 1 To NonClientHandlers.Count
             Call Magic.ssc_DelMsg( _
-                NonClientHandlers.Item(i), MSG_BEFORE, WM_LBUTTONDOWN _
+                NonClientHandlers.Item(i), MSG_BEFORE, _
+                WM_LBUTTONDOWN, WM_LBUTTONDBLCLK _
             )
             Call Magic.ssc_UnSubclass(NonClientHandlers.Item(i))
         Next
@@ -807,7 +830,7 @@ Private Sub RegisterNonClientHandler( _
         )
         Call Magic.ssc_AddMsg( _
             hndWindow, MSG_BEFORE, _
-            WM_LBUTTONDOWN _
+            WM_LBUTTONDOWN, WM_LBUTTONDBLCLK _
         )
     End If
 End Sub
@@ -1045,7 +1068,19 @@ Private Sub SubclassWindowProcedure( _
         'WARNING: This causes the `Click` event of the form to no longer fire for the _
          left mouse button, but will for the right mouse button!
         Call user32_SendMessage(hndParentForm, WM.WM_NCLBUTTONDOWN, UserParam, 0)
-        
+    
+    '`WM_LBUTTONDBLCLK` : Left mouse button double click -- maximise / restore form _
+     <msdn.microsoft.com/en-us/library/windows/desktop/ms645606%28v=vs.85%29.aspx>
+    ElseIf Message = WM_LBUTTONDBLCLK Then '-------------------------------------------
+        'Is the form currently maximised?
+        Call user32_ShowWindow( _
+            hndParentForm, _
+            IIf( _
+                user32_IsZoomed(hndParentForm) = API_TRUE, _
+                SW_RESTORE, SW.SW_SHOWMAXIMIZED _
+            ) _
+        )
+    
     '`WM_NCLBUTTONDOWN` : Left mouse button down in the non-client (border) area _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms645620%28v=vs.85%29.aspx>
     ElseIf Message = WM_NCLBUTTONDOWN Then '-------------------------------------------
