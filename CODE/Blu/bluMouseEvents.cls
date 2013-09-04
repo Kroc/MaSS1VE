@@ -24,9 +24,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       bluMagic.cls
-'Last Updated       26-AUG-13
-'Last Update        Changed Mouse[Back/Forward]Button[Up/Down] events to *-click _
-                    instead as XBUTTONUP was being very unreliable
+'Last Updated       03-SEP-13
+'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
 
 '/// PUBLIC ENUMS /////////////////////////////////////////////////////////////////////
 'Enums you might have to refer to in your own code
@@ -318,7 +317,7 @@ Public Sub Attach( _
         'Prepare the mouse tracking API, we want to receive `WM_MOUSEHOVER` and _
          `WM_MOUSELEAVE` messages
         With TME
-            Let .SizeOfMe = LenB(TME)
+            Let .SizeOfMe = Len(TME)
             Let .Flags = TME_HOVER Or TME_LEAVE
             Let .HoverTime = HOVER_DEFAULT
             Let .hndTrack = hndTarget

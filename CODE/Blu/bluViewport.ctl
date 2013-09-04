@@ -33,8 +33,8 @@ Option Explicit
 
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
-'Last Updated       02-SEP-13
-'Last Update        Added `Centre` property to enable/disable centering of image
+'Last Updated       03-SEP-13
+'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
 
 '--------------------------------------------------------------------------------------
 
@@ -290,8 +290,8 @@ Private Sub UserControl_Initialize()
     
     'The `SCROLLINFO` structures must state their size, _
      let's do this just once
-    Let c.Info(HORZ).SizeOfMe = LenB(c.Info(HORZ))
-    Let c.Info(VERT).SizeOfMe = LenB(c.Info(VERT))
+    Let c.Info(HORZ).SizeOfMe = Len(c.Info(HORZ))
+    Let c.Info(VERT).SizeOfMe = Len(c.Info(VERT))
 End Sub
 
 'CONTROL InitProperties : New instance of the control plopped on a form _

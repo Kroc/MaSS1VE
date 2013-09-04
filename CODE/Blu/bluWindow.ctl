@@ -37,8 +37,8 @@ Option Explicit
 
 'Status             INCOMPLETE, DO NOT USE
 'Dependencies       blu.bas, Lib.bas, WIN32.bas
-'Last Updated       02-SEP-13
-'Last Update        Fixed bug with right border missing when maximised
+'Last Updated       03-SEP-13
+'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
 
 '--------------------------------------------------------------------------------------
 
@@ -926,7 +926,7 @@ Private Sub SubclassWindowProcedure( _
         If user32_IsZoomed(hndParentForm) = API_TRUE Then
             'Coerce the lParam value into a structure
             Dim Params As NCCALCSIZE_PARAMS
-            Call WIN32.kernel32_RtlMoveMemory(Params, ByVal lParam, LenB(Params))
+            Call WIN32.kernel32_RtlMoveMemory(Params, ByVal lParam, Len(Params))
             'Remove the borders when maximised
             With Params.Rectangles(0)
                 'When maximised the title bar is still visible, so we only need to _
@@ -937,7 +937,7 @@ Private Sub SubclassWindowProcedure( _
                 Let .Right = .Right - Borders.Right
             End With
             'Return our changes into the pointer provided to us
-            Call WIN32.kernel32_RtlMoveMemory(ByVal lParam, Params, LenB(Params))
+            Call WIN32.kernel32_RtlMoveMemory(ByVal lParam, Params, Len(Params))
         End If
         'We've handled this ourselves, don't allow Windows to further process this
         Let Handled = True
@@ -947,7 +947,7 @@ Private Sub SubclassWindowProcedure( _
     ElseIf Message = WM_GETMINMAXINFO Then '-------------------------------------------
         'TODO: Must listen for work area change?
         Dim MinMax As MINMAXINFO
-        Call WIN32.kernel32_RtlMoveMemory(MinMax, ByVal lParam, LenB(MinMax))
+        Call WIN32.kernel32_RtlMoveMemory(MinMax, ByVal lParam, Len(MinMax))
 
         Dim hndMonitor As Long
         Let hndMonitor = user32_MonitorFromWindow( _
@@ -955,7 +955,7 @@ Private Sub SubclassWindowProcedure( _
         )
         If hndMonitor <> 0 Then
             Dim Info As MONITORINFO
-            Let Info.SizeOfMe = LenB(Info)
+            Let Info.SizeOfMe = Len(Info)
             If user32_GetMonitorInfo(hndMonitor, Info) = API_TRUE Then
                 With Info
                     If My_MinWidth > 0 Then Let MinMax.MinTrackSize.X = My_MinWidth
@@ -977,7 +977,7 @@ Private Sub SubclassWindowProcedure( _
             End If
         End If
 
-        Call WIN32.kernel32_RtlMoveMemory(ByVal lParam, MinMax, LenB(MinMax))
+        Call WIN32.kernel32_RtlMoveMemory(ByVal lParam, MinMax, Len(MinMax))
         Let Handled = True
     
     ElseIf Message = WM_THEMECHANGED _
@@ -1011,8 +1011,11 @@ Private Sub SubclassWindowProcedure( _
         End If
         
         If My_IsBorderless <> Old Then
-            'Notify the form of the change, it may need to rearrange some controls
+            'Notify the form of the change, it may need to rearrange some controls. _
+             Unfortunately, we can't just fire the parent's `Resize` event ourselves: _
+             <support.microsoft.com/kb/187740>
             RaiseEvent BorderlessStateChange(My_IsBorderless)
+            
         End If
     
     '`WM_ACTIVATE` documentation: _

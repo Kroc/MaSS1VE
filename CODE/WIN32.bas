@@ -11,8 +11,8 @@ Option Explicit
 
 'Status             In Flux
 'Dependencies       Lib.bas
-'Last Updated       02-SEP-13
-'Last Update        Add `GetTemporaryFolder\File` functions
+'Last Updated       03-SEP-13
+'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -722,7 +722,7 @@ End Property
 Public Property Get IsHighContrastMode() As Boolean
     'prepare the structure to hold the information about high contrast mode
     Dim Info As HIGHCONTRAST
-    Let Info.SizeOfMe = LenB(Info)
+    Let Info.SizeOfMe = Len(Info)
     'Get the information, passing our structure in
     If user32_SystemParametersInfo( _
         SPI_GETHIGHCONTRAST, Info.SizeOfMe, Info, 0 _
@@ -752,7 +752,7 @@ Public Property Get WindowsVersion() As Single
     'NOTE: If the app is in compatibility mode, this will return the compatible _
      Windows version, not the actual version; but that's fine with me
     Dim VersionInfo As OSVERSIONINFO
-    Let VersionInfo.SizeOfMe = LenB(VersionInfo)
+    Let VersionInfo.SizeOfMe = Len(VersionInfo)
     If kernel32_GetVersionEx(VersionInfo) = API_TRUE Then
         Let WindowsVersion = _
             CSng(VersionInfo.MajorVersion & "." & VersionInfo.MinorVersion)
@@ -837,7 +837,7 @@ Public Function InitCommonControls(Optional ByVal Types As ICC = ICC_STANDARD_CL
      for this to work, see the web page above for instructions
     
     Dim ControlTypes As INITCOMMONCONTROLSEX
-    Let ControlTypes.SizeOfMe = LenB(ControlTypes)
+    Let ControlTypes.SizeOfMe = Len(ControlTypes)
     Let ControlTypes.Flags = Types
     
     On Error Resume Next

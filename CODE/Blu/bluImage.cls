@@ -24,7 +24,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       WIN32.bas
-'Last Updated       11-AUG-13
+'Last Updated       03-SEP-13
+'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
 
 'By Kroc Camen <kroc@camendesign.com>
 'Written using MSDN documentaion with hints and tricks learnt from: _
@@ -641,7 +642,7 @@ Private Function Create( _
     
     'Define the bitmap
     With BITMAP.Header
-        .SizeOfMe = LenB(BITMAP.Header)
+        .SizeOfMe = Len(BITMAP.Header)
         .BitPlanes = 1
         .Width = ImageWidth
         .Height = -ImageHeight      'Flip the image to be top-down, as you expect
