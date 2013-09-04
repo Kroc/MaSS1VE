@@ -41,16 +41,12 @@ Option Explicit
  where the buttons would be prevent this. This is mainly a problem with MDIForms _
  which must have an aligning picturebox if you want to place anything on the MDIForm
 
-'Status             Ready, awaiting refactoring
-'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), Lib.bas, WIN32.bas
-'Last Updated       03-SEP-13
-'Last Update        If control kind is sizer, will hide itself when the parent form _
-                    maximises
-
-'NOTE: This is due to be rewritten to not depend upon nested controls. The plan is _
- also for this control to act not as one control box button, but as the entire set, _
- where we will detect from the parent form which buttons (min / max / close) should _
- be available
+'Status             Ready to use
+'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), bluWindow.cll, _
+                    Lib.bas, WIN32.bas
+'Last Updated       04-SEP-13
+'Last Update        If the `Kind` of control is min/max/close, it will hide itself _
+                    automatically when an instance of bluWindow becomes inactive
 
 '/// API DEFS /////////////////////////////////////////////////////////////////////////
 
@@ -96,10 +92,16 @@ Private ParentForm As Object
 'If we listen into the events of the parent form then we can automatically hide a _
  sizer control when the form is maximised. Unfortunately VB6 does not expose a common _
  class interface shared by regular Forms and MDIForms so we have to do both
-Private WithEvents ParentForm_Events As Form
-Attribute ParentForm_Events.VB_VarHelpID = -1
-Private WithEvents ParentMDIForm_Events As MDIForm
-Attribute ParentMDIForm_Events.VB_VarHelpID = -1
+Private WithEvents ParentFormEvents As Form
+Attribute ParentFormEvents.VB_VarHelpID = -1
+Private WithEvents ParentMDIFormEvents As MDIForm
+Attribute ParentMDIFormEvents.VB_VarHelpID = -1
+
+'If the parent form has a bluWindow control, we can listen into its events so that _
+ we can automatically hide bluControlBox controls if the window borders are present, _
+ i.e. the Windows min / max / close buttons are visible
+Private WithEvents bluWindowEvents As bluWindow
+Attribute bluWindowEvents.VB_VarHelpID = -1
 
 'If the button is a hovered state
 Private IsHovered As Boolean
@@ -300,25 +302,26 @@ End Sub
 'CONTROL Resize : The developers is resizing the control on the form design _
  ======================================================================================
 Private Sub UserControl_Resize()
+    'If the parent form is maximised, hide ourselves if a sizer control. _
+     We do this here so as to catch switching from one child to another in an MDI form
+    Call ParentFormEvents_Resize
+    
     'Don't allow this control to be resized _
      (The size box is smaller though)
     Let UserControl.Width = blu.Xpx(IIf(My_Kind = Sizer, 24, blu.Metric))
     Let UserControl.Height = blu.Ypx(IIf(My_Kind = Sizer, 24, blu.Metric))
 End Sub
 
-'CONTROL Show : The control has become visible, we should repaint _
- ======================================================================================
-Private Sub UserControl_Show(): Call Refresh: End Sub
-
 'CONTROL Terminate _
  ======================================================================================
 Private Sub UserControl_Terminate()
     'Detatch the mouse tracking subclassing
     Set MouseEvents = Nothing
-    'Derefernce the parent form
+    'Derefernce the parent form, event listeners
     Set ParentForm = Nothing
-    Set ParentForm_Events = Nothing
-    Set ParentMDIForm_Events = Nothing
+    Set ParentFormEvents = Nothing
+    Set ParentMDIFormEvents = Nothing
+    Set bluWindowEvents = Nothing
 End Sub
 
 'CONTROL WriteProperties _
@@ -350,13 +353,57 @@ End Sub
 
 'EVENT Parent[MDI]Form_Events RESIZE _
  ======================================================================================
-Private Sub ParentForm_Events_Resize(): Call ParentMDIForm_Events_Resize: End Sub
-Private Sub ParentMDIForm_Events_Resize()
+Private Sub ParentMDIFormEvents_Resize(): Call ParentFormEvents_Resize: End Sub
+Private Sub ParentFormEvents_Resize()
     'If the window maximised, hide this control if it's a sizer
     If My_Kind = Sizer Then
-        Let UserControl.Extender.Visible = _
-            Not ParentMDIForm_Events.WindowState = _
-            VBRUN.FormWindowStateConstants.vbMaximized
+        Let UserControl.Extender.Visible = Not ( _
+            ParentForm.WindowState = VBRUN.FormWindowStateConstants.vbMaximized _
+        )
+    End If
+End Sub
+
+'EVENT Parent[MDI]Form_Events ACTIVATE _
+ ======================================================================================
+'When the parent form becomes visible, check for a bluWindow control and hide _
+ ourselves if bluWindow is inactive (the Windows min / max /close buttons are visible)
+Private Sub ParentMDIFormEvents_Activate(): Call ParentFormEvents_Activate: End Sub
+Private Sub ParentFormEvents_Activate()
+    'If the form is borderless to begin with, we need to stay visible _
+     (MDI forms don't have a `BorderStyle` property)
+    If Not (TypeOf ParentForm Is MDIForm) Then
+        If ParentForm.BorderStyle = VBRUN.FormBorderStyleConstants.vbBSNone _
+            Then Exit Sub
+    End If
+    
+    'Search the parent form for a bluWindow control
+    Dim VBControl As VB.Control
+    For Each VBControl In ParentForm.Controls
+        'Is this is a bluWindow control?
+        If (TypeOf VBControl Is bluWindow) Then
+            'Begin listening to its events
+            Set bluWindowEvents = Nothing
+            Set bluWindowEvents = VBControl
+            'If we are min/max/close button, show or hide ourselves based on if _
+             bluWindow's borderless UI is active
+            If My_Kind <> Sizer Then
+                Let UserControl.Extender.Visible = bluWindowEvents.IsBorderless
+            End If
+            Exit For
+        End If
+    Next VBControl
+    
+    'If a sizer control, hide ourselves if the form is maximised
+    Call ParentFormEvents_Resize
+End Sub
+
+'EVENT bluWindowEvents BORDERLESSSTATECHANGE _
+ ======================================================================================
+Private Sub bluWindowEvents_BorderlessStateChange(ByVal Enabled As Boolean)
+    'If we are min/max/close button, show or hide ourselves based on if _
+     bluWindow's borderless UI is active
+    If My_Kind <> Sizer Then
+        Let UserControl.Extender.Visible = bluWindowEvents.IsBorderless
     End If
 End Sub
 
@@ -425,10 +472,9 @@ Private Sub ReferenceParentForm()
     
     'Listen into the form events. For example, when the form is maximised, we can _
      hide the control if it's a size-box
-    If TypeOf ParentForm Is MDIForm _
-        Then Set ParentMDIForm_Events = ParentForm _
-        Else Set ParentForm_Events = ParentForm
-Fail:
+    If (TypeOf ParentForm Is MDIForm) _
+        Then Set ParentMDIFormEvents = ParentForm _
+        Else Set ParentFormEvents = ParentForm
 End Sub
 
 'Refresh _

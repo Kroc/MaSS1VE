@@ -4,7 +4,7 @@ Begin VB.MDIForm mdiMain
    AutoShowChildren=   0   'False
    BackColor       =   &H00FFAF00&
    Caption         =   "MaSS1VE"
-   ClientHeight    =   8415
+   ClientHeight    =   7845
    ClientLeft      =   120
    ClientTop       =   450
    ClientWidth     =   15120
@@ -19,9 +19,9 @@ Begin VB.MDIForm mdiMain
       BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   7425
+      Height          =   6855
       Left            =   11460
-      ScaleHeight     =   7425
+      ScaleHeight     =   6855
       ScaleWidth      =   3660
       TabIndex        =   1
       Top             =   990
@@ -219,6 +219,9 @@ Private Sub MDIForm_Resize()
     
     Let Me.toolbar.Height = 2 * blu.Ypx(blu.Metric)
     
+    'Our title text should only be visible if the form is borderless
+    Let Me.lblMaSS1VE.Visible = Me.bluWindow.IsBorderless
+    'Position the title in the centre
     Call Me.lblMaSS1VE.Move( _
         (FormWidth - Me.lblMaSS1VE.Width) \ 2, 0, _
         Me.lblMaSS1VE.Width, blu.Ypx(blu.Metric) _
@@ -227,10 +230,20 @@ Private Sub MDIForm_Resize()
     Let Me.cbxClose.Left = FormWidth - Me.cbxClose.Width
     Let Me.cbxMax.Left = Me.cbxClose.Left - Me.cbxMax.Width
     Let Me.cbxMin.Left = Me.cbxMax.Left - Me.cbxMin.Width
-    Call Me.lblVersion.Move( _
-        Me.cbxMin.Left - Me.lblVersion.Width, 0, _
-        Me.lblVersion.Width, blu.Ypx(blu.Metric) _
-    )
+    
+    'If the window is borderless, there will be min/max/close controls the version _
+     number will go next to
+    If Me.bluWindow.IsBorderless = True Then
+        Call Me.lblVersion.Move( _
+            Me.cbxMin.Left - Me.lblVersion.Width, 0, _
+            Me.lblVersion.Width, blu.Ypx(blu.Metric) _
+        )
+    Else
+        Call Me.lblVersion.Move( _
+            FormWidth - Me.lblVersion.Width, 0, _
+            Me.lblVersion.Width, blu.Ypx(blu.Metric) _
+        )
+    End If
     
     Let Me.bluTab.Height = blu.Ypx(blu.Metric)
     Let Me.bluTab.Top = Me.toolbar.Height - Me.bluTab.Height
@@ -304,6 +317,16 @@ Private Sub btnHelp_Click()
     End If
 End Sub
 
+'EVENT bluWindow BORDERLESSSTATECHANGE _
+ ======================================================================================
+Private Sub bluWindow_BorderlessStateChange(ByVal Enabled As Boolean)
+    'When the Desktop Window Manager switches on or off (i.e. user changes Windows _
+     theme between hardware accelerated and non-accerlerated -- classic -- themes) _
+     force a resize to shift the UI layout around. The min/max/close buttons will _
+     hide themselves automatically, but we will need to hide the custom caption
+    Call MDIForm_Resize
+End Sub
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'SetTip _
@@ -311,8 +334,6 @@ End Sub
 Public Sub SetTip(Optional ByVal Message As String = "")
     If Message <> Me.lblTip.Caption Then Let Me.lblTip.Caption = Message
 End Sub
-
-'/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
 'SetTheme : Change the colour scheme of the form controls _
  ======================================================================================

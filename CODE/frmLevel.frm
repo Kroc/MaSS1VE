@@ -32,6 +32,7 @@ Begin VB.Form frmLevel
          Left            =   14280
          TabIndex        =   21
          Top             =   0
+         Visible         =   0   'False
          Width           =   360
          _ExtentX        =   635
          _ExtentY        =   635

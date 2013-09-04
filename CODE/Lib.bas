@@ -335,7 +335,7 @@ NowCheckMDI:
      reference that by name here, yours might be named something else. What we do is _
      use Win32 to go up through the "MDIClient" window (that isn't exposed to VB) _
      which acts as the viewport of the MDI form and then up again to hit the MDI form
-    If TypeOf GetParentForm Is Form Then
+    If Not TypeOf GetParentForm Is MDIForm Then
         Dim MDIParent_hWnd As Long
         Let MDIParent_hWnd = _
             WIN32.user32_GetParent( _
