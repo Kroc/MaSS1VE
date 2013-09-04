@@ -33,8 +33,8 @@ Option Explicit
 
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
-'Last Updated       03-SEP-13
-'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
+'Last Updated       04-SEP-13
+'Last Update        Image X / Y values are now provided in events
 
 '--------------------------------------------------------------------------------------
 
@@ -257,21 +257,33 @@ Event MouseIn()
 Event MouseHover( _
     ByVal Button As VBRUN.MouseButtonConstants, _
     ByVal Shift As VBRUN.ShiftConstants, _
-    ByVal X As Single, ByVal Y As Single _
+    ByVal X As Single, ByVal Y As Single, _
+    ByVal ImageX As Long, ByVal ImageY As Long _
 )
 
 'The standard mouse events we'll forward
 Event Click()
 Attribute Click.VB_UserMemId = -600
-Event MouseDown(ByVal Button As VBRUN.MouseButtonConstants, ByVal Shift As VBRUN.ShiftConstants, ByVal X As Single, ByVal Y As Single)
-Attribute MouseDown.VB_UserMemId = -605
-Event MouseMove(ByVal Button As VBRUN.MouseButtonConstants, ByVal Shift As VBRUN.ShiftConstants, ByVal X As Single, ByVal Y As Single)
-Attribute MouseMove.VB_UserMemId = -606
-Event MouseUp(ByVal Button As VBRUN.MouseButtonConstants, ByVal Shift As VBRUN.ShiftConstants, ByVal X As Single, ByVal Y As Single)
-Attribute MouseUp.VB_UserMemId = -607
+Event MouseDown( _
+    ByVal Button As VBRUN.MouseButtonConstants, ByVal Shift As VBRUN.ShiftConstants, _
+    ByVal X As Single, ByVal Y As Single, _
+    ByVal ImageX As Long, ByVal ImageY As Long _
+)
+Event MouseMove( _
+    ByVal Button As VBRUN.MouseButtonConstants, ByVal Shift As VBRUN.ShiftConstants, _
+    ByVal X As Single, ByVal Y As Single, _
+    ByVal ImageX As Long, ByVal ImageY As Long _
+)
+Event MouseUp( _
+    ByVal Button As VBRUN.MouseButtonConstants, ByVal Shift As VBRUN.ShiftConstants, _
+    ByVal X As Single, ByVal Y As Single, _
+    ByVal ImageX As Long, ByVal ImageY As Long _
+)
 
 'An event that occurs when painting, allowing you to alter the viewport's display
-Event Paint(ByVal hDC As Long, ByVal ScrollX As Long, ByVal ScrollY As Long)
+Event Paint( _
+    ByVal hDC As Long _
+)
 
 'When a scroll occurs
 Event Scroll(ByVal ScrollX As Long, ByVal ScrollY As Long)
@@ -335,22 +347,19 @@ End Sub
 'CONTROL MouseDown _
  ======================================================================================
 Private Sub UserControl_MouseDown(ByRef Button As Integer, ByRef Shift As Integer, ByRef X As Single, ByRef Y As Single)
-    'TODO: Provide Image X / Y coords
-    RaiseEvent MouseDown(Button, Shift, X, Y)
+    RaiseEvent MouseDown(Button, Shift, X, Y, GetImageX(X), GetImageY(Y))
 End Sub
 
 'CONTROL MouseMove _
  ======================================================================================
 Private Sub UserControl_MouseMove(ByRef Button As Integer, ByRef Shift As Integer, ByRef X As Single, ByRef Y As Single)
-    'TODO: Provide Image X / Y coords
-    RaiseEvent MouseMove(Button, Shift, X, Y)
+    RaiseEvent MouseMove(Button, Shift, X, Y, GetImageX(X), GetImageY(Y))
 End Sub
 
 'CONTROL MouseUp _
  ======================================================================================
 Private Sub UserControl_MouseUp(ByRef Button As Integer, ByRef Shift As Integer, ByRef X As Single, ByRef Y As Single)
-    'TODO: Provide Image X / Y coords
-    RaiseEvent MouseUp(Button, Shift, X, Y)
+    RaiseEvent MouseUp(Button, Shift, X, Y, GetImageX(X), GetImageY(Y))
 End Sub
 
 'CONTROL ReadProperties _
@@ -433,7 +442,7 @@ Private Sub MouseEvents_MouseOut(): RaiseEvent MouseOut: End Sub
 'EVENT MouseEvents MOUSEHOVER _
  ======================================================================================
 Private Sub MouseEvents_MouseHover(ByVal Button As MouseButtonConstants, ByVal Shift As ShiftConstants, ByVal X As Single, ByVal Y As Single)
-    RaiseEvent MouseHover(Button, Shift, X, Y)
+    RaiseEvent MouseHover(Button, Shift, X, Y, GetImageX(X), GetImageY(Y))
 End Sub
 
 'EVENT MouseEvents MOUSEHSCROLL _
@@ -496,6 +505,14 @@ Public Property Let Centre(ByVal State As Boolean)
     Call Me.Refresh
     Call UserControl.PropertyChanged("Centre")
 End Property
+
+'PROPERTY CentreX : The horizontal image offset if image is narrower than the viewport _
+ ======================================================================================
+Public Property Get CentreX() As Long: Let CentreX = c.Centre.X: End Property
+
+'PROPERTY CentreY : The vertical image offset if image is shorter than the viewport _
+ ======================================================================================
+Public Property Get CentreY() As Long: Let CentreY = c.Centre.Y: End Property
 
 'PROPERTY hDC : Handle to the device context for the image layer - not the control _
  ======================================================================================
@@ -682,6 +699,18 @@ End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
+'GetImageX : Given the mouse X position, return the X-image-pixel _
+ ======================================================================================
+Private Function GetImageX(ByVal X As Long) As Long
+    Let GetImageX = c.Info(HORZ).Pos + (X - c.Centre.X)
+End Function
+
+'GetImageY : Given the mouse Y position, return the Y-image-pixel _
+ ======================================================================================
+Private Function GetImageY(ByVal Y As Long) As Long
+    Let GetImageY = c.Info(VERT).Pos + (Y - c.Centre.Y)
+End Function
+
 'InitScrollBars _
  ======================================================================================
 Private Sub InitScrollBars()
@@ -823,7 +852,7 @@ Private Sub SubclassWindowProcedure( _
                 Next i
                 
                 'Give the controller the opportunity to paint over the final display
-                RaiseEvent Paint(Buffer.hDC, c.Info(HORZ).Pos, c.Info(VERT).Pos)
+                RaiseEvent Paint(Buffer.hDC)
                 
                 'Copy the back buffer onto the display
                 Call WIN32.gdi32_BitBlt( _

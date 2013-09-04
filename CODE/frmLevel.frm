@@ -34,9 +34,9 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   360
-         _ExtentX        =   635
-         _ExtentY        =   635
-         Kind            =   3
+         _extentx        =   635
+         _extenty        =   635
+         kind            =   3
       End
       Begin MaSS1VE.bluButton btnZoom2 
          Height          =   360
@@ -45,9 +45,9 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   635
-         Caption         =   "2×"
+         _extentx        =   873
+         _extenty        =   635
+         caption         =   "2×"
       End
       Begin MaSS1VE.bluButton btnZoomTV 
          Height          =   360
@@ -56,9 +56,9 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   635
-         Caption         =   "TV"
+         _extentx        =   873
+         _extenty        =   635
+         caption         =   "TV"
       End
       Begin MaSS1VE.bluButton btnGrid 
          Height          =   360
@@ -67,9 +67,9 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _ExtentX        =   1085
-         _ExtentY        =   635
-         Caption         =   "OFF"
+         _extentx        =   1085
+         _extenty        =   635
+         caption         =   "OFF"
       End
       Begin MaSS1VE.bluButton btnZoom1 
          Height          =   360
@@ -78,19 +78,18 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   635
-         Caption         =   "1×"
+         _extentx        =   873
+         _extenty        =   635
+         caption         =   "1×"
       End
       Begin MaSS1VE.bluLabel lblMemory 
          Height          =   375
          Left            =   240
          Top             =   0
-         Visible         =   0   'False
          Width           =   3735
-         _ExtentX        =   6588
-         _ExtentY        =   661
-         Caption         =   "1,319 bytes floor layout memory free"
+         _extentx        =   6588
+         _extenty        =   661
+         caption         =   "1,319 bytes floor layout memory free"
       End
       Begin MaSS1VE.bluLabel lblZoom 
          Height          =   360
@@ -98,10 +97,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _ExtentX        =   1296
-         _ExtentY        =   635
-         Alignment       =   1
-         Caption         =   "zoom"
+         _extentx        =   1296
+         _extenty        =   635
+         alignment       =   1
+         caption         =   "zoom"
       End
       Begin MaSS1VE.bluLabel lblGrid 
          Height          =   360
@@ -109,10 +108,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _ExtentX        =   1085
-         _ExtentY        =   635
-         Alignment       =   1
-         Caption         =   "grid"
+         _extentx        =   1085
+         _extenty        =   635
+         alignment       =   1
+         caption         =   "grid"
       End
    End
    Begin MaSS1VE.bluViewport vwpLevel 
@@ -121,8 +120,8 @@ Begin VB.Form frmLevel
       TabIndex        =   13
       Top             =   480
       Width           =   10935
-      _ExtentX        =   19288
-      _ExtentY        =   13361
+      _extentx        =   19288
+      _extenty        =   13361
    End
    Begin MaSS1VE.bluTab bluTab 
       Height          =   1200
@@ -130,11 +129,11 @@ Begin VB.Form frmLevel
       TabIndex        =   7
       Top             =   480
       Width           =   495
-      _ExtentX        =   873
-      _ExtentY        =   2117
-      AutoSize        =   -1  'True
-      Border          =   0   'False
-      Orientation     =   1
+      _extentx        =   873
+      _extenty        =   2117
+      autosize        =   -1  'True
+      border          =   0   'False
+      orientation     =   1
    End
    Begin VB.PictureBox picToolbar 
       Appearance      =   0  'Flat
@@ -194,10 +193,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _ExtentX        =   1296
-         _ExtentY        =   847
-         Caption         =   "UNDO"
-         Style           =   1
+         _extentx        =   1296
+         _extenty        =   847
+         caption         =   "UNDO"
+         style           =   1
       End
       Begin MaSS1VE.bluButton btnRedo 
          Height          =   480
@@ -206,10 +205,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _ExtentX        =   1296
-         _ExtentY        =   847
-         Caption         =   "REDO"
-         Style           =   1
+         _extentx        =   1296
+         _extenty        =   847
+         caption         =   "REDO"
+         style           =   1
       End
       Begin MaSS1VE.bluButton btnShare 
          Height          =   480
@@ -218,10 +217,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   975
-         _ExtentX        =   1720
-         _ExtentY        =   847
-         Caption         =   "SHARE"
-         Style           =   1
+         _extentx        =   1720
+         _extenty        =   847
+         caption         =   "SHARE"
+         style           =   1
       End
       Begin MaSS1VE.bluButton btnCut 
          Height          =   480
@@ -230,10 +229,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _ExtentX        =   1085
-         _ExtentY        =   847
-         Caption         =   "CUT"
-         Style           =   1
+         _extentx        =   1085
+         _extenty        =   847
+         caption         =   "CUT"
+         style           =   1
       End
       Begin MaSS1VE.bluButton btnCopy 
          Height          =   480
@@ -242,10 +241,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _ExtentX        =   1296
-         _ExtentY        =   847
-         Caption         =   "COPY"
-         Style           =   1
+         _extentx        =   1296
+         _extenty        =   847
+         caption         =   "COPY"
+         style           =   1
       End
       Begin MaSS1VE.bluButton btnPaste 
          Height          =   480
@@ -254,10 +253,10 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   855
-         _ExtentX        =   1508
-         _ExtentY        =   847
-         Caption         =   "PASTE"
-         Style           =   1
+         _extentx        =   1508
+         _extenty        =   847
+         caption         =   "PASTE"
+         style           =   1
       End
       Begin VB.Line lineSplit 
          BorderColor     =   &H00FFAF00&
@@ -310,9 +309,9 @@ Begin VB.Form frmLevel
          TabIndex        =   14
          Top             =   1200
          Width           =   1575
-         _ExtentX        =   2778
-         _ExtentY        =   2778
-         Centre          =   0   'False
+         _extentx        =   2778
+         _extenty        =   2778
+         centre          =   0   'False
       End
       Begin VB.PictureBox picBlocksToolbar 
          Appearance      =   0  'Flat
@@ -365,20 +364,20 @@ Begin VB.Form frmLevel
             Left            =   480
             Top             =   0
             Width           =   615
-            _ExtentX        =   1085
-            _ExtentY        =   873
-            Caption         =   "LMB"
-            Style           =   1
+            _extentx        =   1085
+            _extenty        =   873
+            caption         =   "LMB"
+            style           =   1
          End
          Begin MaSS1VE.bluLabel lblRMB 
             Height          =   495
             Left            =   480
             Top             =   600
             Width           =   615
-            _ExtentX        =   1085
-            _ExtentY        =   873
-            Caption         =   "RMB"
-            Style           =   1
+            _extentx        =   1085
+            _extenty        =   873
+            caption         =   "RMB"
+            style           =   1
          End
       End
    End
@@ -767,7 +766,7 @@ End Sub
 
 'EVENT vwpBlocks MOUSEUP _
  ======================================================================================
-Private Sub vwpBlocks_MouseUp(Button As MouseButtonConstants, Shift As ShiftConstants, X As Single, Y As Single)
+Private Sub vwpBlocks_MouseUp(ByVal Button As MouseButtonConstants, ByVal Shift As ShiftConstants, ByVal X As Single, ByVal Y As Single, ByVal ImageX As Long, ByVal ImageY As Long)
     'Which block was clicked?
     Dim Index As Long
     Let Index = _
@@ -777,9 +776,9 @@ Private Sub vwpBlocks_MouseUp(Button As MouseButtonConstants, Shift As ShiftCons
     'Only allow clicks within the block range
     If Index >= 0 Or Index = (Level.BlockMapping.Length - 1) Then
         'Which mouse button was clicked?
-        If Button = 1 Then
+        If Button = VBRUN.MouseButtonConstants.vbLeftButton Then
             Let Me.BlockSelectLeft = Index
-        ElseIf Button = 2 Then
+        ElseIf Button = VBRUN.MouseButtonConstants.vbRightButton Then
             Let Me.BlockSelectRight = Index
         End If
     End If
