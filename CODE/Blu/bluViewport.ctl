@@ -134,6 +134,9 @@ Private Declare Function user32_SetScrollInfo Lib "user32" Alias "SetScrollInfo"
 Private Enum WM
     WM_PAINT = &HF
     WM_ERASEBKGND = &H14
+    WM_NCLBUTTONDOWN = &HA1
+    WM_NCRBUTTONDOWN = &HA4
+    WM_NCMBUTTONDOWN = &HA7
     WM_HSCROLL = &H114
     WM_VSCROLL = &H115
 End Enum
@@ -289,9 +292,7 @@ Event MouseUp( _
 )
 
 'An event that occurs when painting, allowing you to alter the viewport's display
-Event Paint( _
-    ByVal hDC As Long _
-)
+Event Paint(ByVal hDC As Long)
 
 'When a scroll occurs
 Event Scroll(ByVal ScrollX As Long, ByVal ScrollY As Long)
@@ -399,7 +400,8 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         Call Magic.ssc_Subclass(UserControl.hWnd, 0, 1, Me)
         Call Magic.ssc_AddMsg( _
             UserControl.hWnd, MSG_BEFORE, _
-            WM_PAINT, WM_ERASEBKGND, WM_HSCROLL, WM_VSCROLL _
+            WM_PAINT, WM_ERASEBKGND, WM_HSCROLL, WM_VSCROLL, _
+            WM_NCLBUTTONDOWN, WM_NCRBUTTONDOWN, WM_NCMBUTTONDOWN _
         )
     End If
 End Sub
@@ -425,7 +427,8 @@ Private Sub UserControl_Terminate()
     If Not Magic Is Nothing Then
         Call Magic.ssc_DelMsg( _
             UserControl.hWnd, MSG_BEFORE, _
-            WM_PAINT, WM_ERASEBKGND, WM_HSCROLL, WM_VSCROLL _
+            WM_PAINT, WM_ERASEBKGND, WM_HSCROLL, WM_VSCROLL, _
+            WM_NCLBUTTONDOWN, WM_NCRBUTTONDOWN, WM_NCMBUTTONDOWN _
         )
         Call Magic.ssc_UnSubclass(UserControl.hWnd)
         Set Magic = Nothing
@@ -1143,6 +1146,13 @@ Private Sub SubclassWindowProcedure( _
             
             Let ReturnValue = 0
             Let Handled = True
+    
+        'The scroll bars have been clicked -- set focus to the control
+        Case WM_NCLBUTTONDOWN, WM_NCRBUTTONDOWN, WM_NCMBUTTONDOWN
+            'The user control does not automatically gain focus when you click on the _
+             scrollbars (you might expect to click on the scrollbar and then use the _
+             keys to move it)
+            Call UserControl.SetFocus
     End Select
 
 '======================================================================================
