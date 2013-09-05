@@ -34,9 +34,10 @@ Option Explicit
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
 'Last Updated       04-SEP-13
-'Last Update        Made `MouseMove` event fire whenever the viewport scrolls _
-                    (so that the new `ImageX/Y` values can be seen by the controller). _
-                    This is incomplete as the mouse button / key state is not included
+'Last Update        Added Zoom
+
+'TODO: When scrolling, include mouse button / key state with the mouse move event sent
+'TODO: Ctrl+Scroll to zoom. Will need to include zoom min/max properties and zoom event
 
 '--------------------------------------------------------------------------------------
 
@@ -232,6 +233,9 @@ Private Type CACHEVARS
     'The destination size to paint. If the image is centred because it is smaller than _
      the viewport, the destination size will be less than the viewport width / height
     Dst As SIZE
+    'The source portion of the image. At Zoom=1, this is the same as Dst, but when _
+     zoomed, it's a smaller area, that is stretched to the Dst size
+    Src As SIZE
 End Type
 Private c As CACHEVARS
 
@@ -247,6 +251,8 @@ Private My_ScrollLineSize As Long       'Size of a "line" for mouse wheel scroll
 Private My_ScrollCharSize As Long       'Size of a "char" for horizontal mouse wheel
 
 Private My_Centre As Boolean            'Centre the image if smaller than the viewport?
+
+Private My_Zoom As Long                 'Zoom level
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
@@ -306,6 +312,8 @@ Private Sub UserControl_Initialize()
      let's do this just once
     Let c.Info(HORZ).SizeOfMe = Len(c.Info(HORZ))
     Let c.Info(VERT).SizeOfMe = Len(c.Info(VERT))
+    
+    Let My_Zoom = 1
 End Sub
 
 'CONTROL InitProperties : New instance of the control plopped on a form _
@@ -342,6 +350,8 @@ Private Sub UserControl_KeyDown(ByRef KeyCode As Integer, ByRef Shift As Integer
         Case vbKeyEnd:      Let Send = SB.SB_BOTTOM
     End Select
     If Send <> -1 Then
+        'Send the `WM_HSCROLL` / `WM_VSCROLL` message. _
+         See the subclass section at the bottom of the file for details
         Call user32_SendMessage(UserControl.hWnd, Scroll, Send, 0)
     End If
 End Sub
@@ -400,6 +410,8 @@ Private Sub UserControl_Resize()
     'Reconfigure the scroll bar parameters, this will deal with the change in client _
      size as the showing / hiding of the scrollbars changes the client size
     Call InitScrollBars
+    'Refresh the viewport
+    Call Me.Refresh
 End Sub
 
 'CONTROL Terminate _
@@ -519,10 +531,20 @@ End Property
 Public Property Get Centre() As Boolean: Let Centre = My_Centre: End Property
 Public Property Let Centre(ByVal State As Boolean)
     Let My_Centre = State
+    'Recalculate the scroll bar limits (will update the centering)
     Call InitScrollBars
-    'WARNING: You shouldn't change this property at runtime because if the mouse is _
-     over the viewport when you change this, a mouse move event won't fire to reflect _
-     the new ImageX/Y position under the cursor (we don't have mouse info here)
+    
+    'Raise a mouse move event since the pointer is no longer under the part of the _
+     image it was before and the controller might need the new ImageX/Y values
+    Dim MousePos As POINT
+    Let MousePos = GetMousePos()
+    'TODO: Get mouse button / key state
+    RaiseEvent MouseMove( _
+        0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
+    )
+    
+    'The viewport is refreshed _after_ the events fire so that your controller _
+     does *not* have to call `Refresh` itself, saving repaints
     Call Me.Refresh
     Call UserControl.PropertyChanged("Centre")
 End Property
@@ -540,7 +562,7 @@ Public Property Get CentreY() As Long: Let CentreY = c.Centre.Y: End Property
 Public Property Get hDC(Optional ByVal Layer As Long = 0) As Long
     'If you want to paint directly on the viewport use the viewport's `Paint` event, _
      this is double-buffered so you won't get any flicker
-    If NumberOfLayers <> 0 And Layer < NumberOfLayers Then
+    If NumberOfLayers <> 0 And Layer >= 0 And Layer < NumberOfLayers Then
         Let hDC = Layers(Layer).Image.hDC
     End If
 End Property
@@ -662,6 +684,32 @@ Public Property Let ScrollY(ByVal Value As Long)
     Call Me.Refresh
 End Property
 
+'PROPERTY Zoom _
+ ======================================================================================
+Public Property Get Zoom() As Long: Let Zoom = My_Zoom: End Property
+Public Property Let Zoom(ByVal ZoomLevel As Long)
+    'Let's not divide by zero!
+    If ZoomLevel < 1 Then Let ZoomLevel = 1
+    Let My_Zoom = ZoomLevel
+    
+    'Recalculate the scroll bar limits, when we send events they may want to refer to _
+     the min / max / centre values and so forth
+    Call InitScrollBars
+    
+    'Raise a mouse move event since the pointer is no longer under the part of the _
+     image it was before and the controller might need the new ImageX/Y values
+    Dim MousePos As POINT
+    Let MousePos = GetMousePos()
+    'TODO: Get mouse button / key state
+    RaiseEvent MouseMove( _
+        0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
+    )
+    
+    'The viewport is refreshed _after_ the events fire so that your controller _
+     does *not* have to call `Refresh` itself, saving repaints
+    Call Me.Refresh
+End Property
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'AddLayer : Adds a layer to the whole image _
@@ -682,9 +730,12 @@ Public Function AddLayer( _
     
     Let NumberOfLayers = NumberOfLayers + 1
     Let AddLayer = NumberOfLayers
+    
+    'NOTE: This procedure does not refresh the viewport! It is expected that you might _
+     want to add multiple layers and paint into them before refreshing the viewport
 End Function
 
-'Cls : Clears the image -- NOT the viewport _
+'Cls : Clears the image _
  ======================================================================================
 Public Sub Cls(Optional ByVal Layer As Long = -1)
     'If no layer is specified ("-1"), clear all of them
@@ -695,7 +746,9 @@ Public Sub Cls(Optional ByVal Layer As Long = -1)
         'Paint the layer clear
         Call Layers(i).Image.Cls
     Next i
-    Call Me.Refresh
+    
+    'NOTE: This procedure does not refresh the viewport! When you clear the image _
+     (or layer), you might be beginning to paint on it and won't want flicker
 End Sub
 
 'Refresh _
@@ -759,6 +812,9 @@ Public Sub SetImageProperties( _
     
     'When the back buffer changes, recalculate the scrollbars
     Call InitScrollBars
+    
+    'NOTE: This procedure does not refresh the viewport! It is expected that you might _
+     want to add multiple layers and paint into them before refreshing the viewport
 End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
@@ -766,13 +822,13 @@ End Sub
 'GetImageX : Given the mouse X position, return the X-image-pixel _
  ======================================================================================
 Private Function GetImageX(ByVal X As Long) As Long
-    Let GetImageX = c.Info(HORZ).Pos + (X - c.Centre.X)
+    Let GetImageX = c.Info(HORZ).Pos + (X - c.Centre.X) \ My_Zoom
 End Function
 
 'GetImageY : Given the mouse Y position, return the Y-image-pixel _
  ======================================================================================
 Private Function GetImageY(ByVal Y As Long) As Long
-    Let GetImageY = c.Info(VERT).Pos + (Y - c.Centre.Y)
+    Let GetImageY = c.Info(VERT).Pos + (Y - c.Centre.Y) \ My_Zoom
 End Function
 
 'GetMousePos : Get the mouse position within the viewport _
@@ -791,21 +847,30 @@ End Function
 'InitScrollBars _
  ======================================================================================
 Private Sub InitScrollBars()
+    'Show / Hide scrollbars? _
+     ----------------------------------------------------------------------------------
     'Get the size of the viewport
     Call WIN32.user32_GetClientRect(UserControl.hWnd, c.ClientRECT)
     
+    'The size of the image, accounting for zooming
+    Dim ImageSize As SIZE
+    Let ImageSize.Width = c.ImageRECT.Right * My_Zoom
+    Let ImageSize.Height = c.ImageRECT.Bottom * My_Zoom
+    
     'Show or hide the scrollbars based on the size of the viewport
     Call user32_ShowScrollBar( _
-        UserControl.hWnd, HORZ, Abs(c.ImageRECT.Right > c.ClientRECT.Right) _
+        UserControl.hWnd, HORZ, Abs(ImageSize.Width > c.ClientRECT.Right) _
     )
     Call user32_ShowScrollBar( _
-        UserControl.hWnd, VERT, Abs(c.ImageRECT.Bottom > c.ClientRECT.Bottom) _
+        UserControl.hWnd, VERT, Abs(ImageSize.Height > c.ClientRECT.Bottom) _
     )
     
     'If a scrollbar was visible and gets hidden, it changes the size of the viewport, _
      regrab the size and work from that now on
     Call WIN32.user32_GetClientRect(UserControl.hWnd, c.ClientRECT)
     
+    'Setup the back buffer: _
+     ----------------------------------------------------------------------------------
     'Recreate the back buffer (the size of the viewport) for flicker-free painting
     Set Buffer = Nothing
     Set Buffer = New bluImage
@@ -819,24 +884,47 @@ Private Sub InitScrollBars()
         Buffer.hDC, c.UserControl_BackColor _
     )
     
+    'Calculate portion of image to be displayed: _
+     ----------------------------------------------------------------------------------
     'If the image is narrower than than the viewport then centre it horizontally
-    If My_Centre = True And c.ImageRECT.Right < c.ClientRECT.Right Then
-        Let c.Centre.X = (c.ClientRECT.Right - c.ImageRECT.Right) \ 2
-        Let c.Dst.Width = c.ImageRECT.Right
+    If My_Centre = True And ImageSize.Width < c.ClientRECT.Right Then
+        'Offset the image by half the difference in space between the image and _
+         the viewport's width so that it appears centred
+        Let c.Centre.X = (c.ClientRECT.Right - ImageSize.Width) \ 2
+        'We will be painting the full width of the image, nothing clipped
+        Let c.Dst.Width = ImageSize.Width
     Else
         Let c.Centre.X = 0
-        Let c.Dst.Width = c.ClientRECT.Right
+        'When zoomed in, if the viewport is not an exact multiple of the zoom level _
+         (i.e. odd numbered width when zoom=2) then the image stretching would cause _
+         one or more of the pixels row/columns to be thicker than the others, that is, _
+         if your viewport is 21px wide and the image is 10px wide then one of those _
+         10 pixel columns will be 3px wide, not 2px. This could be a problem with the _
+         controller who might expect a rigid, consistent grid when zoomed. _
+         To fix this we have to normalise the destination width/height so that it is _
+         a multiple of the zoom factor
+        Let c.Dst.Width = _
+            c.ClientRECT.Right + My_Zoom - (c.ClientRECT.Right Mod My_Zoom)
     End If
         
     'If the image is shorter than the viewport then centre it vertically
-    If My_Centre = True And c.ImageRECT.Bottom < c.ClientRECT.Bottom Then
-        Let c.Centre.Y = (c.ClientRECT.Bottom - c.ImageRECT.Bottom) \ 2
-        Let c.Dst.Height = c.ImageRECT.Bottom
+    If My_Centre = True And ImageSize.Height < c.ClientRECT.Bottom Then
+        'Offset the image by half the difference in space between the image and _
+         the viewport's height so that it appears centred
+        Let c.Centre.Y = (c.ClientRECT.Bottom - ImageSize.Height) \ 2
+        'We will be painting the full height of the image, nothing clipped
+        Let c.Dst.Height = ImageSize.Height
     Else
         Let c.Centre.Y = 0
-        Let c.Dst.Height = c.ClientRECT.Bottom
+        Let c.Dst.Height = _
+            c.ClientRECT.Bottom + My_Zoom - (c.ClientRECT.Bottom Mod My_Zoom)
     End If
     
+    Let c.Src.Width = c.Dst.Width \ My_Zoom
+    Let c.Src.Height = c.Dst.Height \ My_Zoom
+    
+    'Recalculate the scroll bars limits: _
+     ----------------------------------------------------------------------------------
     'Resizing the control might cause the scroll position to change if it's against _
      the ends of the scroll limit, we need to check this and send a Scroll event
     Dim OldHpos As Long, OldVPos As Long
@@ -845,7 +933,7 @@ Private Sub InitScrollBars()
     With c.Info(HORZ)
         Let OldHpos = .Pos
         Let .Mask = SIF_PAGE Or SIF_RANGE Or SIF_POS
-        Let .Page = c.ClientRECT.Right
+        Let .Page = c.ClientRECT.Right \ My_Zoom
         Let .Max = Lib.Min(c.ImageRECT.Right)
         Let .Pos = Lib.Range(.Pos, Me.ScrollMax(HORZ), .Min)
     End With
@@ -854,13 +942,11 @@ Private Sub InitScrollBars()
     With c.Info(VERT)
         Let OldVPos = .Pos
         Let .Mask = SIF_PAGE Or SIF_RANGE Or SIF_POS
-        Let .Page = c.ClientRECT.Bottom
-        Let .Max = Lib.Min(c.ImageRECT.Bottom + .Page - c.ClientRECT.Bottom)
+        Let .Page = c.ClientRECT.Bottom \ My_Zoom
+        Let .Max = Lib.Min(c.ImageRECT.Bottom)
         Let .Pos = Lib.Range(.Pos, Me.ScrollMax(VERT), .Min)
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
-    
-    Call Me.Refresh
     
     'Now send a scroll event if the scroll value changed
     If OldHpos <> c.Info(HORZ).Pos _
@@ -868,6 +954,9 @@ Private Sub InitScrollBars()
     Then
         RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
     End If
+    
+    'NOTE: This procedure does not refesh the viewport, the various callers handle _
+     that so as to not do unecessary repaints
 End Sub
 
 '/// SUBCLASS /////////////////////////////////////////////////////////////////////////
@@ -905,26 +994,37 @@ Private Sub SubclassWindowProcedure( _
                 For i = 0 To NumberOfLayers - 1
                     'The bottom layer does not need to be painted transparently
                     If i = 0 Then
-                        'Paint the visible portion of the image
-                        Call WIN32.gdi32_BitBlt( _
-                            Buffer.hDC, _
-                            c.Centre.X, c.Centre.Y, _
-                            c.Dst.Width, c.Dst.Height, _
-                            Layers(0).Image.hDC, _
-                            c.Info(HORZ).Pos, c.Info(VERT).Pos, _
-                            vbSrcCopy _
-                        )
+                        If My_Zoom = 1 Then
+                            Call WIN32.gdi32_BitBlt( _
+                                Buffer.hDC, _
+                                c.Centre.X, c.Centre.Y, _
+                                c.Dst.Width, c.Dst.Height, _
+                                Layers(0).Image.hDC, _
+                                c.Info(HORZ).Pos, c.Info(VERT).Pos, _
+                                vbSrcCopy _
+                            )
+                        Else
+                            Call WIN32.gdi32_StretchBlt( _
+                                Buffer.hDC, _
+                                c.Centre.X, c.Centre.Y, _
+                                c.Dst.Width, c.Dst.Height, _
+                                Layers(0).Image.hDC, _
+                                c.Info(HORZ).Pos, c.Info(VERT).Pos, _
+                                c.Src.Width, c.Src.Height, _
+                                vbSrcCopy _
+                            )
+                        End If
                     Else
                         'For the other layers, mask out their background colour
-                        If WIN32.gdi32_GdiTransparentBlt( _
+                        Call WIN32.gdi32_GdiTransparentBlt( _
                             Buffer.hDC, _
                             c.Centre.X, c.Centre.Y, _
                             c.Dst.Width, c.Dst.Height, _
                             Layers(i).Image.hDC, _
                             c.Info(HORZ).Pos, c.Info(VERT).Pos, _
-                            c.Dst.Width, c.Dst.Height, _
+                            c.Src.Width, c.Src.Height, _
                             Layers(i).Image.BackgroundColour _
-                        ) = 0 Then Stop
+                        )
                     End If
                 Next i
                 
@@ -1034,7 +1134,7 @@ Private Sub SubclassWindowProcedure( _
             
             'Scroll the pixels in the window
             Call user32_ScrollWindowEx( _
-                UserControl.hWnd, ScrollBy(HORZ), ScrollBy(VERT), _
+                UserControl.hWnd, ScrollBy(HORZ) * My_Zoom, ScrollBy(VERT) * My_Zoom, _
                 0, 0, 0, 0, SW_INVALIDATE _
             )
             'The viewport is refreshed _after_ the events fire so that your controller _

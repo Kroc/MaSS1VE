@@ -307,6 +307,7 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
              different colour scheme
             Call frmLevel.SetTheme
             Call frmLevel.Show
+            Call frmLevel.SetFocus
             
             'Don't keep the PLAY tab around
             Unload frmPlay
@@ -319,6 +320,7 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
              from the level editor the tab colours won't mismatch
             Call Me.SetTheme
             Call frmPlay.Show
+            Call frmPlay.SetFocus
             
     End Select
 End Sub

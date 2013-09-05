@@ -43,7 +43,6 @@ Begin VB.Form frmLevel
          Left            =   13320
          TabIndex        =   17
          Top             =   0
-         Visible         =   0   'False
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   635
@@ -54,7 +53,6 @@ Begin VB.Form frmLevel
          Left            =   13800
          TabIndex        =   18
          Top             =   0
-         Visible         =   0   'False
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   635
@@ -76,7 +74,6 @@ Begin VB.Form frmLevel
          Left            =   12840
          TabIndex        =   20
          Top             =   0
-         Visible         =   0   'False
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   635
@@ -96,7 +93,6 @@ Begin VB.Form frmLevel
          Height          =   360
          Left            =   12120
          Top             =   0
-         Visible         =   0   'False
          Width           =   735
          _ExtentX        =   1296
          _ExtentY        =   635
@@ -755,15 +751,15 @@ Private Sub vwpLevel_Paint(ByVal hDC As Long)
     
     'Determine where in the viewport the selection rectangle begins
     Dim X As Long, Y As Long
-    Let X = Me.vwpLevel.CentreX + ((Hover.X * 32) - Me.vwpLevel.ScrollX)
-    Let Y = Me.vwpLevel.CentreY + ((Hover.Y * 32) - Me.vwpLevel.ScrollY)
+    Let X = Me.vwpLevel.CentreX + (x32(Hover.X) - Me.vwpLevel.ScrollX) * My_Zoom
+    Let Y = Me.vwpLevel.CentreY + (x32(Hover.Y) - Me.vwpLevel.ScrollY) * My_Zoom
     
     Dim Box As RECT
-    Call WIN32.user32_SetRect(Box, X, Y, X + 35, Y + 35)
+    Call WIN32.user32_SetRect(Box, X, Y, X + x32(My_Zoom) + 3, Y + x32(My_Zoom) + 3)
     Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(BLACK_BRUSH))
-    Call WIN32.user32_SetRect(Box, X - 1, Y - 1, X + 33, Y + 33)
+    Call WIN32.user32_SetRect(Box, X - 1, Y - 1, X + x32(My_Zoom) + 1, Y + x32(My_Zoom) + 1)
     Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(WHITE_BRUSH))
-    Call WIN32.user32_SetRect(Box, X - 2, Y - 2, X + 34, Y + 34)
+    Call WIN32.user32_SetRect(Box, X - 2, Y - 2, X + x32(My_Zoom) + 2, Y + x32(My_Zoom) + 2)
     Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(WHITE_BRUSH))
 End Sub
 
@@ -913,6 +909,7 @@ Public Property Set Level(ByVal TheLevel As S1Level)
                 Index:=i _
             )
         Next i
+        Call vwpBlocks.Refresh
         
         'Set the app colour scheme
         Call Me.SetTheme
@@ -924,6 +921,8 @@ End Property
 Public Property Get Zoom() As Long: Let Zoom = My_Zoom: End Property
 Public Property Let Zoom(ByVal ZoomLevel As Long)
     Let My_Zoom = ZoomLevel
+    
+    Let Me.vwpLevel.Zoom = My_Zoom
     
     Me.btnZoom1.State = IIf(My_Zoom = 1, bluSTATE.Active, bluSTATE.Inactive)
     Me.btnZoom2.State = IIf(My_Zoom = 2, bluSTATE.Active, bluSTATE.Inactive)
@@ -1048,7 +1047,8 @@ Private Sub HandleMouse( _
     If ImageY >= Me.vwpLevel.ImageHeight Then GoTo Invalid
     
     'Calculate which block the mouse is over
-    Let Block.X = ImageX \ 32: Let Block.Y = ImageY \ 32
+    Let Block.X = ImageX \ 32
+    Let Block.Y = ImageY \ 32
     'Has the hover rectangle moved from one block to the next? _
      (we want to ensure we repaint only when the mouse moves from one block to another _
       and not with every single mouse move event)
@@ -1061,7 +1061,7 @@ Private Sub HandleMouse( _
     'Just hovering, thanks
     If Button = 0 Then
         Call mdiMain.SetTip( _
-            "L/R CLICK: Set blocks" _
+            "L/R-CLICK: Set blocks M-CLICK: Pick block" _
         )
         
     'Left Click:
