@@ -256,6 +256,8 @@ Private My_ScrollCharSize As Long       'Size of a "char" for horizontal mouse w
 Private My_Centre As Boolean            'Centre the image if smaller than the viewport?
 
 Private My_Zoom As Long                 'Zoom level
+Private My_ZoomMin As Long              'Minimum zoom level (i.e. 1)
+Private My_ZoomMax As Long              'Maximum zoom level
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
@@ -324,6 +326,8 @@ Private Sub UserControl_InitProperties()
     Let Me.ScrollAmountV = 32
     Let Me.ScrollLineSize = 16
     Let Me.ScrollCharSize = 16
+    Let Me.ZoomMin = 1
+    Let Me.ZoomMax = 16
 End Sub
 
 'CONTROL KeyDown : Handle keyboard control of scrolling _
@@ -380,11 +384,13 @@ End Sub
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     With PropBag
         Let Me.BackColor = .ReadProperty(Name:="BackColor", DefaultValue:=VBRUN.SystemColorConstants.vbApplicationWorkspace)
-        Let Me.Centre = .ReadProperty(Name:="Centre", DefaultValue:=True)
-        Let Me.ScrollAmountH = .ReadProperty(Name:="ScrollAmountH", DefaultValue:=32)
-        Let Me.ScrollAmountV = .ReadProperty(Name:="ScrollAmountV", DefaultValue:=32)
-        Let Me.ScrollLineSize = .ReadProperty(Name:="ScrollLineSize", DefaultValue:=16)
-        Let Me.ScrollCharSize = .ReadProperty(Name:="ScrollCharSize", DefaultValue:=64)
+        Let My_Centre = .ReadProperty(Name:="Centre", DefaultValue:=True)
+        Let My_ScrollAmount(HORZ) = .ReadProperty(Name:="ScrollAmountH", DefaultValue:=32)
+        Let My_ScrollAmount(VERT) = .ReadProperty(Name:="ScrollAmountV", DefaultValue:=32)
+        Let My_ScrollLineSize = .ReadProperty(Name:="ScrollLineSize", DefaultValue:=16)
+        Let My_ScrollCharSize = .ReadProperty(Name:="ScrollCharSize", DefaultValue:=64)
+        Let My_ZoomMin = .ReadProperty(Name:="ZoomMin", DefaultValue:=1)
+        Let My_ZoomMax = .ReadProperty(Name:="ZoomMax", DefaultValue:=16)
     End With
     
     'Only subclass if not in VB's design mode
@@ -445,6 +451,8 @@ Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
         Call .WriteProperty(Name:="ScrollAmountV", Value:=My_ScrollAmount(VERT), DefaultValue:=32)
         Call .WriteProperty(Name:="ScrollLineSize", Value:=My_ScrollLineSize, DefaultValue:=16)
         Call .WriteProperty(Name:="ScrollCharSize", Value:=My_ScrollCharSize, DefaultValue:=64)
+        Call .WriteProperty(Name:="ZoomMin", Value:=My_ZoomMin, DefaultValue:=1)
+        Call .WriteProperty(Name:="ZoomMax", Value:=My_ZoomMax, DefaultValue:=16)
     End With
 End Sub
 
@@ -691,8 +699,8 @@ End Property
  ======================================================================================
 Public Property Get Zoom() As Long: Let Zoom = My_Zoom: End Property
 Public Property Let Zoom(ByVal ZoomLevel As Long)
-    'Let's not divide by zero!
-    If ZoomLevel < 1 Then Let ZoomLevel = 1
+    'Keep within the defined bounds
+    Let ZoomLevel = Lib.Range(ZoomLevel, My_ZoomMax, My_ZoomMin)
     Let My_Zoom = ZoomLevel
     
     'Recalculate the scroll bar limits, when we send events they may want to refer to _
@@ -711,6 +719,40 @@ Public Property Let Zoom(ByVal ZoomLevel As Long)
     'The viewport is refreshed _after_ the events fire so that your controller _
      does *not* have to call `Refresh` itself, saving repaints
     Call Me.Refresh
+End Property
+
+'PROPERTY ZoomMin : Minimum zoom size (e.g. when Ctrl+Scroll zooming) _
+ ======================================================================================
+Public Property Get ZoomMin() As Long: Let ZoomMin = My_ZoomMin: End Property
+Public Property Let ZoomMin(ByVal ZoomLevel As Long)
+    'Let's not divide by zero!
+    If ZoomLevel < 1 Then Let ZoomLevel = 1
+    'The minimum cannot be greater than the maximum
+    If ZoomLevel > My_ZoomMax Then Let ZoomLevel = My_ZoomMax
+    
+    'If the current zoom is less than that, change the zoom level
+    If My_Zoom < My_ZoomMin Then Let Me.Zoom = My_ZoomMin
+    
+    'Save the changed property value
+    Let My_ZoomMin = ZoomLevel
+    Call UserControl.PropertyChanged("ZoomMin")
+End Property
+
+'PROPERTY ZoomMax : Maximum zoom size (e.g. when Ctrl+Scroll zooming) _
+ ======================================================================================
+Public Property Get ZoomMax() As Long: Let ZoomMax = My_ZoomMax: End Property
+Public Property Let ZoomMax(ByVal ZoomLevel As Long)
+    'Let's not divide by zero!
+    If ZoomLevel < 1 Then Let ZoomLevel = 1
+    'Zoom max cannot be less than zoom min!
+    If ZoomLevel < My_ZoomMin Then Let ZoomLevel = My_ZoomMin
+    
+    'If the current zoom is greater than that, change the zoom level
+    If My_Zoom > ZoomLevel Then Let Me.Zoom = My_ZoomMax
+    
+    'Save the changed property value
+    Let My_ZoomMax = ZoomLevel
+    Call UserControl.PropertyChanged("ZoomMin")
 End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
