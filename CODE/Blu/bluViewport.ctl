@@ -33,8 +33,8 @@ Option Explicit
 
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
-'Last Updated       04-SEP-13
-'Last Update        Added Zoom
+'Last Updated       05-SEP-13
+'Last Update        Fixed bug with additional layers disappearing at scroll ends
 
 'TODO: When scrolling, include mouse button / key state with the mouse move event sent
 'TODO: Ctrl+Scroll to zoom. Will need to include zoom min/max properties and zoom event
@@ -1039,6 +1039,7 @@ Private Sub SubclassWindowProcedure( _
                 For i = 0 To NumberOfLayers - 1
                     'The bottom layer does not need to be painted transparently
                     If i = 0 Then
+                        'With no zoom, it's ever so slightly faster to non-stretch `BitBlt`
                         If My_Zoom = 1 Then
                             Call WIN32.gdi32_BitBlt( _
                                 Buffer.hDC, _
@@ -1049,6 +1050,9 @@ Private Sub SubclassWindowProcedure( _
                                 vbSrcCopy _
                             )
                         Else
+                            'When zoomed, stretch the 1:1 image to the viewport. The source _
+                             and destination sizes are calculated in `InitScrollBars`, usually _
+                             called upon resizing the viewport
                             Call WIN32.gdi32_StretchBlt( _
                                 Buffer.hDC, _
                                 c.Centre.X, c.Centre.Y, _
@@ -1060,6 +1064,29 @@ Private Sub SubclassWindowProcedure( _
                             )
                         End If
                     Else
+                        'Whilst `BitBlt` & `StretchBlt` don't care if you specify a _
+                         source portion of the image that is bigger than the image, _
+                         `TransparentBlt` will fail if you are not strictly within _
+                         bounds, therefore we need to check for an overflow when _
+                         `InitScrollBars` has adjusted the source & destination size _
+                         to avoid pixel squashing/stretching with viewport sizes that _
+                         are not exact multiples of the zoom level
+                        
+                        'NOTE: For reasons currently beyond my understanding, the _
+                         following code does not work if placed in `InitScrollBars` _
+                         where it belongs
+                         
+                        'Check if the source width goes over the width of the image _
+                         and correct source and destination widths if so
+                        If c.Info(HORZ).Pos + c.Src.Width > c.ImageRECT.Right _
+                        Then Let c.Src.Width = c.ImageRECT.Right - c.Info(HORZ).Pos: _
+                             Let c.Dst.Width = c.Src.Width * My_Zoom
+                        'Check if the source height goes over the height of the image _
+                         and correct source and destination heights if so
+                        If c.Info(VERT).Pos + c.Src.Height > c.ImageRECT.Bottom _
+                        Then Let c.Src.Height = c.ImageRECT.Bottom - c.Info(VERT).Pos: _
+                             Let c.Dst.Height = c.Src.Height * My_Zoom
+                        
                         'For the other layers, mask out their background colour
                         Call WIN32.gdi32_GdiTransparentBlt( _
                             Buffer.hDC, _
@@ -1081,11 +1108,9 @@ Private Sub SubclassWindowProcedure( _
                     Paint.hndDC, 0, 0, c.ClientRECT.Right, c.ClientRECT.Bottom, _
                     Buffer.hDC, 0, 0, vbSrcCopy _
                 )
+                
+                'Finish painting, let Windows know we've handled it ourselves
                 Call user32_EndPaint(UserControl.hWnd, Paint)
-                
-'                '"validates the update region"
-'                Call Magic.ssc_CallOrigWndProc(hndWindow, Message, wParam, lParam)
-                
                 Let ReturnValue = 0
                 Let Handled = True
             End If
