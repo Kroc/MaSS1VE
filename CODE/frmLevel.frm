@@ -24,13 +24,13 @@ Begin VB.Form frmLevel
       Left            =   0
       ScaleHeight     =   360
       ScaleWidth      =   14655
-      TabIndex        =   16
+      TabIndex        =   15
       Top             =   8040
       Width           =   14655
       Begin MaSS1VE.bluControlBox cbxSizer 
          Height          =   360
          Left            =   14280
-         TabIndex        =   21
+         TabIndex        =   20
          Top             =   0
          Visible         =   0   'False
          Width           =   360
@@ -41,7 +41,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnZoom2 
          Height          =   360
          Left            =   13320
-         TabIndex        =   17
+         TabIndex        =   16
          Top             =   0
          Width           =   495
          _ExtentX        =   873
@@ -51,7 +51,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnZoomTV 
          Height          =   360
          Left            =   13800
-         TabIndex        =   18
+         TabIndex        =   17
          Top             =   0
          Width           =   495
          _ExtentX        =   873
@@ -61,7 +61,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnGrid 
          Height          =   360
          Left            =   11640
-         TabIndex        =   19
+         TabIndex        =   18
          Top             =   0
          Visible         =   0   'False
          Width           =   615
@@ -72,7 +72,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluButton btnZoom1 
          Height          =   360
          Left            =   12840
-         TabIndex        =   20
+         TabIndex        =   19
          Top             =   0
          Width           =   495
          _ExtentX        =   873
@@ -110,15 +110,6 @@ Begin VB.Form frmLevel
          Alignment       =   1
          Caption         =   "grid"
       End
-   End
-   Begin MaSS1VE.bluViewport vwpLevel 
-      Height          =   7575
-      Left            =   3720
-      TabIndex        =   13
-      Top             =   480
-      Width           =   10935
-      _ExtentX        =   19288
-      _ExtentY        =   13361
    End
    Begin MaSS1VE.bluTab bluTab 
       Height          =   1200
@@ -162,7 +153,7 @@ Begin VB.Form frmLevel
          Left            =   60
          List            =   "frmLevel.frx":0002
          Style           =   2  'Dropdown List
-         TabIndex        =   15
+         TabIndex        =   14
          Top             =   60
          Width           =   3615
       End
@@ -303,7 +294,7 @@ Begin VB.Form frmLevel
       Begin MaSS1VE.bluViewport vwpBlocks 
          Height          =   1575
          Left            =   0
-         TabIndex        =   14
+         TabIndex        =   13
          Top             =   1200
          Width           =   1575
          _ExtentX        =   2778
@@ -376,6 +367,30 @@ Begin VB.Form frmLevel
             Caption         =   "RMB"
             Style           =   1
          End
+      End
+   End
+   Begin VB.PictureBox picViewport 
+      Appearance      =   0  'Flat
+      BackColor       =   &H8000000C&
+      BorderStyle     =   0  'None
+      ForeColor       =   &H80000008&
+      HasDC           =   0   'False
+      Height          =   7575
+      Left            =   3720
+      ScaleHeight     =   505
+      ScaleMode       =   3  'Pixel
+      ScaleWidth      =   729
+      TabIndex        =   21
+      Top             =   480
+      Width           =   10935
+      Begin MaSS1VE.bluViewport vwpLevel 
+         Height          =   2295
+         Left            =   0
+         TabIndex        =   22
+         Top             =   0
+         Width           =   2655
+         _ExtentX        =   4683
+         _ExtentY        =   4048
       End
    End
 End
@@ -503,6 +518,9 @@ Private Sub Form_Resize()
         0, Me.ScaleHeight - blu.Ypx(24), _
         Me.ScaleWidth, blu.Ypx(24) _
     )
+    
+    Let Me.lblMemory.Left = Me.bluTab.Width - blu.Xpx(8)
+    
     'Put the sizing box in the corner, _
      make it square according to the statusbar height
     Call cbxSizer.Move( _
@@ -510,9 +528,11 @@ Private Sub Form_Resize()
         0, Me.picStatusbar.ScaleHeight, Me.picStatusbar.ScaleHeight _
     )
     
-    Let Me.lblMemory.Left = Me.bluTab.Width - blu.Xpx(8)
-    'Zoom levels
-    Let Me.btnZoomTV.Left = Me.cbxSizer.Left - Me.btnZoomTV.Width
+    'Zoom levels (when the form is maximised, the size box is hidden)
+    Let Me.btnZoomTV.Left = IIf( _
+        mdiMain.WindowState = VBRUN.FormWindowStateConstants.vbMaximized, _
+        Me.picStatusbar.ScaleWidth, Me.cbxSizer.Left _
+    ) - Me.btnZoomTV.Width
     Let Me.btnZoom2.Left = Me.btnZoomTV.Left - Me.btnZoom2.Width
     Let Me.btnZoom1.Left = Me.btnZoom2.Left - Me.btnZoom1.Width
     Let Me.lblZoom.Left = Me.btnZoom1.Left - Me.lblZoom.Width
@@ -611,8 +631,9 @@ Private Sub Form_Resize()
     
     'Level viewport: _
      ----------------------------------------------------------------------------------
-    'Reposition the level viewport
-    Call Me.vwpLevel.Move( _
+    'Position the viewport container to fill the form, this provides a backing space _
+     for the actual viewport when in "TV" mode where the level won't fill the form
+    Call Me.picViewport.Move( _
         Me.picSidePane(0).Left + Me.picSidePane(0).Width, _
         Me.picToolbar.Top + Me.picToolbar.Height, _
         Me.ScaleWidth - (Me.picSidePane(0).Left + Me.picSidePane(0).Width), _
@@ -620,6 +641,51 @@ Private Sub Form_Resize()
             Me.picToolbar.Top + Me.picToolbar.Height + Me.picStatusbar.Height _
         ) _
     )
+    
+    'Are we in "TV" mode? Fix the viewport to 248x192px at the maximum zoom that will _
+     fit into the form
+    If My_Zoom = 3 Then
+        Dim Ratio As SIZE
+        'How many times will the fixed resolution fit into the viewport? _
+         (this will give us the maximum zoom factor usable)
+        Let Ratio.Width = Me.picViewport.ScaleWidth \ ( _
+            248 + WIN32.GetSystemMetric(SM_CXVSCROLL) _
+        )
+        Let Ratio.Height = Me.picViewport.ScaleHeight \ ( _
+            192 + WIN32.GetSystemMetric(SM_CYHSCROLL) _
+        )
+        'Whichever of these is the lowest determines the zoom level we will use
+        Dim ZoomLevel As Long
+        Let ZoomLevel = IIf(Ratio.Width > Ratio.Height, Ratio.Height, Ratio.Width)
+        'If one of these are 0 then the viewport is too small to fit a fixed 248x192px _
+         screen, we will instead fill the form and zoom out
+        If ZoomLevel = 0 Then
+            Let Me.vwpLevel.Zoom = 1
+            'Don't bother with fixed size screen, just fill what form there is
+            Call Me.vwpLevel.Move( _
+                0, 0, Me.picViewport.ScaleWidth, Me.picViewport.ScaleHeight _
+            )
+        Else
+            'Set the viewport's zoom level
+            Let Me.vwpLevel.Zoom = ZoomLevel
+            'Centre the viewport in the work area
+            Call Me.vwpLevel.Move( _
+                (Me.picViewport.ScaleWidth - ( _
+                    (248 * ZoomLevel) + WIN32.GetSystemMetric(SM_CXVSCROLL) _
+                )) \ 2, _
+                (Me.picViewport.ScaleHeight - ( _
+                    (192 * ZoomLevel) + WIN32.GetSystemMetric(SM_CYHSCROLL) _
+                )) \ 2, _
+                (248 * ZoomLevel) + WIN32.GetSystemMetric(SM_CXVSCROLL), _
+                (192 * ZoomLevel) + WIN32.GetSystemMetric(SM_CYHSCROLL) _
+            )
+        End If
+    Else
+        'For normal zooms, fill the form with the viewport
+        Call Me.vwpLevel.Move( _
+            0, 0, Me.picViewport.ScaleWidth, Me.picViewport.ScaleHeight _
+        )
+    End If
 End Sub
 
 'FORM Terminate _
@@ -927,6 +993,11 @@ Public Property Let Zoom(ByVal ZoomLevel As Long)
     Me.btnZoom1.State = IIf(My_Zoom = 1, bluSTATE.Active, bluSTATE.Inactive)
     Me.btnZoom2.State = IIf(My_Zoom = 2, bluSTATE.Active, bluSTATE.Inactive)
     Me.btnZoomTV.State = IIf(My_Zoom = 3, bluSTATE.Active, bluSTATE.Inactive)
+    
+    '"TV" mode -- fix the resolution to 248x192 and zoom as much as possible for this _
+     to fill the screen. The `Resize` event handles this as the zoom and ratio must _
+     be managed as the form resizes
+    Call Form_Resize
 End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
