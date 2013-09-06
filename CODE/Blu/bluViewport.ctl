@@ -476,9 +476,13 @@ Private Sub MouseEvents_MouseHScroll(ByVal CharsScrolled As Single, ByVal Button
     'Scroll the viewport...
     With c.Info(HORZ)
         Let .Mask = SIF_POS
+        'For increased zoom, we need to dampen the scrolling speed!
         Let .Pos = Lib.Range( _
-            .Pos - (CharsScrolled * My_ScrollCharSize), _
-            Me.ScrollMax(HORZ), .Min _
+            InputNumber:=.Pos - Lib.NotZero( _
+                InputNumber:=(CharsScrolled * My_ScrollCharSize) \ My_Zoom, _
+                AtLeast:=Sgn(CharsScrolled) _
+            ), _
+            Maximum:=Me.ScrollMax(HORZ), Minimum:=.Min _
         )
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, HORZ, c.Info(HORZ), API_TRUE)
@@ -499,9 +503,13 @@ Private Sub MouseEvents_MouseVScroll(ByVal LinesScrolled As Single, ByVal Button
     'Scroll the viewport...
     With c.Info(VERT)
         Let .Mask = SIF_POS
+        'For increased zoom, we need to dampen the scrolling speed!
         Let .Pos = Lib.Range( _
-            .Pos - (LinesScrolled * My_ScrollLineSize), _
-            Me.ScrollMax(VERT), .Min _
+            InputNumber:=.Pos - Lib.NotZero( _
+                InputNumber:=(LinesScrolled * My_ScrollLineSize) \ My_Zoom, _
+                AtLeast:=Sgn(LinesScrolled) _
+            ), _
+            Maximum:=Me.ScrollMax(VERT), Minimum:=.Min _
         )
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)

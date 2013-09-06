@@ -186,6 +186,13 @@ Public Function Range(ByVal InputNumber As Long, Optional ByVal Maximum = 214748
     Let Range = Max(Min(InputNumber, Minimum), Maximum)
 End Function
 
+'NotZero : Ensure a number is not zero. Useful when dividing by an unknown factor _
+ ======================================================================================
+Public Function NotZero(ByVal InputNumber As Long, Optional ByVal AtLeast As Long = 1) As Long
+    'This is different from Min / Max because it allows you to handle +/- numbers
+    If InputNumber = 0 Then Let NotZero = AtLeast Else Let NotZero = InputNumber
+End Function
+
 'RGBToHSL : Convert Red, Green, Blue to Hue, Saturation, Lightness _
  ======================================================================================
 '<www.xbeat.net/vbspeed/c_RGBToHSL.htm>
