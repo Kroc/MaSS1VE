@@ -709,7 +709,8 @@ Public Property Get Zoom() As Long: Let Zoom = My_Zoom: End Property
 Public Property Let Zoom(ByVal ZoomLevel As Long)
     'Keep within the defined bounds
     Let ZoomLevel = Lib.Range(ZoomLevel, My_ZoomMax, My_ZoomMin)
-    Let My_Zoom = ZoomLevel
+    'Don't change the zoom if not necessary (avoid repaints)
+    If My_Zoom = ZoomLevel Then Exit Property Else Let My_Zoom = ZoomLevel
     
     'Recalculate the scroll bar limits, when we send events they may want to refer to _
      the min / max / centre values and so forth
@@ -738,11 +739,11 @@ Public Property Let ZoomMin(ByVal ZoomLevel As Long)
     'The minimum cannot be greater than the maximum
     If ZoomLevel > My_ZoomMax Then Let ZoomLevel = My_ZoomMax
     
+    'Set the property value now as it will assessed if the zoom is changed below
+    Let My_ZoomMin = ZoomLevel
     'If the current zoom is less than that, change the zoom level
     If My_Zoom < My_ZoomMin Then Let Me.Zoom = My_ZoomMin
     
-    'Save the changed property value
-    Let My_ZoomMin = ZoomLevel
     Call UserControl.PropertyChanged("ZoomMin")
 End Property
 
@@ -755,11 +756,11 @@ Public Property Let ZoomMax(ByVal ZoomLevel As Long)
     'Zoom max cannot be less than zoom min!
     If ZoomLevel < My_ZoomMin Then Let ZoomLevel = My_ZoomMin
     
-    'If the current zoom is greater than that, change the zoom level
-    If My_Zoom > ZoomLevel Then Let Me.Zoom = My_ZoomMax
-    
-    'Save the changed property value
+    'Set the property value now as it will assessed if the zoom is changed below
     Let My_ZoomMax = ZoomLevel
+    'If the current zoom is greater than that, change the zoom level
+    If My_Zoom > My_ZoomMax Then Let Me.Zoom = My_ZoomMax
+    
     Call UserControl.PropertyChanged("ZoomMin")
 End Property
 
