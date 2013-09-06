@@ -957,7 +957,7 @@ Private Sub InitScrollBars()
          To fix this we have to normalise the destination width/height so that it is _
          a multiple of the zoom factor
         Let c.Dst.Width = _
-            c.ClientRECT.Right + My_Zoom - (c.ClientRECT.Right Mod My_Zoom)
+            c.ClientRECT.Right + (My_Zoom - 1) - (c.ClientRECT.Right Mod My_Zoom)
     End If
         
     'If the image is shorter than the viewport then centre it vertically
@@ -970,7 +970,7 @@ Private Sub InitScrollBars()
     Else
         Let c.Centre.Y = 0
         Let c.Dst.Height = _
-            c.ClientRECT.Bottom + My_Zoom - (c.ClientRECT.Bottom Mod My_Zoom)
+            c.ClientRECT.Bottom + (My_Zoom - 1) - (c.ClientRECT.Bottom Mod My_Zoom)
     End If
     
     Let c.Src.Width = c.Dst.Width \ My_Zoom
@@ -1072,29 +1072,6 @@ Private Sub SubclassWindowProcedure( _
                             )
                         End If
                     Else
-                        'Whilst `BitBlt` & `StretchBlt` don't care if you specify a _
-                         source portion of the image that is bigger than the image, _
-                         `TransparentBlt` will fail if you are not strictly within _
-                         bounds, therefore we need to check for an overflow when _
-                         `InitScrollBars` has adjusted the source & destination size _
-                         to avoid pixel squashing/stretching with viewport sizes that _
-                         are not exact multiples of the zoom level
-                        
-                        'NOTE: For reasons currently beyond my understanding, the _
-                         following code does not work if placed in `InitScrollBars` _
-                         where it belongs
-                         
-                        'Check if the source width goes over the width of the image _
-                         and correct source and destination widths if so
-                        If c.Info(HORZ).Pos + c.Src.Width > c.ImageRECT.Right _
-                        Then Let c.Src.Width = c.ImageRECT.Right - c.Info(HORZ).Pos: _
-                             Let c.Dst.Width = c.Src.Width * My_Zoom
-                        'Check if the source height goes over the height of the image _
-                         and correct source and destination heights if so
-                        If c.Info(VERT).Pos + c.Src.Height > c.ImageRECT.Bottom _
-                        Then Let c.Src.Height = c.ImageRECT.Bottom - c.Info(VERT).Pos: _
-                             Let c.Dst.Height = c.Src.Height * My_Zoom
-                        
                         'For the other layers, mask out their background colour
                         Call WIN32.gdi32_GdiTransparentBlt( _
                             Buffer.hDC, _
