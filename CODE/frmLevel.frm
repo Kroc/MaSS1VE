@@ -948,8 +948,8 @@ Public Property Set Level(ByVal TheLevel As S1Level)
         
         'Centre the viewport on Sonic
         Call Me.vwpLevel.ScrollTo( _
-            x32(My_Level.StartX + 1) - (((vwpLevel.Width \ Screen.TwipsPerPixelX) \ My_Zoom) \ 2), _
-            x32(My_Level.StartY + 1) - (((vwpLevel.Height \ Screen.TwipsPerPixelY) \ My_Zoom) \ 2) _
+            x32(My_Level.StartX + 1) - ((vwpLevel.Width \ My_Zoom) \ 2), _
+            x32(My_Level.StartY + 1) - ((vwpLevel.Height \ My_Zoom) \ 2) _
         )
         
         'Block mappings side pane: _
