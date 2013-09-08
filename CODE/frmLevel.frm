@@ -391,6 +391,7 @@ Begin VB.Form frmLevel
          Width           =   2655
          _ExtentX        =   4683
          _ExtentY        =   4048
+         ZoomMax         =   2
       End
    End
 End
@@ -773,8 +774,9 @@ End Sub
 
 'EVENT btnZoom1/2/TV CLICK : Change the zoom level _
  ======================================================================================
-Private Sub btnZoom1_Click(): Let Me.Zoom = 1: End Sub
-Private Sub btnZoom2_Click(): Let Me.Zoom = 2: End Sub
+Private Sub btnZoom1_Click(): Let Me.Zoom = 1: Let Me.vwpLevel.Zoom = 1: End Sub
+Private Sub btnZoom2_Click(): Let Me.Zoom = 2: Me.vwpLevel.Zoom = 2: End Sub
+'For TV mode, the `Form_Resize` event will set the appropriate viewport zoom
 Private Sub btnZoomTV_Click(): Let Me.Zoom = 3: End Sub
 
 'EVENT cmbLevels CLICK : The drop-down level list has changed value, load the level _
@@ -815,18 +817,29 @@ Private Sub vwpLevel_Paint(ByVal hDC As Long)
     'If the mouse is not hovered over any block nor is there a selection, then skip
     If Hover.X = -1 Then Exit Sub
     
+    'Cache the current zoom level
+    Dim ZoomLevel As Long
+    Let ZoomLevel = vwpLevel.Zoom
+    
     'Determine where in the viewport the selection rectangle begins
     Dim X As Long, Y As Long
-    Let X = Me.vwpLevel.CentreX + (x32(Hover.X) - Me.vwpLevel.ScrollX) * My_Zoom
-    Let Y = Me.vwpLevel.CentreY + (x32(Hover.Y) - Me.vwpLevel.ScrollY) * My_Zoom
+    Let X = Me.vwpLevel.CentreX + (x32(Hover.X) - Me.vwpLevel.ScrollX) * ZoomLevel
+    Let Y = Me.vwpLevel.CentreY + (x32(Hover.Y) - Me.vwpLevel.ScrollY) * ZoomLevel
     
     Dim Box As RECT
-    Call WIN32.user32_SetRect(Box, X, Y, X + x32(My_Zoom) + 3, Y + x32(My_Zoom) + 3)
+    Call WIN32.user32_SetRect(Box, X, Y, X + x32(ZoomLevel) + 3, Y + x32(ZoomLevel) + 3)
     Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(BLACK_BRUSH))
-    Call WIN32.user32_SetRect(Box, X - 1, Y - 1, X + x32(My_Zoom) + 1, Y + x32(My_Zoom) + 1)
+    Call WIN32.user32_SetRect(Box, X - 1, Y - 1, X + x32(ZoomLevel) + 1, Y + x32(ZoomLevel) + 1)
     Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(WHITE_BRUSH))
-    Call WIN32.user32_SetRect(Box, X - 2, Y - 2, X + x32(My_Zoom) + 2, Y + x32(My_Zoom) + 2)
+    Call WIN32.user32_SetRect(Box, X - 2, Y - 2, X + x32(ZoomLevel) + 2, Y + x32(ZoomLevel) + 2)
     Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(WHITE_BRUSH))
+End Sub
+
+'EVENT vwpLevel ZOOM : When the user zooms with Ctrl+Scroll _
+ ======================================================================================
+Private Sub vwpLevel_Zoom(ByVal Direction As Long)
+    'Update the zoom buttons state
+    Let Me.Zoom = vwpLevel.Zoom
 End Sub
 
 'EVENT vwpBlocks MOUSEUP _
@@ -988,7 +1001,10 @@ Public Property Get Zoom() As Long: Let Zoom = My_Zoom: End Property
 Public Property Let Zoom(ByVal ZoomLevel As Long)
     Let My_Zoom = ZoomLevel
     
-    Let Me.vwpLevel.Zoom = My_Zoom
+    'Ironically, we don't actually change the viewport's zoom level here! _
+     Because the viewport zoom can be changed by the user using Ctrl+Scroll we need _
+     to respond to the `Zoom` event by changing the button state, but not the zoom _
+     level. The changing of the viewport's zoom level occurs on the zoom button clicks
     
     Me.btnZoom1.State = IIf(My_Zoom = 1, bluSTATE.Active, bluSTATE.Inactive)
     Me.btnZoom2.State = IIf(My_Zoom = 2, bluSTATE.Active, bluSTATE.Inactive)

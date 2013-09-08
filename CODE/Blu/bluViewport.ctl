@@ -33,11 +33,10 @@ Option Explicit
 
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
-'Last Updated       05-SEP-13
-'Last Update        Fixed bug with additional layers disappearing at scroll ends
+'Last Updated       08-SEP-13
+'Last Update        Added Ctrl+Scroll to zoom
 
 'TODO: When scrolling, include mouse button / key state with the mouse move event sent
-'TODO: Ctrl+Scroll to zoom. Will need to include zoom min/max properties and zoom event
 
 '--------------------------------------------------------------------------------------
 
@@ -299,6 +298,10 @@ Event Paint(ByVal hDC As Long)
 'When a scroll occurs
 Event Scroll(ByVal ScrollX As Long, ByVal ScrollY As Long)
 
+'When the user zooms the viewport via Ctrl+Zoom. This event doesn't fire when the _
+ zoom is changed via the property to avoid potential infinite loops with your code
+Event Zoom(ByVal Direction As Long)
+
 'CONTROL Click _
  ======================================================================================
 Private Sub UserControl_Click(): RaiseEvent Click: End Sub
@@ -500,20 +503,27 @@ End Sub
 'EVENT MouseEvents MOUSEVSCROLL _
  ======================================================================================
 Private Sub MouseEvents_MouseVScroll(ByVal LinesScrolled As Single, ByVal Button As MouseButtonConstants, ByVal Shift As ShiftConstants, ByVal X As Single, ByVal Y As Single)
-    'Scroll the viewport...
-    With c.Info(VERT)
-        Let .Mask = SIF_POS
-        'For increased zoom, we need to dampen the scrolling speed!
-        Let .Pos = Lib.Range( _
-            InputNumber:=.Pos - Lib.NotZero( _
-                InputNumber:=(LinesScrolled * My_ScrollLineSize) \ My_Zoom, _
-                AtLeast:=Sgn(LinesScrolled) _
-            ), _
-            Maximum:=Me.ScrollMax(VERT), Minimum:=.Min _
-        )
-    End With
-    Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
-    RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
+    'If Ctrl is held, zoom
+    If (Shift And vbCtrlMask) > 0 Then
+        'The zoom property will automatically handle the min / max limit
+        Let Me.Zoom = Me.Zoom + Sgn(LinesScrolled)
+        RaiseEvent Zoom(Sgn(LinesScrolled))
+    Else
+        'Scroll the viewport...
+        With c.Info(VERT)
+            Let .Mask = SIF_POS
+            'For increased zoom, we need to dampen the scrolling speed!
+            Let .Pos = Lib.Range( _
+                InputNumber:=.Pos - Lib.NotZero( _
+                    InputNumber:=(LinesScrolled * My_ScrollLineSize) \ My_Zoom, _
+                    AtLeast:=Sgn(LinesScrolled) _
+                ), _
+                Maximum:=Me.ScrollMax(VERT), Minimum:=.Min _
+            )
+        End With
+        Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
+        RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
+    End If
     
     'Raise a mouse move event since the pointer is no longer under the part of the _
      image it was before and the controller might need the new ImageX/Y values
