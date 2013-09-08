@@ -56,19 +56,21 @@ Private My_IsUnderWater As Boolean
 'The number of rings available on the level
 Private My_Rings As Long
 
-'Stuff from the ROM Level Header that isn't documented / integrated yet, so we have _
- to store to export a ROM. Hopefully this will go away once this stuff is documented _
- and integrated as ROM data shouldn't be here -- the import process abstracts it away
+'Stuff from the ROM Level Header that isn't integrated yet, so we have to store it to _
+ export a ROM. This will go away once this stuff is integrated as ROM data shouldn't _
+ be here -- the import process abstracts it away
+'Documentation for these variables can be found here: _
+ <info.sonicretro.org/SCHG:Sonic_the_Hedgehog_%288-bit%29#Level_Headers>
 Public ROM_SP As Byte       'Solidity pointer (what tiles are solid / passable)
-Public ROM_X1 As Byte       'Unknown byte 1
-Public ROM_X2 As Byte       'Unknown byte 2
-Public ROM_LW As Long       'Level Width (Unknown)
-Public ROM_LH As Long       'Level Height (Unknown)
-Public ROM_X3 As Byte       'Unknown byte 3
-Public ROM_X4 As Byte       'Unknown byte 4
-Public ROM_X5 As Byte       'Unknown byte 5
-Public ROM_X6 As Byte       'Unknown byte 6
-Public ROM_ML As Long       'Pointer from $10000 to the Block Mappings ($10000)
+Public ROM_CL As Byte       'Crop Left
+Public ROM_LX As Byte       'Level X Offset
+Public ROM_XX As Long       'Unknown byte
+Public ROM_LW As Long       'Level Width
+Public ROM_CT As Long       'Crop Top
+Public ROM_LY As Long       'Level Y Offset
+Public ROM_XH As Long       'Extend Height
+Public ROM_LH As Long       'Level Height
+Public ROM_BM As Long       'Pointer from $10000 to the Block Mapping ($10000)
 Public ROM_LA As Long       'Pointer from $30000 to the Level Art ($32FE6)
 Public ROM_SA As Long       'Pointer from $24000 to the Sprite Art ($2A12A)
 Public ROM_IP As Byte       'Initial palette index

@@ -355,15 +355,15 @@ Continue_LevelPointers:
         'Copy across the unknown and unimplemented stuff from the ROM header, it's _
          needed when it comes to exporting
         Let .ROM_SP = BIN.B(LevelHeader)          'Solidity pointer -- UNDOCUMENTED
-        Let .ROM_X1 = BIN.B(LevelHeader + 5)      'Unknown byte 1
-        Let .ROM_X2 = BIN.B(LevelHeader + 6)      'Unknown byte 2
-        Let .ROM_LW = BIN.B(LevelHeader + 7)      '"Level Width" (Unknown)
-        Let .ROM_LH = BIN.B(LevelHeader + 8)      '"Level Height" (Unknown)
-        Let .ROM_X3 = BIN.B(LevelHeader + 9)      'Unknown byte 3
-        Let .ROM_X4 = BIN.B(LevelHeader + 10)     'Unknown byte 4
-        Let .ROM_X5 = BIN.B(LevelHeader + 11)     'Unknown byte 5
-        Let .ROM_X6 = BIN.B(LevelHeader + 12)     'Unknown byte 6
-        Let .ROM_ML = BIN.IntLE(LevelHeader + 19) 'Pointer from $10000 to the Block Mappings ($10000)
+        Let .ROM_CL = BIN.B(LevelHeader + 5)      'Crop Left
+        Let .ROM_LX = BIN.B(LevelHeader + 6)      'Level X Offset
+        Let .ROM_XX = BIN.B(LevelHeader + 7)      'Unknown byte 2
+        Let .ROM_LW = BIN.B(LevelHeader + 8)      'Level Width
+        Let .ROM_CT = BIN.B(LevelHeader + 9)      'Crop Top
+        Let .ROM_LY = BIN.B(LevelHeader + 10)     'Level Y Offset
+        Let .ROM_XH = BIN.B(LevelHeader + 11)     'Extend Height
+        Let .ROM_LH = BIN.B(LevelHeader + 12)     'Level height
+        Let .ROM_BM = BIN.IntLE(LevelHeader + 19) 'Pointer from $10000 to the Block Mappings ($10000)
         Let .ROM_LA = BIN.IntLE(LevelHeader + 21) 'Pointer from $30000 to the Level Art ($32FE6)
         Let .ROM_SA = BIN.IntLE(LevelHeader + 24) 'Pointer from $24000 to the Sprite Art ($2A12A)
         Let .ROM_IP = BIN.B(LevelHeader + 26)     'Initial palette index
@@ -755,10 +755,15 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
                 Let BIN.B(Pointer + 27) = .ROM_CS       'Cycle palette speed
                 
                 'Level dimensions:
-                Let BIN.IntLE(Pointer + 1) = .Width     'Actual level width
-                Let BIN.IntLE(Pointer + 3) = .Height    'Actual level height
-                Let BIN.B(Pointer + 7) = .ROM_LW        'Level Width -- UNDOCUMENTED
-                Let BIN.B(Pointer + 8) = .ROM_LH        'Level Height -- UNDOCUMENTED
+                Let BIN.IntLE(Pointer + 1) = .Width     'Floor Layout width
+                Let BIN.IntLE(Pointer + 3) = .Height    'Floor Layout height
+                Let BIN.B(Pointer + 6) = .ROM_LX        'Level X offset
+                Let BIN.B(Pointer + 10) = .ROM_LY       'Level Y offset
+                Let BIN.B(Pointer + 8) = .ROM_LW        'Level Width
+                Let BIN.B(Pointer + 12) = .ROM_LH       'Level Height
+                Let BIN.B(Pointer + 11) = .ROM_XH       'Extend Height
+                Let BIN.B(Pointer + 5) = .ROM_CL        'Crop Left
+                Let BIN.B(Pointer + 9) = .ROM_CT        'Crop Top
                 
                 'Level attributes
                 Let BIN.B(Pointer + 36) = .ROM_MU       'Music index
@@ -771,7 +776,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
                 
                 'Level structure
                 Let BIN.B(Pointer) = .ROM_SP            'Solidity pointer -- UNDOCUMENTED
-                Let BIN.IntLE(Pointer + 19) = .ROM_ML   'Block Mappings pointer
+                Let BIN.IntLE(Pointer + 19) = .ROM_BM   'Block Mappings pointer
                 Let BIN.IntLE(Pointer + 15) = _
                     FloorLocations(.FloorLayout.ID)     'The Floor Layout pointer
                 Let BIN.IntLE(Pointer + 17) = _
@@ -779,14 +784,9 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
                 Let BIN.IntLE(Pointer + 30) = .ROM_OL   'Object Layout pointer
                 
                 'Unknown / unimplemented bytes:
-                Let BIN.B(Pointer + 35) = 0             'Always "0"
-                Let BIN.B(Pointer + 5) = .ROM_X1
-                Let BIN.B(Pointer + 6) = .ROM_X2
-                Let BIN.B(Pointer + 9) = .ROM_X3
-                Let BIN.B(Pointer + 10) = .ROM_X4
-                Let BIN.B(Pointer + 11) = .ROM_X5
-                Let BIN.B(Pointer + 12) = .ROM_X6
-                Let BIN.B(Pointer + 23) = 9             'Always "9"
+                Let BIN.B(Pointer + 7) = .ROM_XX        'Unknown byte
+                Let BIN.B(Pointer + 35) = 0             'Always 0
+                Let BIN.B(Pointer + 23) = 9             'Always 9
             End With
         End If
     Next LevelIndex
