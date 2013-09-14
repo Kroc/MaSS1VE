@@ -40,7 +40,7 @@ Begin VB.Form frmLevel
       End
       Begin MaSS1VE.bluButton btnZoom2 
          Height          =   360
-         Left            =   13320
+         Left            =   12840
          TabIndex        =   16
          Top             =   0
          Width           =   495
@@ -60,7 +60,7 @@ Begin VB.Form frmLevel
       End
       Begin MaSS1VE.bluButton btnGrid 
          Height          =   360
-         Left            =   11640
+         Left            =   11160
          TabIndex        =   18
          Top             =   0
          Visible         =   0   'False
@@ -71,13 +71,23 @@ Begin VB.Form frmLevel
       End
       Begin MaSS1VE.bluButton btnZoom1 
          Height          =   360
-         Left            =   12840
+         Left            =   12360
          TabIndex        =   19
          Top             =   0
          Width           =   495
          _ExtentX        =   873
          _ExtentY        =   635
          Caption         =   "1×"
+      End
+      Begin MaSS1VE.bluButton btnZoom3 
+         Height          =   360
+         Left            =   13320
+         TabIndex        =   23
+         Top             =   0
+         Width           =   495
+         _ExtentX        =   873
+         _ExtentY        =   635
+         Caption         =   "3×"
       End
       Begin MaSS1VE.bluLabel lblMemory 
          Height          =   375
@@ -91,7 +101,7 @@ Begin VB.Form frmLevel
       End
       Begin MaSS1VE.bluLabel lblZoom 
          Height          =   360
-         Left            =   12120
+         Left            =   11640
          Top             =   0
          Width           =   735
          _ExtentX        =   1296
@@ -101,7 +111,7 @@ Begin VB.Form frmLevel
       End
       Begin MaSS1VE.bluLabel lblGrid 
          Height          =   360
-         Left            =   11040
+         Left            =   10560
          Top             =   0
          Visible         =   0   'False
          Width           =   615
@@ -391,7 +401,7 @@ Begin VB.Form frmLevel
          Width           =   2655
          _ExtentX        =   4683
          _ExtentY        =   4048
-         ZoomMax         =   2
+         ZoomMax         =   3
       End
    End
 End
@@ -534,7 +544,8 @@ Private Sub Form_Resize()
         mdiMain.WindowState = VBRUN.FormWindowStateConstants.vbMaximized, _
         Me.picStatusbar.ScaleWidth, Me.cbxSizer.Left _
     ) - Me.btnZoomTV.Width
-    Let Me.btnZoom2.Left = Me.btnZoomTV.Left - Me.btnZoom2.Width
+    Let Me.btnZoom3.Left = Me.btnZoomTV.Left - Me.btnZoom3.Width
+    Let Me.btnZoom2.Left = Me.btnZoom3.Left - Me.btnZoom2.Width
     Let Me.btnZoom1.Left = Me.btnZoom2.Left - Me.btnZoom1.Width
     Let Me.lblZoom.Left = Me.btnZoom1.Left - Me.lblZoom.Width
     'Grid ON/OFF
@@ -645,19 +656,22 @@ Private Sub Form_Resize()
     
     'Are we in "TV" mode? Fix the viewport to 248x192px at the maximum zoom that will _
      fit into the form
-    If My_Zoom = 3 Then
+    If My_Zoom = 4 Then
         Dim Ratio As SIZE
         'How many times will the fixed resolution fit into the viewport? _
          (this will give us the maximum zoom factor usable)
-        Let Ratio.Width = Me.picViewport.ScaleWidth \ ( _
-            248 + WIN32.GetSystemMetric(SM_CXVSCROLL) _
-        )
-        Let Ratio.Height = Me.picViewport.ScaleHeight \ ( _
-            192 + WIN32.GetSystemMetric(SM_CYHSCROLL) _
-        )
+        Let Ratio.Width = ( _
+            Me.picViewport.ScaleWidth - WIN32.GetSystemMetric(SM_CXVSCROLL) _
+        ) \ 248
+        Let Ratio.Height = ( _
+            Me.picViewport.ScaleHeight - WIN32.GetSystemMetric(SM_CYHSCROLL) _
+        ) \ 192
         'Whichever of these is the lowest determines the zoom level we will use
         Dim ZoomLevel As Long
-        Let ZoomLevel = IIf(Ratio.Width > Ratio.Height, Ratio.Height, Ratio.Width)
+        Let ZoomLevel = Lib.Max( _
+            IIf(Ratio.Width > Ratio.Height, Ratio.Height, Ratio.Width), _
+            Me.vwpLevel.ZoomMax _
+        )
         'If one of these are 0 then the viewport is too small to fit a fixed 248x192px _
          screen, we will instead fill the form and zoom out
         If ZoomLevel = 0 Then
@@ -775,9 +789,10 @@ End Sub
 'EVENT btnZoom1/2/TV CLICK : Change the zoom level _
  ======================================================================================
 Private Sub btnZoom1_Click(): Let Me.Zoom = 1: Let Me.vwpLevel.Zoom = 1: End Sub
-Private Sub btnZoom2_Click(): Let Me.Zoom = 2: Me.vwpLevel.Zoom = 2: End Sub
+Private Sub btnZoom2_Click(): Let Me.Zoom = 2: Let Me.vwpLevel.Zoom = 2: End Sub
+Private Sub btnZoom3_Click(): Let Me.Zoom = 3: Let Me.vwpLevel.Zoom = 3: End Sub
 'For TV mode, the `Form_Resize` event will set the appropriate viewport zoom
-Private Sub btnZoomTV_Click(): Let Me.Zoom = 3: End Sub
+Private Sub btnZoomTV_Click(): Let Me.Zoom = 4: End Sub
 
 'EVENT cmbLevels CLICK : The drop-down level list has changed value, load the level _
  ======================================================================================
@@ -1008,9 +1023,10 @@ Public Property Let Zoom(ByVal ZoomLevel As Long)
     
     Me.btnZoom1.State = IIf(My_Zoom = 1, bluSTATE.Active, bluSTATE.Inactive)
     Me.btnZoom2.State = IIf(My_Zoom = 2, bluSTATE.Active, bluSTATE.Inactive)
-    Me.btnZoomTV.State = IIf(My_Zoom = 3, bluSTATE.Active, bluSTATE.Inactive)
+    Me.btnZoom3.State = IIf(My_Zoom = 3, bluSTATE.Active, bluSTATE.Inactive)
+    Me.btnZoomTV.State = IIf(My_Zoom = 4, bluSTATE.Active, bluSTATE.Inactive)
     
-    '"TV" mode -- fix the resolution to 248x192 and zoom as much as possible for this _
+    '"TV" mode fixes the resolution to 248x192 and zooms as much as possible for this _
      to fill the screen. The `Resize` event handles this as the zoom and ratio must _
      be managed as the form resizes
     Call Form_Resize
