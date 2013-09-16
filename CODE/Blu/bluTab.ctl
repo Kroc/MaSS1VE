@@ -10,6 +10,7 @@ Begin VB.UserControl bluTab
    ForeColor       =   &H00FFAF00&
    ScaleHeight     =   495
    ScaleWidth      =   4170
+   ToolboxBitmap   =   "bluTab.ctx":0000
    Begin MaSS1VE.bluButton bluButton 
       Height          =   495
       Index           =   0

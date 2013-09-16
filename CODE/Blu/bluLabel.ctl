@@ -11,6 +11,7 @@ Begin VB.UserControl bluLabel
    ScaleHeight     =   25
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   122
+   ToolboxBitmap   =   "bluLabel.ctx":0000
    Windowless      =   -1  'True
 End
 Attribute VB_Name = "bluLabel"

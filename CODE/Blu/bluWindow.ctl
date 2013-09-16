@@ -3,19 +3,29 @@ Begin VB.UserControl bluWindow
    Appearance      =   0  'Flat
    BackColor       =   &H00FFAA00&
    CanGetFocus     =   0   'False
-   ClientHeight    =   405
+   ClientHeight    =   480
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   465
+   ClientWidth     =   480
    ClipBehavior    =   0  'None
    ClipControls    =   0   'False
    Enabled         =   0   'False
    HasDC           =   0   'False
    HitBehavior     =   0  'None
    InvisibleAtRuntime=   -1  'True
-   ScaleHeight     =   405
-   ScaleWidth      =   465
+   ScaleHeight     =   480
+   ScaleWidth      =   480
+   ToolboxBitmap   =   "bluWindow.ctx":0000
    Windowless      =   -1  'True
+   Begin VB.Image imgIcon 
+      Appearance      =   0  'Flat
+      Height          =   480
+      Left            =   0
+      Picture         =   "bluWindow.ctx":0312
+      Stretch         =   -1  'True
+      Top             =   0
+      Width           =   480
+   End
 End
 Attribute VB_Name = "bluWindow"
 Attribute VB_GlobalNameSpace = False
@@ -37,8 +47,8 @@ Option Explicit
 
 'Status             INCOMPLETE, DO NOT USE
 'Dependencies       blu.bas, Lib.bas, WIN32.bas
-'Last Updated       04-SEP-13
-'Last Update        Added double-click to maximise / restore parent form
+'Last Updated       16-SEP-13
+'Last Update        Added icons
 
 '--------------------------------------------------------------------------------------
 
@@ -579,8 +589,10 @@ End Sub
  ======================================================================================
 Private Sub UserControl_Resize()
     'This control can't be resized
-    Let UserControl.Width = blu.Xpx(blu.Metric)
-    Let UserControl.Height = blu.Ypx(blu.Metric)
+    Let UserControl.Width = 32 * Screen.TwipsPerPixelX
+    Let UserControl.Height = 32 * Screen.TwipsPerPixelY
+    Let imgIcon.Width = UserControl.Width
+    Let imgIcon.Height = UserControl.Height
 End Sub
 
 'CONTROL Terminate : Clean up _

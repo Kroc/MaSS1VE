@@ -19,6 +19,7 @@ Begin VB.UserControl bluButton
    ScaleHeight     =   33
    ScaleMode       =   3  'Pixel
    ScaleWidth      =   97
+   ToolboxBitmap   =   "bluButton.ctx":0000
 End
 Attribute VB_Name = "bluButton"
 Attribute VB_GlobalNameSpace = False
