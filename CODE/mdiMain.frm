@@ -137,6 +137,12 @@ Begin VB.MDIForm mdiMain
          Enabled         =   0   'False
       End
    End
+   Begin MaSS1VE.bluDownload bluDownload 
+      Left            =   720
+      Top             =   1200
+      _ExtentX        =   847
+      _ExtentY        =   847
+   End
    Begin MaSS1VE.bluWindow bluWindow 
       Left            =   120
       Top             =   1200
