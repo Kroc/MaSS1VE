@@ -159,16 +159,18 @@ SectionEnd
 
 ;--------------------------------------------------------------------------------------
 Section Local
+        ${If} $PortableMode = 0
+
         ;We're going to install a single shortcut directly into the Start Menu,
         ; no sub-folder -- that's so passe
         CreateShortCut "${START_MENU_SHORTCUT}" "$INSTDIR\${EXE_NAME}" "" "" "" SW_SHOWNORMAL "" "${PRODUCT_DESCRIPTION}"
 
         ;Place Uninstall.exe
         WriteUninstaller "$INSTDIR\${UNINSTALLER_EXE_NAME}"
-        
+
         ;Allow running the app from the run box (WIN+R)
         WriteRegStr HKCU "${REG_APPPATH}" "" "$INSTDIR\${EXE_NAME}"
-        
+
         ;Write the uninstaller info to the registry
         WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayName" "${PRODUCT_NAME}"
         WriteRegStr HKCU "${REG_UNINSTALL}" "UninstallString" "$\"$INSTDIR\${UNINSTALLER_EXE_NAME}$\""
@@ -178,12 +180,14 @@ Section Local
         WriteRegStr HKCU "${REG_UNINSTALL}" "Publisher" "${PRODUCT_PUBLISHER}"
         WriteRegDWORD HKCU "${REG_UNINSTALL}" "NoModify" 1
         WriteRegDWORD HKCU "${REG_UNINSTALL}" "NoRepair" 1
-        
+
         ;Add the program size to the uninstall info
         ; (this measures the size of the install directory)
         ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
         IntFmt $0 "0x%08X" $0
         WriteRegDWORD HKCU "${REG_UNINSTALL}" "EstimatedSize" "$0"
+        
+        ${EndIf}
 SectionEnd
 
 ;=== UNINSTALLATION ===================================================================
