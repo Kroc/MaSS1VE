@@ -11,7 +11,32 @@
 ; or portably. Huge thanks goes to Anders for an excellent sample of this approach:
 ; <stackoverflow.com/questions/13777988/use-nsis-to-create-both-normal-install-and-portable-install>
 
-;--- Includes -------------------------------------------------------------------------
+;--------------------------------------------------------------------------------------
+
+!include LogicLib.nsh                                  ;If / Then logic
+!include FileFunc.nsh                                  ;File system operations
+!include MUI2.nsh                                      ;Modern interface
+
+;Include the UAC plugin for handling user / admin rights. You won't need to install
+; the plugin yourself, it's provided in a sub-folder thanks to its permissable licence
+; <nsis.sourceforge.net/UAC_plug-in>
+!addplugindir UAC\Ansi
+!include UAC\UAC.nsh
+
+;--------------------------------------------------------------------------------------
+;We begin with a series of global constants which will help us avoid a lot of
+; duplicate values that, when changed, we will want to be reflected throughout
+
+;Windows new-line sequence
+!define CRLF "$\r$\n"
+
+!define PRODUCT_NAME "MaSS1VE"
+!define EXE_NAME "${PRODUCT_NAME}.exe"
+
+;Meta data
+!define PRODUCT_DESCRIPTION "Create new adventures with Sonic on the Master System!"
+!define PRODUCT_PUBLISHER "Camen Design"
+!define PRODUCT_WEB_SITE "http://camendesign.com"
 
 /* NOTE: To save having to manually update this script every time there's a new version
    of MaSS1VE, we will want to extract the version number from MaSS1VE and apply it to
@@ -35,20 +60,6 @@
         !define PRODUCT_VERSION_VB6 "0.0.0"
 !endif
 
-!include LogicLib.nsh                                  ;If / Then logic
-!include FileFunc.nsh                                  ;File system operations
-!include MUI2.nsh                                      ;Modern interface
-
-;--------------------------------------------------------------------------------------
-;We begin with a series of global constants which will help us avoid a lot of
-; duplicate values that, when changed, we will want to be reflected throughout
-
-!define PRODUCT_NAME "MaSS1VE"
-!define PRODUCT_DESCRIPTION "Create new adventures with Sonic on the Master System!"
-!define PRODUCT_PUBLISHER "Camen Design"
-!define PRODUCT_WEB_SITE "http://camendesign.com"
-!define EXE_NAME "${PRODUCT_NAME}.exe"
-
 ;Name the installer with the version number from MaSS1VE.exe
 !define INSTALLER_NAME "Install ${PRODUCT_NAME} v${PRODUCT_VERSION_VB6}"
 ;The uninstaller is more guessable
@@ -59,7 +70,7 @@
 !define INSTDIR_PORTABLE_DEFAULT "$DESKTOP\${PRODUCT_NAME}"
 
 ;We'll put a single shortcut directly into the start menu (no sub-folder)
-!define START_MENU_SHORTCUT "$STARTMENU\Programs\${PRODUCT_NAME}.lnk"
+!define START_MENU_SHORTCUT "$SMPROGRAMS\${PRODUCT_NAME}.lnk"
 
 ;Registry key for the uninstaller info ("Add/Remove Programs")
 !define REG_UNINSTALL "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
@@ -113,6 +124,8 @@ VIAddVersionKey "FileDescription" "${PRODUCT_NAME} Installer"
 VIAddVersionKey "FileVersion" "${PRODUCT_VERSION_VB6}"
 
 ;======================================================================================
+
+var /GLOBAL IsAdmin
 var /GLOBAL PortableMode
 
 ;Define installation pages: -----------------------------------------------------------
@@ -125,6 +138,9 @@ Page Custom PortableModePageCreate PortableModePageLeave
 ;Allow skipping of the Directory page (if portable mode is on),
 ; with thanks to <forums.winamp.com/showpost.php?p=2358237&postcount=4>
 !define MUI_PAGE_CUSTOMFUNCTION_PRE DirectoryPagePre
+;Check the chosen directory before continuing, we won't be able to install to an
+; Admin-only direcoty (such as %PROGRAMFILES%) and need to warn the user
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE DirectoryPageLeave
 !insertmacro MUI_PAGE_DIRECTORY
 
 ;Do the actual installation
@@ -132,9 +148,11 @@ Page Custom PortableModePageCreate PortableModePageLeave
 
 /* Remember that you shouldn't launch the executable from admin-privliges
    <mdb-blog.blogspot.co.uk/2013/01/nsis-lunch-program-as-user-from-uac.html>
-   We will have to fix the Admin OLE drag-and-drop bug in MaSS1VE to be safe in case
-   people run the installer as Admin out of need / habit */
-!define MUI_FINISHPAGE_RUN "$INSTDIR\${EXE_NAME}"
+   MaSS1VE has a bug where OLE drag-and-drop won't work when running as Administrator,
+   but regardless we don't want it saving data to %PROGRAMFILES% and then being unable
+   to change it the next time the program is run! */
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_FUNCTION FinishPageRun
 !insertmacro MUI_PAGE_FINISH
 
 ;Uninstallation pages:
@@ -146,19 +164,24 @@ Page Custom PortableModePageCreate PortableModePageLeave
 
 ;=== INSTALLATION =====================================================================
 
+;--------------------------------------------------------------------------------------
 Section Install
+        ;If local installation has been selected,
+        ; choose the deafult installation path
         ${If} $PortableMode = 0
-               StrCpy $INSTDIR ${INSTDIR_LOCAL_DEFAULT}
+                StrCpy $INSTDIR ${INSTDIR_LOCAL_DEFAULT}
         ${EndIf}
 
         SetOutPath "$INSTDIR"
         SetOverwrite ifnewer
 
+        ;Package the app
         File "..\BUILD\${EXE_NAME}"
 SectionEnd
 
 ;--------------------------------------------------------------------------------------
 Section Local
+        ;Don't create shortcut / modify registry if portable mode selected
         ${If} $PortableMode = 0
 
         ;We're going to install a single shortcut directly into the Start Menu,
@@ -168,24 +191,24 @@ Section Local
         ;Place Uninstall.exe
         WriteUninstaller "$INSTDIR\${UNINSTALLER_EXE_NAME}"
 
-        ;Allow running the app from the run box (WIN+R)
-        WriteRegStr HKCU "${REG_APPPATH}" "" "$INSTDIR\${EXE_NAME}"
-
         ;Write the uninstaller info to the registry
-        WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayName" "${PRODUCT_NAME}"
-        WriteRegStr HKCU "${REG_UNINSTALL}" "UninstallString" "$\"$INSTDIR\${UNINSTALLER_EXE_NAME}$\""
-        WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayIcon" "$INSTDIR\${EXE_NAME}"
-        WriteRegStr HKCU "${REG_UNINSTALL}" "DisplayVersion" "${PRODUCT_VERSION_VB6}"
-        WriteRegStr HKCU "${REG_UNINSTALL}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
-        WriteRegStr HKCU "${REG_UNINSTALL}" "Publisher" "${PRODUCT_PUBLISHER}"
-        WriteRegDWORD HKCU "${REG_UNINSTALL}" "NoModify" 1
-        WriteRegDWORD HKCU "${REG_UNINSTALL}" "NoRepair" 1
+        WriteRegStr   SHCTX "${REG_UNINSTALL}" "DisplayName" "${PRODUCT_NAME}"
+        WriteRegStr   SHCTX "${REG_UNINSTALL}" "UninstallString" "$\"$INSTDIR\${UNINSTALLER_EXE_NAME}$\""
+        WriteRegStr   SHCTX "${REG_UNINSTALL}" "DisplayIcon" "$\"$INSTDIR\${EXE_NAME}$\""
+        WriteRegStr   SHCTX "${REG_UNINSTALL}" "DisplayVersion" "${PRODUCT_VERSION_VB6}"
+        WriteRegStr   SHCTX "${REG_UNINSTALL}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
+        WriteRegStr   SHCTX "${REG_UNINSTALL}" "Publisher" "${PRODUCT_PUBLISHER}"
+        WriteRegDWORD SHCTX "${REG_UNINSTALL}" "NoModify" 1
+        WriteRegDWORD SHCTX "${REG_UNINSTALL}" "NoRepair" 1
+
+        ;Allow running the app from the run box (WIN+R)
+        WriteRegStr   SHCTX "${REG_APPPATH}" "" "$INSTDIR\${EXE_NAME}"
 
         ;Add the program size to the uninstall info
         ; (this measures the size of the install directory)
         ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
         IntFmt $0 "0x%08X" $0
-        WriteRegDWORD HKCU "${REG_UNINSTALL}" "EstimatedSize" "$0"
+        WriteRegDWORD SHCTX "${REG_UNINSTALL}" "EstimatedSize" "$0"
         
         ${EndIf}
 SectionEnd
@@ -201,15 +224,17 @@ Section un.Install
         Delete "$INSTDIR\${EXE_NAME}"
         Delete "$INSTDIR\${UNINSTALLER_EXE_NAME}"
         ;Remove the install directory only if it's empty
-        RMDir "$INSTDIR"
+        RMDir  "$INSTDIR"
         
         ;Clean up the registry keys
-        DeleteRegKey HKCU "${REG_APPPATH}"
-        DeleteRegKey HKCU "${REG_UNINSTALL}"
+        DeleteRegKey SHCTX "${REG_APPPATH}"
+        DeleteRegKey SHCTX "${REG_UNINSTALL}"
 SectionEnd
 
 ;=== FUNCTIONS ========================================================================
 
+;Initialise the installer:
+;--------------------------------------------------------------------------------------
 Function .onInit
         ;Get the command line parameters
         ; <nsis.sourceforge.net/Docs/AppendixE.html#E.1.11>
@@ -220,31 +245,31 @@ Function .onInit
         ${GetOptions} $9 "/?" $8
         ${IfNot} ${Errors}
                 MessageBox MB_ICONINFORMATION|MB_SETFOREGROUND "\
-                           /PORTABLE : Install without shortuct / uninstaller$\n\
-                           /S : Silent install$\n\
-                           /D=%directory% : Specify destination directory$\n"
+                        /PORTABLE : Install without shortuct / uninstaller${CRLF}\
+                        /S : Silent install${CRLF}\
+                        /D=%directory% : Specify destination directory"
                 Quit
+        ${EndIf}
+
+        ;Is the installer being "run as administrator"? We don't support running as
+        ; admin just yet, it would prevent us from automatically updating
+        !insertmacro UAC_IsAdmin
+        StrCpy $IsAdmin $0
+        ${If} $IsAdmin = 1
+                MessageBox MB_ICONSTOP|MB_SETFOREGROUND "\
+                        ${PRODUCT_NAME} does not support being installed as \
+                        Administrator (it prevents updates installing correctly). \
+                        Please re-run the installer normally."
+                Abort
         ${EndIf}
 
         ClearErrors
         ${GetOptions} $9 "/PORTABLE" $8
         ${IfNot} ${Errors}
             StrCpy $PortableMode 1
-;            StrCpy $0 $PortableDestDir
         ${Else}
             StrCpy $PortableMode 0
-;            StrCpy $0 $NormalDestDir
-;            ${If} ${Silent}
-;                Call RequireAdmin
-;            ${EndIf}
         ${EndIf}
-;
-;        ${If} $InstDir == ""
-;            ; User did not use /D to specify a directory,
-;            ; we need to set a default based on the install mode
-;            StrCpy $InstDir $0
-;        ${EndIf}
-;        Call SetModeDestinationFromInstdir
 FunctionEnd
 
 ;--------------------------------------------------------------------------------------
@@ -267,20 +292,18 @@ Function PortableModePageCreate
         nsDialogs::Show
 FunctionEnd
 
+;Set the portable mode based on the user selection:
 ;--------------------------------------------------------------------------------------
 Function PortableModePageLeave
         ${NSD_GetState} $1 $0
         ${If} $0 <> ${BST_UNCHECKED}
                 StrCpy $PortableMode 0
-                ;StrCpy $InstDir $NormalDestDir
-                ;Call RequireAdmin
         ${Else}
-               StrCpy $PortableMode 1
-               ;StrCpy $InstDir $PortableDestDir
+                StrCpy $PortableMode 1
         ${EndIf}
 FunctionEnd
 
-;Allow skipping the Directory page when local install is selected
+;Allow skipping the Directory page when local install is selected:
 ;--------------------------------------------------------------------------------------
 Function DirectoryPagePre
          ;If local mode selected, skip the Directory page, installation happens
@@ -288,4 +311,39 @@ Function DirectoryPagePre
         ${If} $PortableMode = 0
               Abort
         ${EndIf}
+FunctionEnd
+
+;Check the chosen directory is writable:
+;--------------------------------------------------------------------------------------
+Function DirectoryPageLeave
+        ;Attempt to create a temporary file in the installation directory,
+        ; (creating the installation directory if it doesn't exist) --
+        ; if this fails the user doesn't have write-permissions to this folder
+        ; and we need to warn the user
+        ClearErrors
+        CreateDirectory "$INSTDIR"
+        FileOpen $R0 "$INSTDIR\tmp.dat" w
+        FileClose $R0
+        ;Clean up. We delete the directory (if empty) in case the user changes their
+        ; mind and selects a different location
+        Delete "$INSTDIR\tmp.dat"
+        RmDir "$INSTDIR"
+        ;Do not proceed if the directory can't be written to
+        ${If} ${Errors}
+                MessageBox MB_ICONSTOP|MB_SETFOREGROUND "\
+                        You don't have write permission to install ${PRODUCT_NAME} to \
+                        '$INSTDIR', please select a location that is accessible, e.g. \
+                        Desktop, Documents.${CRLF}\
+                        ${CRLF}\
+                        ${PRODUCT_NAME} does not support installation as the \
+                        Administrator account yet."
+                Abort
+        ${EndIf}
+FunctionEnd
+
+;--------------------------------------------------------------------------------------
+Function FinishPageRun
+        ;Ensure the program is not launched as Administrator (otherwise the program
+        ; will write data somewhere where it won't be able to modify it later!)
+        !insertmacro UAC_AsUser_ExecShell "" "$INSTDIR\${EXE_NAME}" "" "" ""
 FunctionEnd
