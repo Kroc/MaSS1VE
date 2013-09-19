@@ -159,9 +159,7 @@ Begin VB.Form frmLevel
             Strikethrough   =   0   'False
          EndProperty
          Height          =   345
-         ItemData        =   "frmLevel.frx":0000
          Left            =   60
-         List            =   "frmLevel.frx":0002
          Style           =   2  'Dropdown List
          TabIndex        =   14
          Top             =   60

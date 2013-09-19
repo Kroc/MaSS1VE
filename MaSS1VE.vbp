@@ -1,5 +1,5 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\Windows\System32\stdole2.tlb#OLE Automation
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\Windows\system32\stdole2.tlb#OLE Automation
 Module=WIN32; CODE\WIN32.bas
 Module=Run; CODE\Run.bas
 Module=ROM; CODE\ROM.bas
@@ -45,7 +45,7 @@ Description="Master System Sonic 1 Visual Editor"
 CompatibleMode="0"
 MajorVer=0
 MinorVer=0
-RevisionVer=60
+RevisionVer=61
 AutoIncrementVer=1
 ServerSupportFiles=0
 VersionComments="Master System Sonic 1 Visual Editor"
