@@ -11,8 +11,8 @@ Option Explicit
 
 'Status             In Flux
 'Dependencies       Lib.bas
-'Last Updated       04-SEP-13
-'Last Update        Added `GetCursorPos`, `ScreenToClient` & `FrameRect` calls
+'Last Updated       20-SEP-13
+'Last Update        Added `SetIcon` to load 32-bit icons from the EXE
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -124,6 +124,27 @@ Public Enum ICC
     ICC_ALL_CLASSES = &HFDFF&           'All of the above
 End Enum
 
+'This will allow us to load the icons embedded in the EXE _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms648045%28v=vs.85%29.aspx>
+Private Declare Function user32_LoadImage Lib "user32" Alias "LoadImageA" ( _
+    ByVal hndInstance As Long, _
+    ByVal ImageName As String, _
+    ByVal ImageType As IMAGE, _
+    ByVal Width As Long, _
+    ByVal Height As Long, _
+    ByVal LoadFlag As LR _
+) As Long
+
+Private Enum IMAGE
+    IMAGE_BITMAP = 0
+    IMAGE_ICON = 1
+    IMAGE_CURSOR = 2
+End Enum
+
+Private Enum LR
+    LR_SHARED = &H8000&                 'Re-uses a resource. The system will unload it
+End Enum
+
 'WINDOWS SYSTEM INFORMATION _
  --------------------------------------------------------------------------------------
 
@@ -192,14 +213,15 @@ Private Declare Function user32_GetSystemMetrics Lib "user32" Alias "GetSystemMe
 Public Enum SM
     SM_CXVSCROLL = 2            'Width of vertical scroll bar
     SM_CYHSCROLL = 3            'Height of horizontal scroll bar
+    
     SM_CYCAPTION = 4            'Title bar height
     SM_CXBORDER = 5             'Border width. Equivalent to SM_CXEDGE for windows
                                  'with the 3-D look
     SM_CYBORDER = 6             'Border width. Equivalent to the SM_CYEDGE for windows
                                  'with the 3-D look
-    SM_CYFIXEDFRAME = 8         'Border height
     SM_CXFIXEDFRAME = 7         'Thickness of the frame around a window that has a
                                  'caption but is not sizable
+    SM_CYFIXEDFRAME = 8         'Border height
     SM_CXSIZEFRAME = 32         'Resizable border horizontal thickness
     SM_CYSIZEFRAME = 33         'Resizable border vertical thickness
     SM_CYEDGE = 46              'The height of a 3-D border
@@ -210,6 +232,11 @@ Public Enum SM
     SM_SWAPBUTTON = 23          'Mouse buttons are swapped
     SM_MOUSEHORIZONTALWHEELPRESENT = 91
     SM_MOUSEWHEELPRESENT = 75
+    
+    SM_CXICON = 11              'Default width of an icon (Usually 32 or 48)
+    SM_CYICON = 12              'Default height of an icon
+    SM_CXSMICON = 49            'Width of small icons (Usually 16)
+    SM_CYSMICON = 50            'Height of small icons
 End Enum
 
 'Get the location of a special folder, e.g. "My Documents", "System32" &c. _
@@ -263,6 +290,17 @@ Public Declare Function user32_GetParent Lib "user32" Alias "GetParent" ( _
     ByVal hndWindow As Long _
 ) As Long
 
+'We'll use this in `SetIcon` to find VB6's hidden top-level window _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms633515%28v=vs.85%29.aspx>
+Private Declare Function user32_GetWindow Lib "user32" Alias "GetWindow" ( _
+    ByVal hndWindow As Long, _
+    ByVal Command As GW _
+) As Long
+
+Private Enum GW
+    GW_OWNER = 4
+End Enum
+
 'Get the dimensions of the whole window, including the border area _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms633519%28v=vs.85%29.aspx>
 Public Declare Function user32_GetWindowRect Lib "user32" Alias "GetWindowRect" ( _
@@ -304,6 +342,24 @@ Public Declare Function user32_PtInRect Lib "user32" Alias "PtInRect" ( _
     ByRef InRect As RECT, _
     ByVal X As Long, _
     ByVal Y As Long _
+) As BOOL
+
+'Send a message from one window to another _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms644950%28v=vs.85%29.aspx>
+Public Declare Function user32_SendMessage Lib "user32" Alias "SendMessageA" ( _
+    ByVal hndWindow As Long, _
+    ByVal Message As Long, _
+    ByVal wParam As Long, _
+    ByVal lParam As Long _
+) As Long
+
+'Sends a message to another window, but doesn't wait for a return value _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms644944%28v=vs.85%29.aspx>
+Public Declare Function user32_PostMessage Lib "user32" Alias "PostMessageA" ( _
+    ByVal hndWindow As Long, _
+    ByVal Message As Long, _
+    ByVal wParam As Long, _
+    ByVal lParam As Long _
 ) As BOOL
 
 'GDI DRAWING: _
@@ -891,3 +947,78 @@ Public Function OLETranslateColor(ByVal Colour As OLE_COLOR) As Long
         OLEColour:=Colour, hndPalette:=0, ptrColour:=OLETranslateColor _
     ) Then Let OLETranslateColor = vbWhite
 End Function
+
+'SetIcon : Use a 32-bit icon from the compiled in resource file _
+ ======================================================================================
+'This function has been adapted from this article & code by Steve McMahon: _
+ <www.vbaccelerator.com/home/VB/Tips/Setting_the_App_Icon_Correctly/article.asp>
+'It relies upon the icon being compiled into the EXE using the .res file. _
+ See the RES folder for scripts and files that compile the icons into the .res file
+Public Sub SetIcon( _
+    ByVal hndWindow As Long, _
+    ByVal IconResName As String, _
+    Optional ByVal SetAsAppIcon As Boolean = True _
+)
+    Const WM_SETICON = &H80
+    Const ICON_SMALL = 0
+    Const ICON_BIG = 1
+    
+    'We can't load icons from the EXE when running from the IDE, obviously! _
+     As a cheap fall-back we'll load the icon from the RES file, but you won't get _
+     the quality 32-bit icons, so expect some roughness
+    If Run.InIDE = True Then
+        'Find which form this handle belongs to
+        Dim VBForm As VB.Form
+        For Each VBForm In VB.Forms
+            If VBForm.hWnd = hndWindow Then
+                'Set the icon from the resource file, though this will likely load _
+                 the 16x16 256-colour icon
+                Set VBForm.Icon = VB.LoadResPicture( _
+                    IconResName, VBRUN.LoadResConstants.vbResIcon _
+                )
+                Exit For
+            End If
+        Next VBForm
+        Exit Sub
+    End If
+    
+    'VB6 has a hidden window that acts as some kind of persistence / controller for _
+     the whole app. We need to find this to set an app-wide icon (e.g. Alt+Tab window)
+    If SetAsAppIcon = True Then
+        Dim hndParent As Long
+        Let hndParent = hndWindow
+        Dim hndVB6 As Long
+        Let hndVB6 = hndWindow
+        Do While Not (hndParent = 0)
+            Let hndParent = user32_GetWindow(hndParent, GW_OWNER)
+            If Not (hndParent = 0) Then hndVB6 = hndParent
+        Loop
+    End If
+    
+    'Do the actual loading of the icon, large size (usually 32 or 48px)
+    Dim hndIconLarge As Long
+    Let hndIconLarge = user32_LoadImage( _
+        App.hInstance, IconResName, IMAGE_ICON, _
+        GetSystemMetric(SM_CXICON), GetSystemMetric(SM_CYICON), _
+        LR_SHARED _
+    )
+    'Assign the large icon:
+    If SetAsAppIcon = True Then
+        Call user32_SendMessage(hndVB6, WM_SETICON, ICON_BIG, hndIconLarge)
+    End If
+    Call user32_SendMessage(hndWindow, WM_SETICON, ICON_BIG, hndIconLarge)
+    
+    'Load the small icon size (usually 16px)
+    Dim hndIconSmall As Long
+    Let hndIconSmall = user32_LoadImage( _
+        App.hInstance, IconResName, IMAGE_ICON, _
+        GetSystemMetric(SM_CXSMICON), GetSystemMetric(SM_CYSMICON), _
+        LR_SHARED _
+    )
+    'Assign the small icon:
+    If SetAsAppIcon = True Then
+        Call user32_SendMessage(hndVB6, WM_SETICON, ICON_SMALL, hndIconSmall)
+    End If
+    Call user32_SendMessage(hndWindow, WM_SETICON, ICON_SMALL, hndIconSmall)
+End Sub
+

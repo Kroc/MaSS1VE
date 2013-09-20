@@ -47,8 +47,8 @@ Option Explicit
 
 'Status             INCOMPLETE, DO NOT USE
 'Dependencies       blu.bas, Lib.bas, WIN32.bas
-'Last Updated       16-SEP-13
-'Last Update        Added icons
+'Last Updated       19-SEP-13
+'Last Update        Moved `SendMessage` / `PostMessage` APIs to WIN32
 
 '--------------------------------------------------------------------------------------
 
@@ -296,24 +296,6 @@ End Enum
 
 'Subclassing Definitions _
  --------------------------------------------------------------------------------------
-
-'Send a message from one window to another _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms644950%28v=vs.85%29.aspx>
-Private Declare Function user32_SendMessage Lib "user32" Alias "SendMessageA" ( _
-    ByVal hndWindow As Long, _
-    ByVal Message As WM, _
-    ByVal wParam As Long, _
-    ByVal lParam As Long _
-) As Long
-
-'Sends a message to another window, but doesn't wait for a return value _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms644944%28v=vs.85%29.aspx>
-Private Declare Function user32_PostMessage Lib "user32" Alias "PostMessageA" ( _
-    ByVal hndWindow As Long, _
-    ByVal Message As WM, _
-    ByVal wParam As Long, _
-    ByVal lParam As Long _
-) As BOOL
 
 'Window messages we'll want to tap into
 Private Enum WM
@@ -1079,7 +1061,7 @@ Private Sub SubclassWindowProcedure( _
          out the necessary action
         'WARNING: This causes the `Click` event of the form to no longer fire for the _
          left mouse button, but will for the right mouse button!
-        Call user32_SendMessage(hndParentForm, WM.WM_NCLBUTTONDOWN, UserParam, 0)
+        Call WIN32.user32_SendMessage(hndParentForm, WM.WM_NCLBUTTONDOWN, UserParam, 0)
     
     '`WM_LBUTTONDBLCLK` : Left mouse button double click -- maximise / restore form _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms645606%28v=vs.85%29.aspx>
@@ -1103,9 +1085,9 @@ Private Sub SubclassWindowProcedure( _
          <www.codeproject.com/script/Content/ViewAssociatedFile.aspx?rzp=%2FKB%2Fvbscript%2Flavolpecw32%2Flvcw32h.zip&zep=DLLclasses%2FclsCustomWindow.cls&obid=11916&obtid=2&ovid=4> _
          <www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeId=62605&lngWId=1>
         If wParam = HT.HTCAPTION Then
-            Call user32_PostMessage(hndParentForm, WM_SYSCOMMAND, SC_MOVE Or HT.HTCAPTION, lParam)
+            Call WIN32.user32_PostMessage(hndParentForm, WM_SYSCOMMAND, SC_MOVE Or HT.HTCAPTION, lParam)
         ElseIf wParam = HT.HTBOTTOMRIGHT Then
-            Call user32_PostMessage(hndParentForm, WM_SYSCOMMAND, SC_SIZE Or (HT.HTBOTTOMRIGHT - 9), lParam)
+            Call WIN32.user32_PostMessage(hndParentForm, WM_SYSCOMMAND, SC_SIZE Or (HT.HTBOTTOMRIGHT - 9), lParam)
         End If
     
     '`WM_SETCURSOR` documentation: _

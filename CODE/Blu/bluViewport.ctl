@@ -34,8 +34,8 @@ Option Explicit
 
 'Status             Ready, but incomplete
 'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
-'Last Updated       08-SEP-13
-'Last Update        Added Ctrl+Scroll to zoom
+'Last Updated       19-SEP-13
+'Last Update        `SendMessage` API moved to WIN32
 
 'TODO: When scrolling, include mouse button / key state with the mouse move event sent
 
@@ -141,15 +141,6 @@ Private Enum WM
     WM_VSCROLL = &H115
 End Enum
 
-'Send a window message _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms644950%28v=vs.85%29.aspx>
-Private Declare Function user32_SendMessage Lib "user32" Alias "SendMessageA" ( _
-    ByVal hndWindow As Long, _
-    ByVal Message As WM, _
-    ByVal wParam As Long, _
-    ByVal lParam As Long _
-) As Long
-
 '<msdn.microsoft.com/en-us/library/windows/desktop/dd162768%28v=vs.85%29.aspx>
 Private Type PAINTSTRUCT
   hndDC As Long
@@ -213,7 +204,7 @@ Attribute MouseEvents.VB_VarHelpID = -1
 'bluViewport allows you to manage multiple layers for the whole image to minimise _
  the amount of painting you have to do and so bluViewport can manage the scrolling
 Private Type Layer
-    Image As bluImage
+    IMAGE As bluImage
 End Type
 Private NumberOfLayers As Long
 Private Layers() As Layer
@@ -361,7 +352,7 @@ Private Sub UserControl_KeyDown(ByRef KeyCode As Integer, ByRef Shift As Integer
     If Send <> -1 Then
         'Send the `WM_HSCROLL` / `WM_VSCROLL` message. _
          See the subclass section at the bottom of the file for details
-        Call user32_SendMessage(UserControl.hWnd, Scroll, Send, 0)
+        Call WIN32.user32_SendMessage(UserControl.hWnd, Scroll, Send, 0)
     End If
 End Sub
 
@@ -593,7 +584,7 @@ Public Property Get hDC(Optional ByVal Layer As Long = 0) As Long
     'If you want to paint directly on the viewport use the viewport's `Paint` event, _
      this is double-buffered so you won't get any flicker
     If NumberOfLayers <> 0 And Layer >= 0 And Layer < NumberOfLayers Then
-        Let hDC = Layers(Layer).Image.hDC
+        Let hDC = Layers(Layer).IMAGE.hDC
     End If
 End Property
 
@@ -601,14 +592,14 @@ End Property
  ======================================================================================
 Public Property Get ImageWidth() As Long
     If NumberOfLayers = 0 Then Exit Property
-    Let ImageWidth = Layers(0).Image.Width
+    Let ImageWidth = Layers(0).IMAGE.Width
 End Property
 
 'PROPERTY ImageHeight _
  ======================================================================================
 Public Property Get ImageHeight() As Long
     If NumberOfLayers = 0 Then Exit Property
-    Let ImageHeight = Layers(0).Image.Height
+    Let ImageHeight = Layers(0).IMAGE.Height
 End Property
 
 'PROPERTY ScrollMax : Return the maximum scroll value _
@@ -786,8 +777,8 @@ Public Function AddLayer( _
     ReDim Preserve Layers(NumberOfLayers) As Layer
     'Set the image size for the layer
     With Layers(NumberOfLayers)
-        Set .Image = New bluImage
-        Call .Image.Create24Bit( _
+        Set .IMAGE = New bluImage
+        Call .IMAGE.Create24Bit( _
             ImageWidth:=c.ImageRECT.Right, ImageHeight:=c.ImageRECT.Bottom, _
             BackgroundColour:=TransparentColour, UseTransparency:=True _
         )
@@ -809,7 +800,7 @@ Public Sub Cls(Optional ByVal Layer As Long = -1)
         IIf(Layer = -1, LBound(Layers), Layer) To _
         IIf(Layer = -1, UBound(Layers), Layer)
         'Paint the layer clear
-        Call Layers(i).Image.Cls
+        Call Layers(i).IMAGE.Cls
     Next i
     
     'NOTE: This procedure does not refresh the viewport! When you clear the image _
@@ -867,8 +858,8 @@ Public Sub SetImageProperties( _
     Erase Layers
     ReDim Layers(0) As Layer
     With Layers(0)
-        Set .Image = New bluImage
-        Call .Image.Create24Bit(Width, Height, c.UserControl_BackColor)
+        Set .IMAGE = New bluImage
+        Call .IMAGE.Create24Bit(Width, Height, c.UserControl_BackColor)
     End With
     Let NumberOfLayers = 1
     
@@ -1065,7 +1056,7 @@ Private Sub SubclassWindowProcedure( _
                                 Buffer.hDC, _
                                 c.Centre.X, c.Centre.Y, _
                                 c.Dst.Width, c.Dst.Height, _
-                                Layers(0).Image.hDC, _
+                                Layers(0).IMAGE.hDC, _
                                 c.Info(HORZ).Pos, c.Info(VERT).Pos, _
                                 vbSrcCopy _
                             )
@@ -1077,7 +1068,7 @@ Private Sub SubclassWindowProcedure( _
                                 Buffer.hDC, _
                                 c.Centre.X, c.Centre.Y, _
                                 c.Dst.Width, c.Dst.Height, _
-                                Layers(0).Image.hDC, _
+                                Layers(0).IMAGE.hDC, _
                                 c.Info(HORZ).Pos, c.Info(VERT).Pos, _
                                 c.Src.Width, c.Src.Height, _
                                 vbSrcCopy _
@@ -1089,10 +1080,10 @@ Private Sub SubclassWindowProcedure( _
                             Buffer.hDC, _
                             c.Centre.X, c.Centre.Y, _
                             c.Dst.Width, c.Dst.Height, _
-                            Layers(i).Image.hDC, _
+                            Layers(i).IMAGE.hDC, _
                             c.Info(HORZ).Pos, c.Info(VERT).Pos, _
                             c.Src.Width, c.Src.Height, _
-                            Layers(i).Image.BackgroundColour _
+                            Layers(i).IMAGE.BackgroundColour _
                         )
                     End If
                 Next i

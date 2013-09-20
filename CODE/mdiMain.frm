@@ -172,6 +172,9 @@ Private LevelIndex As Byte
 'MDIFORM Load _
  ======================================================================================
 Private Sub MDIForm_Load()
+    'Load the 32-bit icon from the EXE
+    Call WIN32.SetIcon(mdiMain.hWnd, "AAA")
+    
     'Set the minimum allowed size of the form
     Let Me.bluWindow.MinWidth = 512
     Let Me.bluWindow.MinHeight = 320

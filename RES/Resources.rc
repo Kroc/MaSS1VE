@@ -1,0 +1,5 @@
+// Icon for the main application
+AAA		ICON	MOVEABLE	PRELOAD		AppIcon.ico
+
+1		24	MOVEABLE	PRELOAD		MaSS1VE.exe.manifest
+

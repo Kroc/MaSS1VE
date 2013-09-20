@@ -1,0 +1,12 @@
+*
+!.gitignore
+
+!*.bat
+!*.ico
+!*.manifest
+!*.rc
+!*.res
+
+# Include GoRC, a free resource compiler (to replace the hard to get Microsoft RC.exe)
+# Unforunately the original website is no longer online. Just Google "GoRC Compiler"
+!GoRC/

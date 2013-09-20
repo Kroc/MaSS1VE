@@ -45,20 +45,10 @@ Option Explicit
 'Status             Ready to use
 'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), bluWindow.cll, _
                     Lib.bas, WIN32.bas
-'Last Updated       04-SEP-13
-'Last Update        If the `Kind` of control is min/max/close, it will hide itself _
-                    automatically when an instance of bluWindow becomes inactive
+'Last Updated       19-SEP-13
+'Last Update        `SendMessage` API was moved to WIN32
 
 '/// API DEFS /////////////////////////////////////////////////////////////////////////
-
-'Send a message from one window to another _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms644950%28v=vs.85%29.aspx>
-Private Declare Function user32_SendMessage Lib "user32" Alias "SendMessageA" ( _
-    ByVal hndWindow As Long, _
-    ByVal Message As Long, _
-    ByVal wParam As Long, _
-    ByVal lParam As Long _
-) As Long
 
 'All mouse events can be trapped by one window. VB apparently does this behind the _
  scenes, so we need to release the capture in order to resize the form from the control _
@@ -139,7 +129,7 @@ Private Sub UserControl_MouseDown(Button As Integer, Shift As Integer, X As Sing
          <www.vbforums.com/showthread.php?250431-VB-Flexible-Shangle-%28window-resizing-grip%29>
         Call user32_ReleaseCapture
         'Simulate clicking on the lower-right window border
-        Call user32_SendMessage( _
+        Call WIN32.user32_SendMessage( _
             Lib.GetParentForm(UserControl.Parent, True).hWnd, _
             WM_NCLBUTTONDOWN, HTBOTTOMRIGHT, 0 _
         )

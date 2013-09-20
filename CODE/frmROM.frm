@@ -214,6 +214,7 @@ End Enum
 
 'Track mouse in / out events
 Private WithEvents MouseEvents As bluMouseEvents
+Attribute MouseEvents.VB_VarHelpID = -1
 
 'When the user drags a ROM over the form we pre-verify that is indeed a Sonic 1 ROM _
  before they drop it so as to use responsive UI
@@ -238,6 +239,9 @@ Private Sub Form_Load()
     Let Me.lblVersion.Caption = Run.VersionString
     'Add the current year to the copyright message
     Let Me.lblCopy.Caption = Replace(Me.lblCopy.Caption, "#YEAR", Year(Now))
+    
+    'Load the 32-bit icon from the EXE
+    Call WIN32.SetIcon(frmROM.hWnd, "AAA")
 End Sub
 
 'FORM Resize _

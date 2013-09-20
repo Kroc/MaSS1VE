@@ -4,7 +4,10 @@
 
 !README.md
 !LICENCE.txt
+
 !*.vbp
-!BUILD/
+
 !CODE/
 !INSTALL/
+!RELEASE/
+!RES/

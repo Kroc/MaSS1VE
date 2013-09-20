@@ -11,7 +11,7 @@ Option Explicit
 
 '/// PUBLIC VARS //////////////////////////////////////////////////////////////////////
 
-'Like `App.Path`, but the same place ("BUILD" folder) for MaSS1VE in IDE / compiled
+'Like `App.Path`, but the same place ("RELEASE" folder) for MaSS1VE in IDE / compiled
 Public Path As String
 
 '/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
@@ -36,11 +36,11 @@ Private Sub Main()
      to be subclassed and crashes the IDE. To stop this, the variable below will _
      always be False when the controls are running in Design Mode. We set `UserMode` _
      to True in the `Sub Main()` to tell the controls it's okay to subclass. _
-     (`Sub Main()` will only be run when you your app runs, not during design time)
+     (`Sub Main()` will only be run when your app runs, not during design time)
     Let blu.UserMode = True
     
-    'Set `Run.Path` so that program output goes to the BUILD folder when in IDE
-    Let Run.Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "BUILD\", "")
+    'Set `Run.Path` so that program output goes to the RELEASE folder when in IDE
+    Let Run.Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "RELEASE\", "")
         
     'Check for Sonic 1 ROM _
      ----------------------------------------------------------------------------------
@@ -59,7 +59,8 @@ Private Sub Main()
     
     'If no ROM was found, ask the user for it
     If ROM.Path = vbNullString Then
-        Load frmROM: Call frmROM.Show
+        Load frmROM
+        Call frmROM.Show
     
     Else
         'We have the ROM, we can start MaSS1VE proper
