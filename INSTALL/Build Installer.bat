@@ -3,10 +3,10 @@ CLS
 
 REM Compile the app
 ECHO * Compiling MaSS1VE.exe
-"%PROGRAMFILES%\Microsoft Visual Studio\VB98\vb6.exe" /make "..\MaSS1VE.vbp" /outdir "..\BUILD"
+"%PROGRAMFILES%\Microsoft Visual Studio\VB98\vb6.exe" /make "..\MaSS1VE.vbp" /outdir "..\RELEASE"
 
 REM Get the version number from the MaSS1VE executable
-FOR /f "delims=" %%R IN ('CScript //NOLOGO GetFileVersion.vbs ..\BUILD\MaSS1VE.exe') DO (SET "EXEVER=%%R")
+FOR /f "delims=" %%R IN ('CScript //NOLOGO GetFileVersion.vbs ..\RELEASE\MaSS1VE.exe') DO (SET "EXEVER=%%R")
 ECHO - Version number is: %EXEVER%
 
 REM Convert this to a shorter version number in the VB6 style. VB6 does not use the Build value

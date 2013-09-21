@@ -111,6 +111,11 @@ BrandingText /TRIMRIGHT " "                             ;Hide "NSIS Installer" t
 ShowInstDetails nevershow
 ShowUnInstDetails nevershow
 
+;Define installer and uninstaller icons. We use the app's icon so that it's easily
+; identifiable in the Add/Remove Programs list
+!define MUI_ICON "..\RES\AppIcon.ico"
+!define MUI_UNICON "..\RES\AppIcon.ico"
+
 ;--------------------------------------------------------------------------------------
 ;Set the version info on the installer .exe
 
@@ -176,7 +181,7 @@ Section Install
         SetOverwrite ifnewer
 
         ;Package the app
-        File "..\BUILD\${EXE_NAME}"
+        File "..\RELEASE\${EXE_NAME}"
 SectionEnd
 
 ;--------------------------------------------------------------------------------------
