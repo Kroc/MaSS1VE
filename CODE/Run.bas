@@ -20,7 +20,8 @@ Public Path As String
  ======================================================================================
 Public Property Get VersionString() As String
     Let VersionString = _
-        "v" & App.Major & "." & App.Minor & "." & App.Revision & " pre-alpha"
+        "v" & Format(App.Major & "." & App.Minor, "##0.0#") & _
+        " #" & App.Revision & " pre-alpha"
 End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////

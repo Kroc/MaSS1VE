@@ -57,7 +57,7 @@
                   instead of compiling the script on its own"
         ;We'll let the script continue, for testing purposes only
         !define PRODUCT_VERSION_WIN "0.0.0.0"
-        !define PRODUCT_VERSION_VB6 "0.0.0"
+        !define PRODUCT_VERSION_VB6 "0.0#0"
 !endif
 
 ;Name the installer with the version number from MaSS1VE.exe

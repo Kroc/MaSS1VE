@@ -11,7 +11,7 @@ ECHO - Version number is: %EXEVER%
 
 REM Convert this to a shorter version number in the VB6 style. VB6 does not use the Build value
 FOR /f "tokens=1,2,3,4 delims=." %%A IN ("%EXEVER%") DO (SET "Major=%%A" & SET "Minor=%%B" & SET "Build=%%C" & SET "Revision=%%D")
-SET "VB6VER=%MAJOR%.%MINOR%.%REVISION%"
+SET "VB6VER=%MAJOR%.%MINOR%#%REVISION%"
 
 REM Now build the installer
 ECHO.
