@@ -283,60 +283,32 @@ Private Sub imgDrop_OLEDragDrop( _
     'Copy the ROM to App Data: _
      ----------------------------------------------------------------------------------
     On Error Resume Next
-    'If possible, a "Data" folder will be created in the app's directory, this allows _
-     for portable installations, but will fail on Vista+ if the app is installed in a _
-     non-user area like "Program Files". Failing that, we will try use the user's _
-     `%APPDATA%` path
+    'If possible, an "App Data" folder will be created in the app's directory, _
+     MaSS1VE doesn't support installation / running from a read-only directory, _
+     including Administrator-owned folders like `%PROGRAMFILES%`; it would greatly _
+     complicate the automatic update process at this time
      
     'Does a "Data" folder exist in the app's directory?
-    If Lib.DirExists(Run.Path & "Data") = False Then
+    If Lib.DirExists(Run.Path & "App Data") = False Then
         'Attempt to create the "Data" folder
-        Call VBA.MkDir(Run.Path & "Data")
+        Call VBA.MkDir(Run.Path & "App Data")
         'If that succeeded, we will attempt to copy the file there
         If Err.Number = 0 Then GoTo AppDirCopy
     
     Else
-AppDirCopy: Err.Clear
-        'The app's own "Data" folder already exists, attempt to copy into it. This _
-         could fail if a previously portable installation was moved to a non-user _
-         area of the disk, or if the portable media is made read-only
-        Call VBA.FileCopy(ROM.Path, Run.Path & "Data\ROM.sms")
+AppDirCopy:
+        Call Err.Clear
+        'The app's own "App Data" folder already exists, attempt to copy into it. _
+         This could fail if a previously portable installation was moved to a _
+         non-user area of the disk, or if the portable media is made read-only
+        Call VBA.FileCopy(ROM.Path, Run.Path & "App Data\ROM.sms")
         If Err.Number = 0 Then
             'Update the location of the ROM path used here-in
-            Let ROM.Path = Run.Path & "Data\ROM.sms"
+            Let ROM.Path = Run.Path & "App Data\ROM.sms"
             GoTo Continue
         End If
     End If
     
-    'If we were unable to copy to the application's directory (i.e. non-portable), _
-     attempt the user's `%APPDATA%` path
-    Dim AppData As String
-    Let AppData = WIN32.GetSpecialFolder(CSIDL_APPDATA)
-    'It's very unlikely, but that could have returned blank
-    If AppData = vbNullString Then GoTo CouldNotCopy
-    
-    'Does MaSS1VE's sub folder exist in there?
-    If Lib.DirExists(AppData & "MaSS1VE") = False Then
-        'Attempt to create the application folder
-        Call VBA.MkDir(AppData & "MaSS1VE")
-        'If that succeeded, we will attempt to copy the file there
-        If Err.Number = 0 Then GoTo AppDataCopy
-    
-    Else
-AppDataCopy:
-        Err.Clear
-        Call VBA.FileCopy(ROM.Path, AppData & "MaSS1VE\ROM.sms")
-        If Err.Number = 0 Then
-            'Update the location of the ROM path used here-in
-            Let ROM.Path = AppData & "MaSS1VE\ROM.sms"
-            GoTo Continue
-        Else
-            'That's all strategies exhausted...
-            GoTo CouldNotCopy
-        End If
-    End If
-
-CouldNotCopy:
     'If we were not able to copy the ROM we can still continue, using the file's _
      original location, but the user will have to repeat this process every time _
      MaSS1VE is started. For now we will stave off an error message or other action

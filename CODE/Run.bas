@@ -14,16 +14,6 @@ Option Explicit
 'Like `App.Path`, but the same place ("RELEASE" folder) for MaSS1VE in IDE / compiled
 Public Path As String
 
-'/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
-
-'PROPERTY VersionString : A friendly version number displayed in some places _
- ======================================================================================
-Public Property Get VersionString() As String
-    Let VersionString = _
-        "v" & Format(App.Major & "." & App.Minor, "##0.0#") & _
-        " #" & App.Revision & " pre-alpha"
-End Property
-
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'MAIN : It all starts here! _
@@ -48,15 +38,15 @@ Private Sub Main()
     'MaSS1VE requires access to an original Sonic 1 ROM when starting a new project _
      or exporting to a new ROM. Rather than just save a path to a ROM file located _
      somewhere in the user's files (which might get moved), we will keep a copy in _
-     the app path or the user's app data so there's less chance of it going missing
-    'MaSS1VE doesn't come with a Sonic 1 ROM, the user has to provide their own, so _
-     display a form where they can drag-and-drop one if we can't find it
+     the app path's data folder so there's less chance of it going missing.
+    'MaSS1VE doesn't come with a Sonic 1 ROM, the user has to provide their own, _
+     so display a form where they can drag-and-drop one if we can't find it
     
-    'Check the two common locations for a ROM
-    'WARNING: Incredibly, prefixing `Locate` with it's module, `ROM`, causes the _
-     compiler to crash. It's insane, yes. This is the only reference on the web _
-     I found about this rare bug: <bbs.csdn.net/topics/30000137>
-    Let ROM.Path = Locate()
+    'When a ROM is provided, it's copied to the "App Data" folder in the app directory, _
+     Test if it's currently there:
+    If Lib.FileExists(Run.Path & "App Data\ROM.sms") = True Then
+        Let ROM.Path = Run.Path & "App Data\ROM.sms"
+    End If
     
     'If no ROM was found, ask the user for it
     If ROM.Path = vbNullString Then
@@ -79,16 +69,26 @@ Private Sub Main()
     End If
 End Sub
 
+'/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
+
+'PROPERTY VersionString : A friendly version number displayed in some places _
+ ======================================================================================
+Public Property Get VersionString() As String
+    Let VersionString = _
+        "v" & Format(App.Major & "." & App.Minor, "##0.0#") & _
+        " #" & App.Revision & " pre-alpha"
+End Property
+
 'InIDE : Are we running the code from the Visual Basic IDE? _
  ======================================================================================
-Public Function InIDE() As Boolean
+Public Property Get InIDE() As Boolean
     On Error GoTo Err_True
     
     'Do something that only faults in the IDE
     Debug.Print 1 \ 0
     InIDE = False
-    Exit Function
+    Exit Property
 
 Err_True:
     InIDE = True
-End Function
+End Property

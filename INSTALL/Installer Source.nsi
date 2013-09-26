@@ -66,7 +66,7 @@
 !define UNINSTALLER_EXE_NAME "Uninstall.exe"
 
 ;define default installation paths for Local and Portable mode
-!define INSTDIR_LOCAL_DEFAULT "$LOCALAPPDATA\${PRODUCT_NAME}"
+!define INSTDIR_LOCAL_DEFAULT "$APPDATA\${PRODUCT_NAME}"
 !define INSTDIR_PORTABLE_DEFAULT "$DESKTOP\${PRODUCT_NAME}"
 
 ;We'll put a single shortcut directly into the start menu (no sub-folder)
