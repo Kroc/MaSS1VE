@@ -289,9 +289,9 @@ Private Sub imgDrop_OLEDragDrop( _
      complicate the automatic update process at this time
      
     'Does a "Data" folder exist in the app's directory?
-    If Lib.DirExists(Run.Path & "App Data") = False Then
+    If Lib.DirExists(Run.AppData) = False Then
         'Attempt to create the "Data" folder
-        Call VBA.MkDir(Run.Path & "App Data")
+        Call VBA.MkDir(Run.AppData)
         'If that succeeded, we will attempt to copy the file there
         If Err.Number = 0 Then GoTo AppDirCopy
     
@@ -301,10 +301,10 @@ AppDirCopy:
         'The app's own "App Data" folder already exists, attempt to copy into it. _
          This could fail if a previously portable installation was moved to a _
          non-user area of the disk, or if the portable media is made read-only
-        Call VBA.FileCopy(ROM.Path, Run.Path & "App Data\ROM.sms")
+        Call VBA.FileCopy(ROM.Path, Run.AppData & ROM.NameSMS)
         If Err.Number = 0 Then
             'Update the location of the ROM path used here-in
-            Let ROM.Path = Run.Path & "App Data\ROM.sms"
+            Let ROM.Path = Run.AppData & ROM.NameSMS
             GoTo Continue
         End If
     End If

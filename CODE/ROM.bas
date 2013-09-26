@@ -20,6 +20,9 @@ Option Explicit
  we need it without too much fear it will get moved about
 Public Path As String
 
+'The file name used when copying the ROM file into the app's data folder
+Public Const NameSMS As String = "ROM.sms"
+
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
 'The entire ROM binary image. It should be faster to read it in as a single binary _
@@ -671,8 +674,6 @@ End Function
 'Export : Write the level to a playable ROM _
  ======================================================================================
 Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte = 255)
-    Dim i As Long
-
     'Let's do this thing!
     Debug.Print "Exporting ROM: " & FilePath
     Debug.Print "(Using original ROM: " & ROM.Path & ")"

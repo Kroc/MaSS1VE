@@ -9,11 +9,6 @@ Option Explicit
 
 'Where execution begins. Also, generic stuff for the whole app
 
-'/// PUBLIC VARS //////////////////////////////////////////////////////////////////////
-
-'Like `App.Path`, but the same place ("RELEASE" folder) for MaSS1VE in IDE / compiled
-Public Path As String
-
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'MAIN : It all starts here! _
@@ -29,9 +24,6 @@ Private Sub Main()
      to True in the `Sub Main()` to tell the controls it's okay to subclass. _
      (`Sub Main()` will only be run when your app runs, not during design time)
     Let blu.UserMode = True
-    
-    'Set `Run.Path` so that program output goes to the RELEASE folder when in IDE
-    Let Run.Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "RELEASE\", "")
         
     'Check for Sonic 1 ROM _
      ----------------------------------------------------------------------------------
@@ -43,9 +35,9 @@ Private Sub Main()
      so display a form where they can drag-and-drop one if we can't find it
     
     'When a ROM is provided, it's copied to the "App Data" folder in the app directory, _
-     Test if it's currently there:
-    If Lib.FileExists(Run.Path & "App Data\ROM.sms") = True Then
-        Let ROM.Path = Run.Path & "App Data\ROM.sms"
+     test if it's currently there:
+    If Lib.FileExists(Run.AppData & ROM.NameSMS) = True Then
+        Let ROM.Path = Run.AppData & ROM.NameSMS
     End If
     
     'If no ROM was found, ask the user for it
@@ -71,15 +63,15 @@ End Sub
 
 '/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
 
-'PROPERTY VersionString : A friendly version number displayed in some places _
+'PROPERTY AppData : The path where the application data is stored (ROM, Updates) _
  ======================================================================================
-Public Property Get VersionString() As String
-    Let VersionString = _
-        "v" & Format(App.Major & "." & App.Minor, "##0.0#") & _
-        " #" & App.Revision & " pre-alpha"
-End Property
+Public Property Get AppData() As String: Let AppData = Run.Path & "App Data\": End Property
 
-'InIDE : Are we running the code from the Visual Basic IDE? _
+'PROPERTY UserData : The path where the user data is stored (Project files) _
+ ======================================================================================
+Public Property Get UserData() As String: Let UserData = Run.Path & "User Data\": End Property
+
+'PROPERTY InIDE : Are we running the code from the Visual Basic IDE? _
  ======================================================================================
 Public Property Get InIDE() As Boolean
     On Error GoTo Err_True
@@ -91,4 +83,19 @@ Public Property Get InIDE() As Boolean
 
 Err_True:
     InIDE = True
+End Property
+
+'PROPERTY Path : Like `App.Path` but normalised for IDE / EXE _
+ ======================================================================================
+Public Property Get Path() As String
+    'Set `Run.Path` so that program output goes to the RELEASE folder when in IDE
+    Let Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "RELEASE\", "")
+End Property
+
+'PROPERTY VersionString : A friendly version number displayed in some places _
+ ======================================================================================
+Public Property Get VersionString() As String
+    Let VersionString = _
+        "v" & Format(App.Major & "." & App.Minor, "##0.0#") & _
+        " #" & App.Revision & " pre-alpha"
 End Property
