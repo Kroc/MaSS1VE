@@ -46,20 +46,27 @@ Option Explicit
  and this sample usage application sent to me by Tanner Helland _
  <vbforums.com/showthread.php?733409-VB6-Simple-Async-Download-Ctl-for-multiple-Files>
 
-'Status             INCOMPLETE
-'Dependencies       None
-'Last Updated       16-SEP-13
-'Last Update        I made this
+'Status             Ready to use
+'Dependencies       Lib.bas
+'Last Updated       01-OCT-13
+'Last Update        Add `StatusCodeText`, improve download handling, copy temp file
 
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
 Private My_URL As String
 Private My_FilePath As String
 
+'The download is done in the Internet Temporary Files and the filepath is given, _
+ we have to copy it out once done
+Private TempPath As String
+
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
 'As the file downloads
-Event Progress(ByVal BytesDownloaded As Long, ByVal BytesTotal As Long)
+Event Progress( _
+    ByVal StatusCode As AsyncStatusCodeConstants, ByVal Status As String, _
+    ByVal BytesDownloaded As Long, ByVal BytesTotal As Long _
+)
 'All went well
 Event Complete()
 'Something went wrong
@@ -72,21 +79,27 @@ Private Sub UserControl_AsyncReadComplete(ByRef AsyncProp As AsyncProperty)
       because an error condition may have stopped the download. If this was the case, _
       that error will be raised when the Value property of the AsyncProperty object _
       is accessed." <msdn.microsoft.com/en-us/library/aa445408.aspx>
-    On Error GoTo Leave
+    On Error GoTo Fail
+    
+    'Did some error occur during download?
+    If AsyncProp.StatusCode <> vbAsyncStatusCodeEndDownloadData _
+    Or AsyncProp.BytesMax = 0 Then
+        GoTo Fail
+    Else
+        If Lib.FileExists(My_FilePath) = True Then Call VBA.Kill(My_FilePath)
+        Call VBA.FileSystem.FileCopy(TempPath, My_FilePath)
+        RaiseEvent Complete
+    End If
     
     'Clear the current download so you can start another
     Let My_URL = vbNullString
     Let My_FilePath = vbNullString
     
-    'Did some error occur during download?
-    If AsyncProp.StatusCode <> vbAsyncStatusCodeEndDownloadData _
-    Or AsyncProp.BytesMax = 0 Then
-        RaiseEvent Failed(AsyncProp.StatusCode, AsyncProp.Status)
-        Call Me.Cancel
-    Else
-        RaiseEvent Complete
-    End If
-Leave:
+    Exit Sub
+
+Fail:
+    RaiseEvent Failed(AsyncProp.StatusCode, AsyncProp.Status)
+    Call Me.Cancel
 End Sub
 
 'CONTROL AsyncReadProgress _
@@ -94,7 +107,18 @@ End Sub
 Private Sub UserControl_AsyncReadProgress(ByRef AsyncProp As AsyncProperty)
     'Provide an event to track progress
     On Error Resume Next
-    RaiseEvent Progress(AsyncProp.BytesRead, AsyncProp.BytesMax)
+    RaiseEvent Progress( _
+        AsyncProp.StatusCode, AsyncProp.Status, _
+        AsyncProp.BytesRead, AsyncProp.BytesMax _
+    )
+    
+    'If the temporary file for download was assigned, remember it
+    If AsyncProp.StatusCode = vbAsyncStatusCodeCacheFileNameAvailable Then
+        Let TempPath = AsyncProp.Status
+    End If
+    
+    'If an error occurs, abort the download
+    If AsyncProp.StatusCode = vbAsyncStatusCodeError Then Call Me.Cancel
 End Sub
 
 'CONTROL Resize _
@@ -103,7 +127,45 @@ Private Sub UserControl_Resize()
     'You can't resize this control, it just appears as a box
     Let UserControl.Width = 32 * Screen.TwipsPerPixelX
     Let UserControl.Height = 32 * Screen.TwipsPerPixelY
+    Let UserControl.imgIcon.Width = UserControl.ScaleWidth
+    Let UserControl.imgIcon.Height = UserControl.ScaleHeight
 End Sub
+
+'/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
+
+'PROPERTY StatusCodeText : Get a text description for the status codes _
+ ======================================================================================
+Public Property Get StatusCodeText(ByVal Index As AsyncStatusCodeConstants) As String
+    Select Case Index
+        'An error occurred during the asynchronous download
+        Case vbAsyncStatusCodeError
+            Let StatusCodeText = "Error"
+        'Finding the resource specified (i.e. DNS lookup)
+        Case vbAsyncStatusCodeFindingResource
+            Let StatusCodeText = "Finding Resource"
+        'Connecting to the resource (i.e. opening TCP/IP)
+        Case vbAsyncStatusCodeConnecting
+            Let StatusCodeText = "Connecting"
+        'Redirection has occured (i.e. HTTP-301/302)
+        Case vbAsyncStatusCodeRedirecting
+            Let StatusCodeText = "Redirecting"
+        'First data received / More data received
+        Case vbAsyncStatusCodeBeginDownloadData, vbAsyncStatusCodeEndDownloadData
+            Let StatusCodeText = "Downloading"
+        'Data has finished downloading
+        Case vbAsyncStatusCodeEndDownloadData
+            Let StatusCodeText = "Download Complete"
+        'A cached copy is being read
+        Case vbAsyncStatusCodeUsingCachedCopy
+            Let StatusCodeText = "Reading Cache"
+        'Sending the HTTP-Request
+        Case vbAsyncStatusCodeSendingRequest
+            Let StatusCodeText = "Sending Request"
+        
+        Case Else
+            Let StatusCodeText = vbNullString
+    End Select
+End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 

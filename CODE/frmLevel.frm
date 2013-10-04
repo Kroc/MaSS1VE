@@ -916,7 +916,7 @@ Public Property Set Level(ByVal TheLevel As S1Level)
         'When the level form loads, the level select combobox text is blank, we need _
          to set it but doing so would trigger the `Click` event, causing an infinite _
          loop of trying to load the level
-        If Me.cmbLevels.Text = "" Then
+        If Me.cmbLevels.Text = vbNullString Then
             Let Me.cmbLevels.Enabled = False
             Let Me.cmbLevels.Text = My_Level.Title
             Let Me.cmbLevels.Enabled = True

@@ -68,7 +68,6 @@ Public Enum bluControlBox_Kind
 End Enum
 Private My_Kind As bluControlBox_Kind
 
-Private My_State As bluSTATE
 Private My_Style As bluSTYLE
 
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////

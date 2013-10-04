@@ -247,6 +247,9 @@ End Sub
 'FORM Resize _
  ======================================================================================
 Private Sub Form_Resize()
+    'If the form is invisible or minimised then don't bother resizing
+    If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
+    
     'We use an empty image control to cover the form so that we don't get multiple _
      drag in / out events if the user drags over labels &c. (The Z-ordering of this _
      control is important, it's above all the other controls, except the control box)
@@ -282,38 +285,19 @@ Private Sub imgDrop_OLEDragDrop( _
     
     'Copy the ROM to App Data: _
      ----------------------------------------------------------------------------------
-    On Error Resume Next
-    'If possible, an "App Data" folder will be created in the app's directory, _
-     MaSS1VE doesn't support installation / running from a read-only directory, _
-     including Administrator-owned folders like `%PROGRAMFILES%`; it would greatly _
-     complicate the automatic update process at this time
-     
-    'Does a "Data" folder exist in the app's directory?
-    If Lib.DirExists(Run.AppData) = False Then
-        'Attempt to create the "Data" folder
-        Call VBA.MkDir(Run.AppData)
-        'If that succeeded, we will attempt to copy the file there
-        If Err.Number = 0 Then GoTo AppDirCopy
+    '`Run.Main` already checks if the "App Data" folder exists and creates it if not. _
+     We only need attempt to copy the ROM. This could fail if a previously portable _
+     installation was moved to a non-user area of the disk, or if the portable media _
+     is made read-only
+    On Error GoTo Continue
+    Call VBA.FileCopy(ROM.Path, Run.AppData & ROM.NameSMS)
+    'Update the location of the ROM path used here-in
+    Let ROM.Path = Run.AppData & ROM.NameSMS
     
-    Else
-AppDirCopy:
-        Call Err.Clear
-        'The app's own "App Data" folder already exists, attempt to copy into it. _
-         This could fail if a previously portable installation was moved to a _
-         non-user area of the disk, or if the portable media is made read-only
-        Call VBA.FileCopy(ROM.Path, Run.AppData & ROM.NameSMS)
-        If Err.Number = 0 Then
-            'Update the location of the ROM path used here-in
-            Let ROM.Path = Run.AppData & ROM.NameSMS
-            GoTo Continue
-        End If
-    End If
-    
+Continue:
     'If we were not able to copy the ROM we can still continue, using the file's _
      original location, but the user will have to repeat this process every time _
      MaSS1VE is started. For now we will stave off an error message or other action
-    
-Continue:
     On Error GoTo 0
     
     'Since we have no project management yet we just start one in memory. _

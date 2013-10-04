@@ -27,6 +27,15 @@ Begin VB.MDIForm mdiMain
       Top             =   990
       Visible         =   0   'False
       Width           =   3660
+      Begin MaSS1VE.bluWebView bluWebView 
+         Height          =   1575
+         Left            =   0
+         TabIndex        =   8
+         Top             =   480
+         Width           =   1815
+         _ExtentX        =   3201
+         _ExtentY        =   2778
+      End
       Begin VB.PictureBox picHelpToolbar 
          Appearance      =   0  'Flat
          BackColor       =   &H00FFAF00&
@@ -58,7 +67,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluControlBox cbxClose 
          Height          =   480
          Left            =   14640
-         TabIndex        =   5
+         TabIndex        =   4
          Top             =   0
          Width           =   480
          _ExtentX        =   847
@@ -67,7 +76,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
          Left            =   0
-         TabIndex        =   4
+         TabIndex        =   3
          Top             =   495
          Width           =   1200
          _ExtentX        =   2117
@@ -76,7 +85,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
          Left            =   14160
-         TabIndex        =   3
+         TabIndex        =   7
          Top             =   495
          Visible         =   0   'False
          Width           =   975
@@ -87,7 +96,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluControlBox cbxMin 
          Height          =   480
          Left            =   13920
-         TabIndex        =   6
+         TabIndex        =   5
          Top             =   0
          Width           =   480
          _ExtentX        =   847
@@ -97,7 +106,7 @@ Begin VB.MDIForm mdiMain
       Begin MaSS1VE.bluControlBox cbxMax 
          Height          =   480
          Left            =   14280
-         TabIndex        =   7
+         TabIndex        =   6
          Top             =   0
          Width           =   480
          _ExtentX        =   847
@@ -163,9 +172,7 @@ Option Explicit
 '======================================================================================
 'FORM :: mdiMain
 
-'The current selected level in the editor; _
- this is just temporary until we've completed the level selector (frmLevels)
-Private LevelIndex As Byte
+'This is the main application form.
 
 '/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
@@ -211,11 +218,35 @@ Private Sub MDIForm_Load()
     'Load the welcome form into the MDI window so the user has something to look at
     Load frmWelcome
     Call frmWelcome.Show
+    
+    'Check for updates: _
+     ----------------------------------------------------------------------------------
+    'Access the "MaSS1VE.ini" file in the App Data folder. It won't matter if it's _
+     missing, the class will just return default values
+    Dim INI As INIFile
+    Set INI = New INIFile
+    Let INI.FilePath = Run.AppData & Run.INI_Name
+    
+    'Has an update check been done in the last day?
+    If DateDiff("d", _
+        CDate(INI.GetDouble(Run.INI_LastUpdateCheck, "Update")), Now() _
+    ) > 1 Then
+        'Download the "version.txt" file. This is asynchronous, so the code will not _
+         sit here waiting. The bluDownload control `Complete` event will fire once _
+         the file is received so go there to follow the update process
+        Let Me.bluDownload.Tag = Run.Update_VersionFile
+        Call Me.bluDownload.Download( _
+            Run.Update_URL, _
+            Run.AppData & Run.Update_VersionFile, vbAsyncReadForceUpdate _
+        )
+    End If
+    Set INI = Nothing
 End Sub
 
 'MDIFORM Reisze _
  ======================================================================================
 Private Sub MDIForm_Resize()
+    'Resizing code will freak out if we're minimised!
     If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
     
     'The dimensions for aligned controls on an MDIForm are *completely* unreliable. _
@@ -241,8 +272,8 @@ Private Sub MDIForm_Resize()
     Let Me.cbxMax.Left = Me.cbxClose.Left - Me.cbxMax.Width
     Let Me.cbxMin.Left = Me.cbxMax.Left - Me.cbxMin.Width
     
-    'If the window is borderless, there will be min/max/close controls the version _
-     number will go next to
+    'If the window is borderless, there will be min/max/close controls that _
+     the version number will go next to
     If Me.bluWindow.IsBorderless = True Then
         Call Me.lblVersion.Move( _
             Me.cbxMin.Left - Me.lblVersion.Width, 0, _
@@ -269,6 +300,10 @@ Private Sub MDIForm_Resize()
         'Help pane toolbar
         Call Me.picHelpToolbar.Move( _
             blu.Xpx, 0, Me.picHelp.ScaleWidth - blu.Xpx, blu.Ypx(blu.Metric) _
+        )
+        Call Me.bluWebView.Move( _
+            0, Me.picHelpToolbar.Top + Me.picHelpToolbar.Height, _
+            Me.picHelp.ScaleWidth, FormHeight - Me.picHelp.Top - Me.bluWebView.Top _
         )
     End If
     
@@ -357,11 +392,61 @@ Private Sub bluWindow_BorderlessStateChange(ByVal Enabled As Boolean)
     Call MDIForm_Resize
 End Sub
 
+'EVENT bluDownload PROGRESS : A file is being downloaded _
+ ======================================================================================
+Private Sub bluDownload_Progress( _
+    ByVal StatusCode As AsyncStatusCodeConstants, ByVal Status As String, _
+    ByVal BytesDownloaded As Long, ByVal BytesTotal As Long _
+)
+    Debug.Print "bluDownload: " & _
+        bluDownload.StatusCodeText(StatusCode) & " " & Chr(34) & Status & Chr(34) & _
+        " (" & BytesDownloaded & " / " & BytesTotal & ")"
+End Sub
+
+'EVENT bluDownload COMPLETE : The updater has finished downloading something _
+ ======================================================================================
+Private Sub bluDownload_Complete()
+    On Error GoTo Fail
+    
+    'We tag the control with what we're downloading so we can separate actions
+    Select Case Me.bluDownload.Tag
+        '"version.txt" contains the latest version number which we can compare with
+        Case Run.Update_VersionFile
+            'Open the text file and retrieve the version number
+            Dim Version As String
+            Dim FileNumber As Integer: Let FileNumber = FreeFile(FileNumber)
+            Open Run.AppData & Run.Update_VersionFile For Input Lock Write As #FileNumber
+            Line Input #FileNumber, Version
+            Close #FileNumber
+            
+            'Update the INI file as to the last time an update check was performed
+            Dim INI As INIFile: Set INI = New INIFile
+            Let INI.FilePath = Run.AppData & Run.INI_Name
+            Call INI.SetValue(CDbl(Now()), Run.INI_LastUpdateCheck, "Update")
+            Call INI.Save: Set INI = Nothing
+            
+            'Is it different from ours?
+            'TODO: Delete "version.txt" (so that an in-place install doesn't trigger _
+             another update due to "version.txt" differing)
+            If Trim(Version) <> Run.VersionString Then
+                'There's an update!
+'                Stop
+            Else
+                'Same version
+'                Stop
+            End If
+    End Select
+Fail:
+    'If a file was left open at the point of error, try to free the handle
+    On Error Resume Next
+    If FileNumber <> 0 Then Close #FileNumber
+End Sub
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'SetTip _
  ======================================================================================
-Public Sub SetTip(Optional ByVal Message As String = "")
+Public Sub SetTip(Optional ByVal Message As String = vbNullString)
     If Message <> Me.lblTip.Caption Then Let Me.lblTip.Caption = Message
 End Sub
 

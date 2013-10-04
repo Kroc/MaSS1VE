@@ -24,8 +24,9 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       WIN32.bas
-'Last Updated       02-SEP-13
-'Last Update        Fix integer limit in CRC procedure
+'Last Updated       01-OCT-13
+'Last Update        Change `""` to `vbNullString`, _
+                    very slight improvement to error handling
 
 'The CRC function of this class is from "Calculating CRC32 With VB" by Steve McMahon _
  <www.vbaccelerator.com/home/VB/Code/Libraries/CRC32/article.asp> which was _
@@ -177,10 +178,10 @@ End Function
 'Load : Load a binary file into the class _
  ======================================================================================
 Public Function Load(ByVal FilePath As String) As Boolean
-    Dim FileNumber As Integer: FileNumber = FreeFile
-    
     On Error GoTo Fail
+    Dim FileNumber As Integer: FileNumber = FreeFile
     Open FilePath For Binary Access Read Lock Write As #FileNumber
+    
     'This class holds the whole file in RAM, don't load huge files with it, _
      that would be rather silly, use regular `Seek` and `Get` for anything 1+MB
     ReDim Data(0 To VBA.LOF(FileNumber) - 1) As Byte
@@ -188,6 +189,7 @@ Public Function Load(ByVal FilePath As String) As Boolean
     'If the load didn't fail, remember the open file to make `Save` easier
     Let File = FilePath
     Let Load = True
+    
     Close #FileNumber
     Exit Function
     
@@ -200,15 +202,16 @@ Fail:
         "Err #" & Err.Number & ": " & Err.Description, _
         vbCritical Or vbOKOnly, "Unexepected Error" _
     )
+    'If the file was left open at the point of error, try to free the handle
     On Error Resume Next
-    Close #FileNumber
+    If FileNumber <> 0 Then Close #FileNumber
 End Function
 
 'Save : Save a binary file from the class _
  ======================================================================================
-Public Function Save(Optional ByVal FilePath As String = "") As Boolean
-    Dim FileNumber As Integer: FileNumber = FreeFile
-    If FilePath = "" Then Let FilePath = File
+Public Function Save(Optional ByVal FilePath As String = vbNullString) As Boolean
+    'If no filepath is given, use the path of the loaded file
+    If FilePath = vbNullString Then Let FilePath = File
     
     'Is the developer doing something stupid?
     If Me.LOF = 0 Then
@@ -223,9 +226,12 @@ Public Function Save(Optional ByVal FilePath As String = "") As Boolean
     
     'Now try save to disk
     On Error GoTo Fail
+    Dim FileNumber As Integer: FileNumber = FreeFile
     Open FilePath For Binary Access Write Lock Read As #FileNumber
+    
     Put #FileNumber, , Data
     Let Save = True
+    
     Close #FileNumber
     Exit Function
 
@@ -239,7 +245,7 @@ Fail:
     )
     'If the file was left open at the point of error, try to free the handle
     On Error Resume Next
-    Close #FileNumber
+    If FileNumber <> 0 Then Close #FileNumber
 End Function
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////

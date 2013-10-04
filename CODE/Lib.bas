@@ -309,14 +309,14 @@ End Function
  ======================================================================================
 '<cuinl.tripod.com/Tips/fileexist.htm>
 Public Function FileExists(ByVal Path As String) As Boolean
-    Let FileExists = CBool(Dir$(Path) <> "")
+    Let FileExists = CBool(Dir$(Path) <> vbNullString)
 End Function
 
 'DirExists : See if a folder exists _
  ======================================================================================
 '<cuinl.tripod.com/Tips/direxist.htm>
 Public Function DirExists(ByVal Path As String) As Boolean
-    Let DirExists = CBool(Dir$(Path, vbDirectory) <> "")
+    Let DirExists = CBool(Dir$(Path, vbDirectory) <> vbNullString)
 End Function
 
 'GetParentForm : Recurses through the parent objects until we hit the top form _

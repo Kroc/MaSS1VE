@@ -9,6 +9,13 @@ Option Explicit
 
 'Where execution begins. Also, generic stuff for the whole app
 
+'Avoid having to search and replace these strings:
+Public Const Update_VersionFile = "version.txt"
+Public Const Update_URL = "http://localhost/mass1ve/" & Update_VersionFile
+
+Public Const INI_Name = "MaSS1VE.ini"
+Public Const INI_LastUpdateCheck = "LastUpdateCheck"
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'MAIN : It all starts here! _
@@ -24,27 +31,41 @@ Private Sub Main()
      to True in the `Sub Main()` to tell the controls it's okay to subclass. _
      (`Sub Main()` will only be run when your app runs, not during design time)
     Let blu.UserMode = True
-        
+    
+    'Begin Logging _
+     ----------------------------------------------------------------------------------
+    'Create the App Data folder if it doesn't exist so that the update _
+     check won't fail
+    If Lib.DirExists(Run.AppData) = False Then
+        On Error GoTo ReadOnly
+        'Attempt to create the "App Data" folder
+        Call VBA.MkDir(Run.AppData)
+        On Error GoTo 0
+    End If
+    'TODO: Open log file here
+    
     'Check for Sonic 1 ROM _
      ----------------------------------------------------------------------------------
     'MaSS1VE requires access to an original Sonic 1 ROM when starting a new project _
      or exporting to a new ROM. Rather than just save a path to a ROM file located _
      somewhere in the user's files (which might get moved), we will keep a copy in _
-     the app path's data folder so there's less chance of it going missing.
+     the app path's "App Data" folder so there's less chance of it going missing.
     'MaSS1VE doesn't come with a Sonic 1 ROM, the user has to provide their own, _
-     so display a form where they can drag-and-drop one if we can't find it
+     so we display a form where they can drag-and-drop one if we can't find it
     
-    'When a ROM is provided, it's copied to the "App Data" folder in the app directory, _
-     test if it's currently there:
+    'Check if the ROM is already where we expect it
     If Lib.FileExists(Run.AppData & ROM.NameSMS) = True Then
-        Let ROM.Path = Run.AppData & ROM.NameSMS
+        'WARNING: Incredibly, prefixing `NameSMS` with it's module, `ROM`, causes the _
+         compiler to crash. It's insane, yes. This is the only reference on the web _
+         I found about this rare bug: <bbs.csdn.net/topics/30000137>
+        Let ROM.Path = Run.AppData & NameSMS
     End If
     
     'If no ROM was found, ask the user for it
     If ROM.Path = vbNullString Then
         Load frmROM
         Call frmROM.Show
-    
+        
     Else
         'We have the ROM, we can start MaSS1VE proper
         'NOTE: At the moment we don't have UI for starting / loading projects, _
@@ -55,10 +76,21 @@ Private Sub Main()
         
         Call ROM.Import
         Load mdiMain
-        Call mdiMain.Show
-        
         Unload frmROM
+        Call mdiMain.Show
     End If
+    
+    Exit Sub
+
+ReadOnly:
+    'If we can't write the log file, don't go any further, we can't operate in a _
+     read-only environment
+     MsgBox _
+        "Cannot write to " & Chr(34) & Run.AppData & Chr(34) & ". " _
+        & "MaSS1VE cannot be run from a folder it does not have write permissions " _
+        & "for. (e.g. read-only media such as CD or an Administrator owned folder " _
+        & "such as " & Chr(34) & "Program Files" & Chr(34) & ")", _
+        vbCritical Or vbOKOnly
 End Sub
 
 '/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
@@ -89,7 +121,7 @@ End Property
  ======================================================================================
 Public Property Get Path() As String
     'Set `Run.Path` so that program output goes to the RELEASE folder when in IDE
-    Let Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "RELEASE\", "")
+    Let Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "RELEASE\", vbNullString)
 End Property
 
 'PROPERTY VersionString : A friendly version number displayed in some places _

@@ -24,8 +24,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       WIN32.bas
-'Last Updated       03-SEP-13
-'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
+'Last Updated       02-OCT-13
+'Last Update        Improvement in `Save` error handling
 
 'By Kroc Camen <kroc@camendesign.com>
 'Written using MSDN documentaion with hints and tricks learnt from: _
@@ -614,8 +614,8 @@ Public Sub Save(ByVal FilePath As String)
     If FileExists(FilePath) = True Then VBA.Kill (FilePath)
     
     'Write the bitmap to disk
-    Dim FileNumber As Integer
-    Let FileNumber = FreeFile
+    On Error GoTo Fail
+    Dim FileNumber As Integer: Let FileNumber = FreeFile
     Open FilePath For Binary Access Write Lock Read As #FileNumber
         'Headers
         Put #FileNumber, , FileHeader
@@ -623,6 +623,19 @@ Public Sub Save(ByVal FilePath As String)
         'Image data
         Put #FileNumber, , Me.GetByteStream
     Close #FileNumber
+    Exit Sub
+    
+Fail:
+    Call MsgBox( _
+        "Error in bluImage.cls: " & _
+        "An unexpected error occurred whilst saving, the system says: " & _
+        vbCrLf & vbCrLf & _
+        "Err #" & Err.Number & ": " & Err.Description, _
+        vbCritical Or vbOKOnly, "Unexepected Error" _
+    )
+    'If the file was left open at the point of error, try to free the handle
+    On Error Resume Next
+    If FileNumber <> 0 Then Close #FileNumber
 End Sub
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////

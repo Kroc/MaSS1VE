@@ -810,30 +810,6 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
     Set BIN = Nothing
 End Sub
 
-'Locate : Find the ROM (either in the app path, or the user's app data) _
- ======================================================================================
-Public Function Locate() As String
-    'Return null if we couldn't find the ROM
-    Let Locate = vbNullString
-    
-    'First check if the ROM exists in the data folder in the same location as the app _
-     (i.e. we're running portably)
-    If Lib.FileExists(Run.Path & "Data\ROM.sms") = False Then
-        'Secondly, check the user's app data
-        Dim AppData As String
-        Let AppData = WIN32.GetSpecialFolder(CSIDL_APPDATA)
-        'This could potentially come back blank
-        If AppData <> vbNullString Then
-            'Is the ROM in the user's app data
-            If Lib.FileExists(AppData & "MaSS1VE\ROM.sms") = True Then
-                Let Locate = AppData & "MaSS1VE\ROM.sms"
-            End If
-        End If
-    Else
-        Let Locate = Run.Path & "Data\ROM.sms"
-    End If
-End Function
-
 'Verify : Is this a Sonic 1 ROM? _
  ======================================================================================
 'NOTE: To my knowledge there is only one version of Sonic 1 for the Master System, _
