@@ -57,11 +57,11 @@
                   instead of compiling the script on its own"
         ;We'll let the script continue, for testing purposes only
         !define PRODUCT_VERSION_WIN "0.0.0.0"
-        !define PRODUCT_VERSION_VB6 "0.0#0"
+        !define PRODUCT_VERSION_VB6 "0.0,0"
 !endif
 
 ;Name the installer with the version number from MaSS1VE.exe
-!define INSTALLER_NAME "Install ${PRODUCT_NAME} v${PRODUCT_VERSION_VB6}"
+!define INSTALLER_NAME "Install_${PRODUCT_NAME}_v${PRODUCT_VERSION_VB6}"
 ;The uninstaller is more guessable
 !define UNINSTALLER_EXE_NAME "Uninstall.exe"
 
@@ -113,8 +113,8 @@ ShowUnInstDetails nevershow
 
 ;Define installer and uninstaller icons. We use the app's icon so that it's easily
 ; identifiable in the Add/Remove Programs list
-!define MUI_ICON "..\RES\AppIcon.ico"
-!define MUI_UNICON "..\RES\AppIcon.ico"
+!define MUI_ICON "InstallIcon.ico"
+!define MUI_UNICON "InstallIcon.ico"
 
 ;--------------------------------------------------------------------------------------
 ;Set the version info on the installer .exe

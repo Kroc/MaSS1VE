@@ -129,5 +129,5 @@ End Property
 Public Property Get VersionString() As String
     Let VersionString = _
         "v" & Format(App.Major & "." & App.Minor, "##0.0#") & _
-        " #" & App.Revision & " pre-alpha"
+        ", " & App.Revision & " pre-alpha"
 End Property

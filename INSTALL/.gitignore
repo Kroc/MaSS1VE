@@ -5,6 +5,8 @@
 !*.bat
 !*.vbs
 
+!*.ico
+
 # The UAC plugin is bundled here due to its permissable licence
 # http://nsis.sourceforge.net/UAC_plug-in
 !UAC
