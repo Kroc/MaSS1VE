@@ -10,11 +10,10 @@ Option Explicit
 'Where execution begins. Also, generic stuff for the whole app
 
 'Avoid having to search and replace these strings:
-Public Const Update_VersionFile = "version.txt"
-Public Const Update_URL = "http://localhost/mass1ve/" & Update_VersionFile
-
 Public Const INI_Name = "MaSS1VE.ini"
-Public Const INI_LastUpdateCheck = "LastUpdateCheck"
+
+Public Const UpdateFile = "Update.ini"
+Public Const UpdateURL = "http://localhost/mass1ve/" & UpdateFile
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
@@ -129,5 +128,5 @@ End Property
 Public Property Get VersionString() As String
     Let VersionString = _
         "v" & Format(App.Major & "." & App.Minor, "##0.0#") & _
-        ", " & App.Revision & " pre-alpha"
+        "," & App.Revision & " pre-alpha"
 End Property

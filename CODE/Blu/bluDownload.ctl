@@ -48,8 +48,10 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       Lib.bas
-'Last Updated       01-OCT-13
-'Last Update        Add `StatusCodeText`, improve download handling, copy temp file
+'Last Updated       09-OCT-13
+'Last Update        Fix strange bug with not being able to download more than one file
+
+'TODO: Allow multiple simultaneous downloads (use Collection with ID / URL / File)
 
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
@@ -90,10 +92,6 @@ Private Sub UserControl_AsyncReadComplete(ByRef AsyncProp As AsyncProperty)
         Call VBA.FileSystem.FileCopy(TempPath, My_FilePath)
         RaiseEvent Complete
     End If
-    
-    'Clear the current download so you can start another
-    Let My_URL = vbNullString
-    Let My_FilePath = vbNullString
     
     Exit Sub
 

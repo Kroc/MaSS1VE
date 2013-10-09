@@ -64,6 +64,18 @@ Begin VB.MDIForm mdiMain
       TabIndex        =   0
       Top             =   0
       Width           =   15120
+      Begin MaSS1VE.bluButton btnUpdate 
+         Height          =   480
+         Left            =   12840
+         TabIndex        =   9
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   1095
+         _ExtentX        =   1931
+         _ExtentY        =   847
+         Caption         =   "UPDATE!"
+         State           =   1
+      End
       Begin MaSS1VE.bluControlBox cbxClose 
          Height          =   480
          Left            =   14640
@@ -229,15 +241,15 @@ Private Sub MDIForm_Load()
     
     'Has an update check been done in the last day?
     If DateDiff("d", _
-        CDate(INI.GetDouble(Run.INI_LastUpdateCheck, "Update")), Now() _
+        CDate(INI.GetDouble("LastUpdateCheck", "Update")), Now() _
     ) > 1 Then
-        'Download the "version.txt" file. This is asynchronous, so the code will not _
+        'Download the "Update.ini" file. This is asynchronous, so the code will not _
          sit here waiting. The bluDownload control `Complete` event will fire once _
          the file is received so go there to follow the update process
-        Let Me.bluDownload.Tag = Run.Update_VersionFile
+        Let Me.bluDownload.Tag = Run.UpdateFile
         Call Me.bluDownload.Download( _
-            Run.Update_URL, _
-            Run.AppData & Run.Update_VersionFile, vbAsyncReadForceUpdate _
+            Run.UpdateURL, _
+            Run.AppData & Run.UpdateFile, vbAsyncReadForceUpdate _
         )
     End If
     Set INI = Nothing
@@ -274,17 +286,17 @@ Private Sub MDIForm_Resize()
     
     'If the window is borderless, there will be min/max/close controls that _
      the version number will go next to
-    If Me.bluWindow.IsBorderless = True Then
-        Call Me.lblVersion.Move( _
-            Me.cbxMin.Left - Me.lblVersion.Width, 0, _
-            Me.lblVersion.Width, blu.Ypx(blu.Metric) _
-        )
-    Else
-        Call Me.lblVersion.Move( _
-            FormWidth - Me.lblVersion.Width, 0, _
-            Me.lblVersion.Width, blu.Ypx(blu.Metric) _
-        )
-    End If
+    Dim LeftPos As Long
+    Let LeftPos = IIf(Me.bluWindow.IsBorderless = True, Me.cbxMin.Left, FormWidth)
+    
+    Call Me.lblVersion.Move( _
+        LeftPos - Me.lblVersion.Width, 0, _
+        Me.lblVersion.Width, blu.Ypx(blu.Metric) _
+    )
+    Call Me.btnUpdate.Move( _
+        LeftPos - Me.btnUpdate.Width, 0, _
+        Me.btnUpdate.Width, blu.Xpx(blu.Metric) _
+    )
     
     Let Me.bluTab.Height = blu.Ypx(blu.Metric)
     Let Me.bluTab.Top = Me.toolbar.Height - Me.bluTab.Height
@@ -410,36 +422,41 @@ Private Sub bluDownload_Complete()
     
     'We tag the control with what we're downloading so we can separate actions
     Select Case Me.bluDownload.Tag
-        '"version.txt" contains the latest version number which we can compare with
-        Case Run.Update_VersionFile
-            'Open the text file and retrieve the version number
-            Dim Version As String
-            Dim FileNumber As Integer: Let FileNumber = FreeFile(FileNumber)
-            Open Run.AppData & Run.Update_VersionFile For Input Lock Write As #FileNumber
-            Line Input #FileNumber, Version
-            Close #FileNumber
-            
-            'Update the INI file as to the last time an update check was performed
+        '"Update.ini" contains the latest version number which we can compare with
+        Case Run.UpdateFile '----------------------------------------------------------
+            'Open the Update.ini file that was downloaded, ...
             Dim INI As INIFile: Set INI = New INIFile
+            Let INI.FilePath = Run.AppData & Run.UpdateFile
+            
+            '...and retrieve the latest version number
+            Dim Version As String, URL As String
+            Let Version = INI.GetString("Version")
+            Let URL = INI.GetString("InstallURL")
+            
+            'Update MaSS1VE.ini with the last time the update check was performed
             Let INI.FilePath = Run.AppData & Run.INI_Name
-            Call INI.SetValue(CDbl(Now()), Run.INI_LastUpdateCheck, "Update")
+            Call INI.SetValue(CDbl(Now()), "LastUpdateCheck", "Update")
             Call INI.Save: Set INI = Nothing
             
             'Is it different from ours?
-            'TODO: Delete "version.txt" (so that an in-place install doesn't trigger _
-             another update due to "version.txt" differing)
             If Trim(Version) <> Run.VersionString Then
-                'There's an update!
-'                Stop
+                'There's an update! Download the installer...
+                Let Me.bluDownload.Tag = "Update.exe"
+                Call Me.bluDownload.Download( _
+                    URL, Run.AppData & "Update.exe", vbAsyncReadForceUpdate _
+                )
             Else
-                'Same version
-'                Stop
+                'Same version. Delete the Update.ini file so that it doesn't confuse _
+                 MaSS1VE should the user manually update
+                Call VBA.Kill(Run.AppData & Run.UpdateFile)
             End If
+        
+        Case "Update.exe" '------------------------------------------------------------
+            'Once the Update.exe has been downloaded, notify the user in the UI
+            Let Me.lblVersion.Visible = False
+            Let Me.btnUpdate.Visible = True
     End Select
 Fail:
-    'If a file was left open at the point of error, try to free the handle
-    On Error Resume Next
-    If FileNumber <> 0 Then Close #FileNumber
 End Sub
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
