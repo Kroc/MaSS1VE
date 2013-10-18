@@ -62,6 +62,8 @@ Private Declare Sub kernel32_RtlMoveMemory Lib "kernel32" Alias "RtlMoveMemory" 
  that implicitly acts as a late-bound web browser control! (`IWebBrowser2`)
 Private ptrIUnknown As Long
 
+Private ptrIUnknownContainer As Long
+
 'This will hold our reference to the web browser control. _
  This class will implement what it can of `IWebBrowser2` for convenience
 Private IWebBrowser2 As Object
@@ -83,11 +85,9 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     'Use this for events?
     'http://www.binaryworld.net/Main/CodeDetail.aspx?CodeId=3682&atlanta=software%20development
     
-    Dim ptrIUnknownControl As Long
-    
     'http://www.aivosto.com/vbtips/stringopt2.html#API
     Let My_hWnd = atl_AtlAxCreateControl( _
-        StrPtr("http://about:blank"), UserControl.hWnd, 0, ptrIUnknownControl _
+        StrPtr("http://about:blank"), UserControl.hWnd, 0, ptrIUnknownContainer _
     )
     
     Call atl_AtlAxGetControl( _

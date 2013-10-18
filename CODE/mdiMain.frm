@@ -326,6 +326,13 @@ Private Sub MDIForm_Resize()
     )
 End Sub
 
+'MDIFORM Terminate _
+ ======================================================================================
+Private Sub MDIForm_Terminate()
+    'Clean up the project in memory
+    Call GAME.Clear
+End Sub
+
 'MDIFORM Unload _
  ======================================================================================
 Private Sub MDIForm_Unload(Cancel As Integer)
@@ -336,14 +343,6 @@ Private Sub MDIForm_Unload(Cancel As Integer)
     Unload frmWelcome
     Unload frmPlay
     Unload frmLevel
-    
-    'Clean up the project in memory
-    Call GAME.Clear
-    
-    Dim VBForm As Form
-    For Each VBForm In VB.Forms
-        If VBForm.Name <> "mdiMain" Then Unload VBForm
-    Next VBForm
 End Sub
 
 'EVENT bluTab TABCHANGED : The top tabs have been clicked - change zone _
@@ -419,19 +418,20 @@ End Sub
  ======================================================================================
 Private Sub bluDownload_Complete()
     On Error GoTo Fail
+    Dim INI As INIFile
     
     'We tag the control with what we're downloading so we can separate actions
     Select Case Me.bluDownload.Tag
         '"Update.ini" contains the latest version number which we can compare with
         Case Run.UpdateFile '----------------------------------------------------------
             'Open the Update.ini file that was downloaded, ...
-            Dim INI As INIFile: Set INI = New INIFile
+            Set INI = New INIFile
             Let INI.FilePath = Run.AppData & Run.UpdateFile
             
             '...and retrieve the latest version number
-            Dim Version As String, URL As String
+            Dim Version As String, InfoURL As String
             Let Version = INI.GetString("Version")
-            Let URL = INI.GetString("InstallURL")
+            Let InfoURL = INI.GetString("InfoURL")
             
             'Update MaSS1VE.ini with the last time the update check was performed
             Let INI.FilePath = Run.AppData & Run.INI_Name
@@ -440,10 +440,10 @@ Private Sub bluDownload_Complete()
             
             'Is it different from ours?
             If Trim(Version) <> Run.VersionString Then
-                'There's an update! Download the installer...
-                Let Me.bluDownload.Tag = "Update.exe"
+                'There's an update! Download first the release notes...
+                Let Me.bluDownload.Tag = "Update.html"
                 Call Me.bluDownload.Download( _
-                    URL, Run.AppData & "Update.exe", vbAsyncReadForceUpdate _
+                    InfoURL, Run.AppData & "Update.html", vbAsyncReadForceUpdate _
                 )
             Else
                 'Same version. Delete the Update.ini file so that it doesn't confuse _
@@ -451,12 +451,38 @@ Private Sub bluDownload_Complete()
                 Call VBA.Kill(Run.AppData & Run.UpdateFile)
             End If
         
+        Case "Update.html" '-----------------------------------------------------------
+            'Once the release notes have been downloaded, download the installer
+            'First read the download URL from the Update.ini file
+            Set INI = New INIFile
+            Let INI.FilePath = Run.AppData & Run.UpdateFile
+            
+            Dim URL As String
+            Let URL = INI.GetString("InstallURL")
+            If URL <> vbNullString Then
+                Let Me.bluDownload.Tag = "Update.exe"
+                Call Me.bluDownload.Download( _
+                    URL, Run.AppData & "Update.exe", vbAsyncReadForceUpdate _
+                )
+            Else
+'                Stop
+            End If
+            Set INI = Nothing
+        
         Case "Update.exe" '------------------------------------------------------------
             'Once the Update.exe has been downloaded, notify the user in the UI
             Let Me.lblVersion.Visible = False
             Let Me.btnUpdate.Visible = True
     End Select
 Fail:
+End Sub
+
+'btnUpdate CLICK : The update button that appears once an update has been downloaded _
+ ======================================================================================
+Private Sub btnUpdate_Click()
+    Load frmUpdate
+    Call frmUpdate.bluWebView.Navigate(Run.AppData & "Update.html")
+    Call frmUpdate.Show(vbModal, mdiMain)
 End Sub
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////

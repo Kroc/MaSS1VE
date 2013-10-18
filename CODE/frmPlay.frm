@@ -137,33 +137,6 @@ Option Explicit
  (not required for compatibility AFAIK) and you try running MaSS1VE from the IDE _
  <social.msdn.microsoft.com/Forums/windowsdesktop/en-US/0ccf84fd-b78d-45b3-9b79-7366003cb19d/wmdropfiles-in-an-elevated-application-administrator>
 
-'/// API DEFS /////////////////////////////////////////////////////////////////////////
-
-'Launch a file with its associated application _
- <msdn.microsoft.com/en-us/library/windows/desktop/bb762153%28v=vs.85%29.aspx>
-Private Declare Function shell32_ShellExecute Lib "shell32" Alias "ShellExecuteA" ( _
-    ByVal hndWindow As Long, _
-    ByVal Operation As String, _
-    ByVal File As String, _
-    ByVal Parameters As String, _
-    ByVal Directory As String, _
-    ByVal ShowCmd As SW _
-) As Long
-
-Private Enum SW
-    SW_HIDE = 0
-    SW_SHOWNORMAL = 1
-    SW_SHOWMINIMIZED = 2
-    SW_SHOWMAXIMIZED = 3
-    SW_SHOWNOACTIVATE = 4
-    SW_SHOW = 5
-    SW_MINIMIZE = 6
-    SW_SHOWMINNOACTIVE = 7
-    SW_SHOWNA = 8
-    SW_RESTORE = 9
-    SW_SHOWDEFAULT = 10
-End Enum
-
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
 'This will hold the path to the temporary ROM we've cretaed
@@ -217,7 +190,7 @@ Private Sub imgROM_DblClick()
     Let mdiMain.MousePointer = VBRUN.MousePointerConstants.vbArrowHourglass
     'Open the ROM file using explorer, if no file association is set, _
      the 'choose a program' window should appear
-    Call shell32_ShellExecute( _
+    Call WIN32.shell32_ShellExecute( _
         mdiMain.hWnd, vbNullString, TempFile, vbNullString, vbNullString, _
         SW_SHOWNORMAL _
     )

@@ -50,7 +50,7 @@
     own, you should always run "Build Installer.bat" to do that.)
 
    The batch script defines `PRODUCT_VERSION_WIN` ("1.2.3.4" format, required for
-   the `VIProductVersion` setting) and `PRODUCT_VERSION_VB6` ("1.2.4" format)
+   the `VIProductVersion` setting) and `PRODUCT_VERSION_VB6` ("1.2,4" format)
 */
 !ifndef PRODUCT_VERSION_WIN
         !warning "Version number not defined, please run 'Build Installer.bat' \
@@ -132,9 +132,24 @@ VIAddVersionKey "FileVersion" "${PRODUCT_VERSION_VB6}"
 
 var /GLOBAL IsAdmin
 var /GLOBAL PortableMode
+var /GLOBAL UpdateMode
 
 ;Define installation pages: -----------------------------------------------------------
 
+Caption "Install ${PRODUCT_NAME}"
+
+!define MUI_WELCOMEFINISHPAGE_BITMAP "Welcome.bmp"
+!define MUI_WELCOMEPAGE_TITLE "${PRODUCT_NAME} v${PRODUCT_VERSION_VB6}"
+!define MUI_WELCOMEPAGE_TEXT "\
+        Create your own levels for Sonic the Hedgehog™ for the Master System™ with \
+        MaSS1VE, the first and most comprehensive editing tool for modifying the game.\
+        ${CRLF}${CRLF}\
+        This program can install MaSS1VE either locally, or in any folder as a \
+        portable application (such as on a USB-stick) so that you can carry it \
+        around with you!\
+        ${CRLF}${CRLF}\
+        Sonic the Hedgehog™, Master System™ © Sega Enterprises. \
+        MaSS1VE is © Kroc Camen, with a Creative Commons Attribution 3.0 licence."
 !insertmacro MUI_PAGE_WELCOME
 
 ;Define our custom portable-mode choice page
@@ -151,6 +166,12 @@ Page Custom PortableModePageCreate PortableModePageLeave
 ;Do the actual installation
 !insertmacro MUI_PAGE_INSTFILES
 
+!define MUI_FINISHPAGE_TITLE "Installation Complete"
+!define MUI_FINISHPAGE_TEXT "\
+        Please note that you will need a Master System emulator (such as 'Kega Fusion') \
+        to play the $\".sms$\" files MaSS1VE produces."
+!define MUI_FINISHPAGE_LINK "Download 'Kega Fusion' Emulator"
+!define MUI_FINISHPAGE_LINK_LOCATION "http://kega.eidolons-inn.net/"
 /* Remember that you shouldn't launch the executable from admin-privliges
    <mdb-blog.blogspot.co.uk/2013/01/nsis-lunch-program-as-user-from-uac.html>
    MaSS1VE has a bug where OLE drag-and-drop won't work when running as Administrator,
@@ -158,10 +179,13 @@ Page Custom PortableModePageCreate PortableModePageLeave
    to change it the next time the program is run! */
 !define MUI_FINISHPAGE_RUN
 !define MUI_FINISHPAGE_RUN_FUNCTION FinishPageRun
+;This saves some installer space since we won't request a reboot
+!define MUI_FINISHPAGE_NOREBOOTSUPPORT
+;Skip the finish page if updating (`/UPDATE`)
+!define MUI_PAGE_CUSTOMFUNCTION_PRE FinishPagePre
 !insertmacro MUI_PAGE_FINISH
 
 ;Uninstallation pages:
-!insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 
 !insertmacro MUI_LANGUAGE English
@@ -178,10 +202,15 @@ Section Install
         ${EndIf}
 
         SetOutPath "$INSTDIR"
-        SetOverwrite ifnewer
+        SetOverwrite on
 
         ;Package the app
         File "..\RELEASE\${EXE_NAME}"
+        
+        ;Remove the old update data that might confuse things when upgrading version
+        Delete "$INSTDIR\App Data\Update.ini"
+        Delete "$INSTDIR\App Data\Update.html"
+        Delete "$INSTDIR\App Data\Update.exe"
 SectionEnd
 
 ;--------------------------------------------------------------------------------------
@@ -191,7 +220,8 @@ Section Local
 
         ;We're going to install a single shortcut directly into the Start Menu,
         ; no sub-folder -- that's so passe
-        CreateShortCut "${START_MENU_SHORTCUT}" "$INSTDIR\${EXE_NAME}" "" "" "" SW_SHOWNORMAL "" "${PRODUCT_DESCRIPTION}"
+        CreateShortCut "${START_MENU_SHORTCUT}" "$INSTDIR\${EXE_NAME}" "" "" "" \
+                       SW_SHOWNORMAL "" "${PRODUCT_DESCRIPTION}"
 
         ;Place Uninstall.exe
         WriteUninstaller "$INSTDIR\${UNINSTALLER_EXE_NAME}"
@@ -251,8 +281,11 @@ Function .onInit
         ${IfNot} ${Errors}
                 MessageBox MB_ICONINFORMATION|MB_SETFOREGROUND "\
                         /PORTABLE : Install without shortuct / uninstaller${CRLF}\
-                        /S : Silent install${CRLF}\
-                        /D=%directory% : Specify destination directory"
+                        /UPDATE : Update an existing installation, implies `/PORTABLE` \
+                        and `/D` should be used to specify the directory${CRLF}\
+                        /D=%directory% : Specify destination directory (must be last \
+                        and not contain any quotes, even if there are spaces in the \
+                        path${CRLF}"
                 Quit
         ${EndIf}
 
@@ -275,12 +308,36 @@ Function .onInit
         ${Else}
             StrCpy $PortableMode 0
         ${EndIf}
+        
+        ClearErrors
+        ${GetOptions} $9 "/UPDATE" $8
+        ${IfNot} ${Errors}
+            StrCpy $PortableMode 1
+            StrCpy $UpdateMode 1
+        ${Else}
+            StrCpy $PortableMode 0
+            StrCpy $UpdateMode 0
+        ${EndIf}
+FunctionEnd
+
+;--------------------------------------------------------------------------------------
+;The Update Mode (use switch `/UPDATE`) skips all but the install files page
+Function FinishPagePre
+        ${If} $UpdateMode = 1
+                Call FinishPageRun
+                Abort
+        ${EndIf}
 FunctionEnd
 
 ;--------------------------------------------------------------------------------------
 Function PortableModePageCreate
+        ;Skip the local / portable mode select page if running an update
+        ${If} $UpdateMode = 1
+                Abort
+        ${EndIf}
+
         !insertmacro MUI_HEADER_TEXT "Install Mode" ""
-        
+
         nsDialogs::Create 1018
         Pop $0
         ${NSD_CreateLabel} 0 10u 100% 24u "How would you like to install MaSS1VE?"
@@ -290,9 +347,9 @@ Function PortableModePageCreate
         ${NSD_CreateRadioButton} 30u 60u -30u 8u "Portable (such as on a USB drive)"
         Pop $2
         ${If} $PortableMode = 0
-              SendMessage $1 ${BM_SETCHECK} ${BST_CHECKED} 0
+                SendMessage $1 ${BM_SETCHECK} ${BST_CHECKED} 0
         ${Else}
-               SendMessage $2 ${BM_SETCHECK} ${BST_CHECKED} 0
+                SendMessage $2 ${BM_SETCHECK} ${BST_CHECKED} 0
         ${EndIf}
         nsDialogs::Show
 FunctionEnd
@@ -314,7 +371,13 @@ Function DirectoryPagePre
          ;If local mode selected, skip the Directory page, installation happens
          ; automatically to $LOCALAPPDATA
         ${If} $PortableMode = 0
-              Abort
+                Abort
+        ${EndIf}
+        
+        ;If update mode enabled (`/UPDATE`), skip this page, `/D` will specify the
+        ; installation directory (If `/D` is not used, will default to $LOCALAPPDATA)
+        ${If} $UpdateMode = 1
+                Abort
         ${EndIf}
 FunctionEnd
 
@@ -329,10 +392,6 @@ Function DirectoryPageLeave
         CreateDirectory "$INSTDIR"
         FileOpen $R0 "$INSTDIR\tmp.dat" w
         FileClose $R0
-        ;Clean up. We delete the directory (if empty) in case the user changes their
-        ; mind and selects a different location
-        Delete "$INSTDIR\tmp.dat"
-        RmDir "$INSTDIR"
         ;Do not proceed if the directory can't be written to
         ${If} ${Errors}
                 MessageBox MB_ICONSTOP|MB_SETFOREGROUND "\
@@ -344,6 +403,10 @@ Function DirectoryPageLeave
                         Administrator account yet."
                 Abort
         ${EndIf}
+        ;Clean up. We delete the directory (if empty) in case the user changes their
+        ; mind and selects a different location
+        Delete "$INSTDIR\tmp.dat"
+        RmDir "$INSTDIR"
 FunctionEnd
 
 ;--------------------------------------------------------------------------------------

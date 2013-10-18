@@ -11,8 +11,8 @@ Option Explicit
 
 'Status             In Flux
 'Dependencies       Lib.bas
-'Last Updated       20-SEP-13
-'Last Update        Added `SetIcon` to load 32-bit icons from the EXE
+'Last Updated       16-OCT-13
+'Last Update        Added `ShellExecute`
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ Public Declare Sub kernel32_RtlMoveMemory Lib "kernel32" Alias "RtlMoveMemory" (
     ByVal Length As Long _
 )
 
-'DLL LOADING _
+'SYSTEM _
  --------------------------------------------------------------------------------------
 
 'The above can apparently be buggy so this is used as a fallback _
@@ -143,6 +143,31 @@ End Enum
 
 Private Enum LR
     LR_SHARED = &H8000&                 'Re-uses a resource. The system will unload it
+End Enum
+
+'Launch a file with its associated application _
+ <msdn.microsoft.com/en-us/library/windows/desktop/bb762153%28v=vs.85%29.aspx>
+Public Declare Function shell32_ShellExecute Lib "shell32" Alias "ShellExecuteA" ( _
+    ByVal hndWindow As Long, _
+    ByVal Operation As String, _
+    ByVal File As String, _
+    ByVal Parameters As String, _
+    ByVal Directory As String, _
+    ByVal ShowCmd As SW _
+) As Long
+
+Public Enum SW
+    SW_HIDE = 0
+    SW_SHOWNORMAL = 1
+    SW_SHOWMINIMIZED = 2
+    SW_SHOWMAXIMIZED = 3
+    SW_SHOWNOACTIVATE = 4
+    SW_SHOW = 5
+    SW_MINIMIZE = 6
+    SW_SHOWMINNOACTIVE = 7
+    SW_SHOWNA = 8
+    SW_RESTORE = 9
+    SW_SHOWDEFAULT = 10
 End Enum
 
 'WINDOWS SYSTEM INFORMATION _
@@ -755,12 +780,12 @@ End Enum
  like to hold off redrawing the window entirely until the whole process is complete
 '--------------------------------------------------------------------------------------
 'Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
-'Private Declare Function RedrawWindow Lib "user32" (ByVal hWnd As Long, lprcUpdate As RECT, ByVal hrgnUpdate As Long, ByVal fuRedraw As Long) As Long
+Public Declare Function RedrawWindow Lib "user32" (ByVal hWnd As Long, lprcUpdate As RECT, ByVal hrgnUpdate As Long, ByVal fuRedraw As Long) As Long
 'Private Const WM_SETREDRAW as Long = &HB
 'Private Const RDW_INVALIDATE as Long = &H1
 'Private Const RDW_INTERNALPAINT as Long = &H2
-'Private Const RDW_UPDATENOW as Long = &H100
-'Private Const RDW_ALLCHILDREN as Long = &H80
+Public Const RDW_UPDATENOW As Long = &H100
+Public Const RDW_ALLCHILDREN As Long = &H80
 '
 'Private Declare Function InvalidateRect Lib "user32" (ByVal hWnd As Long, lpRect As Any, ByVal bErase As Long) As Long
 '

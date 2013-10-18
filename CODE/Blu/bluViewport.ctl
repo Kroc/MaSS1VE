@@ -173,12 +173,9 @@ Private Declare Function user32_ScrollWindowEx Lib "user32" Alias "ScrollWindowE
     ByVal ptrClipRECT As Long, _
     ByVal ptrUpdateRegion As Long, _
     ByRef ptrUpdateRECT As Long, _
-    ByVal Flags As SW _
+    ByVal Flags As Long _
 ) As Long
-
-Private Enum SW
-    SW_INVALIDATE = &H2
-End Enum
+Private Const SW_INVALIDATE As Long = &H2
 
 '<msdn.microsoft.com/en-us/library/windows/desktop/dd145002%28v=vs.85%29.aspx>
 Private Declare Function user32_InvalidateRect Lib "user32" Alias "InvalidateRect" ( _
