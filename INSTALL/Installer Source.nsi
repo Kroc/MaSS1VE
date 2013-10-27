@@ -13,9 +13,10 @@
 
 ;--------------------------------------------------------------------------------------
 
-!include LogicLib.nsh                                  ;If / Then logic
-!include FileFunc.nsh                                  ;File system operations
-!include MUI2.nsh                                      ;Modern interface
+!include LogicLib.nsh                                   ;If / Then logic
+!include FileFunc.nsh                                   ;File system operations
+!include WordFunc.nsh                                   ;String comparisons
+!include MUI2.nsh                                       ;Modern interface
 
 ;Include the UAC plugin for handling user / admin rights. You won't need to install
 ; the plugin yourself, it's provided in a sub-folder thanks to its permissable licence
@@ -201,8 +202,8 @@ Section Install
                 StrCpy $INSTDIR ${INSTDIR_LOCAL_DEFAULT}
         ${EndIf}
 
-        SetOutPath "$INSTDIR"
         SetOverwrite on
+        SetOutPath "$INSTDIR"
 
         ;Package the app
         File "..\RELEASE\${EXE_NAME}"
@@ -218,6 +219,28 @@ Section Local
         ;Don't create shortcut / modify registry if portable mode selected
         ${If} $PortableMode = 0
 
+        ;Is this Windows 8.1?
+        ;<forums.winamp.com/showthread.php?t=365416>
+        ReadRegStr $R0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" CurrentVersion
+        ${VersionCompare} "6.2" "$R0" $R1
+        ${If} $R1 = 2
+                File "..\RELEASE\${PRODUCT_NAME}.VisualElementsManifest.xml"
+                File "..\RELEASE\Resources.pri"
+                File "..\RELEASE\Resources.scale-140.pri"
+                File "..\RELEASE\Resources.scale-180.pri"
+
+                ;Install the images for the custom Windows 8.1 Start screen tile
+                SetOutPath "$INSTDIR\VisualElements"
+                File "..\RELEASE\VisualElements\70x70Logo.scale-80.png"
+                File "..\RELEASE\VisualElements\70x70Logo.scale-100.png"
+                File "..\RELEASE\VisualElements\70x70Logo.scale-140.png"
+                File "..\RELEASE\VisualElements\70x70Logo.scale-180.png"
+                File "..\RELEASE\VisualElements\150x150Logo.scale-80.png"
+                File "..\RELEASE\VisualElements\150x150Logo.scale-100.png"
+                File "..\RELEASE\VisualElements\150x150Logo.scale-140.png"
+                File "..\RELEASE\VisualElements\150x150Logo.scale-180.png"
+        ${EndIf}
+        
         ;We're going to install a single shortcut directly into the Start Menu,
         ; no sub-folder -- that's so passe
         CreateShortCut "${START_MENU_SHORTCUT}" "$INSTDIR\${EXE_NAME}" "" "" "" \
@@ -245,6 +268,9 @@ Section Local
         IntFmt $0 "0x%08X" $0
         WriteRegDWORD SHCTX "${REG_UNINSTALL}" "EstimatedSize" "$0"
         
+        ;Refresh Explorer to reflect shortcut / icon changes
+        ${RefreshShellIcons}
+        
         ${EndIf}
 SectionEnd
 
@@ -258,6 +284,12 @@ Section un.Install
         ;      in case the user installed into a location with other files
         Delete "$INSTDIR\${EXE_NAME}"
         Delete "$INSTDIR\${UNINSTALLER_EXE_NAME}"
+        ;Delete the Windows 8.1 tile icon (when installed locally)
+        Delete "$INSTDIR\${PRODUCT_NAME}.VisualElementsManifest.xml"
+        Delete "$INSTDIR\Resources.pri"
+        Delete "$INSTDIR\Resources.scale-140.pri"
+        Delete "$INSTDIR\Resources.scale-180.pri"
+        RMDir /r "$INSTDIR\VisualElements"
         ;Remove the install directory only if it's empty
         RMDir  "$INSTDIR"
         

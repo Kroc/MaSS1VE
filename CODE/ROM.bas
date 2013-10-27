@@ -651,16 +651,19 @@ Continue_LevelPointers:
     
     'Apply Block Mappings / Art to Level:
     For LevelIndex = LBound(GAME.Levels) To UBound(GAME.Levels)
-    If Not GAME.Levels(LevelIndex) Is Nothing Then
-    With GAME.Levels(LevelIndex)
-        Set .BlockMapping = GAME.BlockMappings(LevelBlockMappings(LevelIndex))
-        
-        Call GAME.Ring.ApplyPalette(.LevelPalette)
-        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 252 * 8, 0, 16)
-        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 253 * 8, 0, 17)
-        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 254 * 8, 0, 18)
-        Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 255 * 8, 0, 19)
-    End With: End If
+        If Not GAME.Levels(LevelIndex) Is Nothing Then
+            With GAME.Levels(LevelIndex)
+                Set .BlockMapping = GAME.BlockMappings(LevelBlockMappings(LevelIndex))
+                
+                Call GAME.Ring.ApplyPalette(.LevelPalette)
+                Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 252 * 8, 0, 16)
+                Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 253 * 8, 0, 17)
+                Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 254 * 8, 0, 18)
+                Call GAME.Ring.PaintTile(.LevelArt.Tiles.hDC, 255 * 8, 0, 19)
+                
+                
+            End With
+        End If
     Next LevelIndex
     
     'ROM imported!
