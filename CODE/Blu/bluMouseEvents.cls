@@ -463,7 +463,7 @@ Private Sub SubclassWindowProcedure( _
             Dim CharsScrolled As Single
             Let CharsScrolled = WheelScrollChars * (Delta / 120)
             'Alert the controller so it can do the scrolling
-            'NOTE: You should *subtract* the `CharsScrolled` value to your scroll _
+            'NOTE: You should *subtract* the `CharsScrolled` value from your scroll _
              position to scroll correctly
             RaiseEvent MouseHScroll( _
                 CharsScrolled, Button, Shift, _

@@ -1,6 +1,6 @@
 Type=Exe
-Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\Windows\System32\stdole2.tlb#OLE Automation
-Reference=*\G{420B2830-E718-11CF-893D-00A0C9054228}#1.0#0#..\..\..\..\Windows\System32\scrrun.dll#Microsoft Scripting Runtime
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#..\..\..\..\Windows\SysWOW64\stdole2.tlb#OLE Automation
+Reference=*\G{420B2830-E718-11CF-893D-00A0C9054228}#1.0#0#..\..\..\..\Windows\SysWOW64\scrrun.dll#Microsoft Scripting Runtime
 Module=WIN32; CODE\WIN32.bas
 Module=Run; CODE\Run.bas
 Module=ROM; CODE\ROM.bas
@@ -49,7 +49,7 @@ Description="Master System Sonic 1 Visual Editor"
 CompatibleMode="0"
 MajorVer=0
 MinorVer=1
-RevisionVer=81
+RevisionVer=82
 AutoIncrementVer=1
 ServerSupportFiles=0
 VersionComments="Master System Sonic 1 Visual Editor"

@@ -55,6 +55,11 @@ Private Declare Sub kernel32_RtlMoveMemory Lib "kernel32" Alias "RtlMoveMemory" 
     ByVal Length As Long _
 )
 
+'<msdn.microsoft.com/en-us/library/windows/desktop/ms632682%28v=vs.85%29.aspx>
+Private Declare Function user32_DestroyWindow Lib "user32" Alias "DestroyWindow" ( _
+    ByVal hndWindow As Long _
+) As BOOL
+
 '/// PRIVATE VARS /////////////////////////////////////////////////////////////////////
 
 'All COM objects implement an "IUnknown" interface, and since VB6 is COM-based, _
@@ -98,8 +103,12 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
 End Sub
 
 Private Sub UserControl_Terminate()
+    'Detatch our object reference to the interface
     Set IWebBrowser2 = Nothing
 '    Set DWebBrowserEvents2 = Nothing
+    
+    'Get rid of the ActiveX control
+    Call user32_DestroyWindow(My_hWnd)
 End Sub
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////

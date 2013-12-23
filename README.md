@@ -26,6 +26,6 @@ This project has been made possible by:
 * Paul Caton's "SelfSub, SelfHook, SelfCallback" for IDE-safe subclassing
   http://planet-source-code.com/vb/scripts/ShowCode.asp?lngWId=1&txtCodeId=68737
 
-* Tanner Helland's PotoDemon's source code has been a valuable reference
+* Tanner Helland's PhotoDemon's source code has been a valuable reference
   http://tannerhelland.com/photodemon
 

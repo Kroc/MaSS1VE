@@ -222,8 +222,8 @@ Public Function Import() As Boolean
         ROMOffset:=ROM_SONICART, NumberOfTiles:=512, _
         Skip4thByte:=True, UseTransparency:=True _
     )
-    'The ring graphic is not a part of the level art. It gets painted on to the level _
-     art in the last four tiles
+    'The ring graphic is not a part of the level art. _
+     It gets painted on to the level art in the last four tiles
     Debug.Print "* Power Ups"
     Set GAME.PowerUps = Import_Art_Uncompressed(ROM_POWERUPSART, 32)
     Debug.Print "* Ring Art"

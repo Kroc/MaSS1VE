@@ -24,9 +24,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       WIN32.bas
-'Last Updated       01-OCT-13
-'Last Update        Change `""` to `vbNullString`, _
-                    very slight improvement to error handling
+'Last Updated       30-OCT-13
+'Last Update        Allow changing of LOF
 
 'The CRC function of this class is from "Calculating CRC32 With VB" by Steve McMahon _
  <www.vbaccelerator.com/home/VB/Code/Libraries/CRC32/article.asp> which was _
@@ -126,6 +125,11 @@ Public Property Get LOF() As Long
     Let LOF = UBound(Data)
 End Property
 
+Public Property Let LOF(ByVal Length As Long)
+    'Truncate / expand the file
+    ReDim Preserve Data(0 To Length - 1) As Byte
+End Property
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'GetBArr : Get a partial byte-array from the file _
@@ -137,7 +141,7 @@ Public Function GetBArr(ByVal Index As Long, ByVal Length As Long) As Byte()
 '    'This _might_ be more memory safe...? (no crashing)
 '    Dim i As Long: For i = 0 To Length - 1: Let Arr(i) = Data(Index + i): Next i
     
-    Call WIN32.kernel32_RtlMoveMemory( _
+    Call Win32.kernel32_RtlMoveMemory( _
         ptrDestination:=Arr(0), ptrSource:=Data(Index), Length:=Length _
     )
     
@@ -150,7 +154,7 @@ Public Sub SetBArr(ByVal Index As Long, ByRef Arr() As Byte)
 '    'This _might_ be more memory safe...? (no crashing)
 '    Dim i As Long: For i = 0 To Length - 1: Let Data(Index + i) = Arr(i): Next i
 
-    Call WIN32.kernel32_RtlMoveMemory( _
+    Call Win32.kernel32_RtlMoveMemory( _
         ptrDestination:=Data(Index), ptrSource:=Arr(0), Length:=UBound(Arr) _
     )
 End Sub

@@ -15,6 +15,9 @@ Public Const INI_Name = "MaSS1VE.ini"
 Public Const UpdateFile = "Update.ini"
 Public Const UpdateURL = "http://localhost/mass1ve/" & UpdateFile
 
+'We need to know what action was taken on the update form after it was closed
+Public UpdateResponse As VBA.VbMsgBoxResult
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'MAIN : It all starts here! _
@@ -41,7 +44,36 @@ Private Sub Main()
         Call VBA.MkDir(Run.AppData)
         On Error GoTo 0
     End If
+    
     'TODO: Open log file here
+    
+    'Has an update been downloaded? _
+     ----------------------------------------------------------------------------------
+    'The main form (`mdiMain`) downloads updates and displays a button to launch them, _
+     if the user closes the app without launching the update then we will launch the _
+     update automatically the next time the app is started
+    
+    'TODO: If a project file was double-clicked, we need to pass this through the _
+           updater so that it gets loaded after the update
+    
+    'Check the necessary update files have been downloaded...
+    If Run.UpdateWaiting = True Then
+        'Display the update/changelog window and wait for a response
+        Load frmUpdate
+        Call frmUpdate.Show(vbModal)
+        'If the user clicked to "Exit & Update" then do so now
+        If Run.UpdateResponse = vbOK Then
+            'Launch the installer with the path to the installation
+            Call WIN32.shell32_ShellExecute( _
+                0, vbNullString, Run.AppData & "Update.exe", _
+                "/UPDATE /D=" & Left$(Run.Path, Len(Run.Path) - 1), _
+                Run.AppData, SW_SHOWNORMAL _
+            )
+            'Quit the application _
+             (we haven't shown any other UI so exiting `sub Main` will do)
+            Exit Sub
+        End If
+    End If
     
     'Check for Sonic 1 ROM _
      ----------------------------------------------------------------------------------
@@ -73,7 +105,10 @@ Private Sub Main()
         Let frmROM.UIState = Importing
         Call frmROM.Show
         
+        'Rip the ROM data into an in-memory MaSS1VE project
         Call ROM.Import
+        
+        'Launch the main UI
         Load mdiMain
         Unload frmROM
         Call mdiMain.Show
@@ -121,6 +156,18 @@ End Property
 Public Property Get Path() As String
     'Set `Run.Path` so that program output goes to the RELEASE folder when in IDE
     Let Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "RELEASE\", vbNullString)
+End Property
+
+'PROPERTY UpdateWaiting : Check if an update has already been downloaded _
+ ======================================================================================
+Public Property Get UpdateWaiting() As Boolean
+    If Lib.FileExists(Run.AppData & "Update.ini") = True Then
+        If Lib.FileExists(Run.AppData & "Update.html") = True Then
+            If Lib.FileExists(Run.AppData & "Update.exe") = True Then
+                Let UpdateWaiting = True
+            End If
+        End If
+    End If
 End Property
 
 'PROPERTY VersionString : A friendly version number displayed in some places _

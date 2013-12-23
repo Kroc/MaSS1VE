@@ -33,8 +33,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   8
          Top             =   480
          Width           =   1815
-         _ExtentX        =   3201
-         _ExtentY        =   2778
+         _extentx        =   3201
+         _extenty        =   2778
       End
       Begin VB.PictureBox picHelpToolbar 
          Appearance      =   0  'Flat
@@ -71,10 +71,10 @@ Begin VB.MDIForm mdiMain
          Top             =   0
          Visible         =   0   'False
          Width           =   1095
-         _ExtentX        =   1931
-         _ExtentY        =   847
-         Caption         =   "UPDATE!"
-         State           =   1
+         _extentx        =   1931
+         _extenty        =   847
+         caption         =   "UPDATE!"
+         state           =   1
       End
       Begin MaSS1VE.bluControlBox cbxClose 
          Height          =   480
@@ -82,8 +82,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   4
          Top             =   0
          Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
+         _extentx        =   847
+         _extenty        =   847
       End
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
@@ -91,8 +91,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   3
          Top             =   495
          Width           =   1200
-         _ExtentX        =   2117
-         _ExtentY        =   873
+         _extentx        =   2117
+         _extenty        =   873
       End
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
@@ -101,9 +101,9 @@ Begin VB.MDIForm mdiMain
          Top             =   495
          Visible         =   0   'False
          Width           =   975
-         _ExtentX        =   1720
-         _ExtentY        =   873
-         Caption         =   "HELP"
+         _extentx        =   1720
+         _extenty        =   873
+         caption         =   "HELP"
       End
       Begin MaSS1VE.bluControlBox cbxMin 
          Height          =   480
@@ -111,9 +111,9 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   5
          Top             =   0
          Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
-         Kind            =   1
+         _extentx        =   847
+         _extenty        =   847
+         kind            =   1
       End
       Begin MaSS1VE.bluControlBox cbxMax 
          Height          =   480
@@ -121,54 +121,54 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   6
          Top             =   0
          Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
-         Kind            =   2
+         _extentx        =   847
+         _extenty        =   847
+         kind            =   2
       End
       Begin MaSS1VE.bluLabel lblMaSS1VE 
          Height          =   495
          Left            =   3840
          Top             =   0
          Width           =   4455
-         _ExtentX        =   7858
-         _ExtentY        =   873
-         Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
-         Enabled         =   0   'False
+         _extentx        =   7858
+         _extenty        =   873
+         caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
+         enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblTip 
          Height          =   495
          Left            =   10320
          Top             =   495
          Width           =   3855
-         _ExtentX        =   6800
-         _ExtentY        =   873
-         Alignment       =   1
-         Caption         =   "The quick brown fox jumps over the lazy dog"
-         Enabled         =   0   'False
+         _extentx        =   6800
+         _extenty        =   873
+         alignment       =   1
+         caption         =   "The quick brown fox jumps over the lazy dog"
+         enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblVersion 
          Height          =   480
          Left            =   12000
          Top             =   0
          Width           =   1815
-         _ExtentX        =   3201
-         _ExtentY        =   847
-         Alignment       =   1
-         Caption         =   "v0.0.0"
-         Enabled         =   0   'False
+         _extentx        =   3201
+         _extenty        =   847
+         alignment       =   1
+         caption         =   "v0.0.0"
+         enabled         =   0   'False
       End
    End
    Begin MaSS1VE.bluDownload bluDownload 
       Left            =   720
       Top             =   1200
-      _ExtentX        =   847
-      _ExtentY        =   847
+      _extentx        =   847
+      _extenty        =   847
    End
    Begin MaSS1VE.bluWindow bluWindow 
       Left            =   120
       Top             =   1200
-      _ExtentX        =   847
-      _ExtentY        =   847
+      _extentx        =   847
+      _extenty        =   847
    End
 End
 Attribute VB_Name = "mdiMain"
@@ -233,26 +233,33 @@ Private Sub MDIForm_Load()
     
     'Check for updates: _
      ----------------------------------------------------------------------------------
-    'Access the "MaSS1VE.ini" file in the App Data folder. It won't matter if it's _
-     missing, the class will just return default values
-    Dim INI As INIFile
-    Set INI = New INIFile
-    Let INI.FilePath = Run.AppData & Run.INI_Name
+    'Has an update already been downloaded and not installed yet?
+    If Run.UpdateWaiting = True Then
+        'Display the button for the update
+        Let Me.lblVersion.Visible = False
+        Let Me.btnUpdate.Visible = True
+    Else
+        'Access the "MaSS1VE.ini" file in the App Data folder. _
+         It won't matter if it's missing, the class will just return default values
+        Dim INI As INIFile
+        Set INI = New INIFile
+        Let INI.FilePath = Run.AppData & Run.INI_Name
     
-    'Has an update check been done in the last day?
-    If DateDiff("d", _
-        CDate(INI.GetDouble("LastUpdateCheck", "Update")), Now() _
-    ) > 1 Then
-        'Download the "Update.ini" file. This is asynchronous, so the code will not _
-         sit here waiting. The bluDownload control `Complete` event will fire once _
-         the file is received so go there to follow the update process
-        Let Me.bluDownload.Tag = Run.UpdateFile
-        Call Me.bluDownload.Download( _
-            Run.UpdateURL, _
-            Run.AppData & Run.UpdateFile, vbAsyncReadForceUpdate _
-        )
+        'Has an update check been done in the last day?
+        If DateDiff("d", _
+            CDate(INI.GetDouble("LastUpdateCheck", "Update")), Now() _
+        ) > 1 Then
+            'Download the "Update.ini" file. This is asynchronous, so the code will _
+             not sit here waiting. The bluDownload control `Complete` event will fire _
+             once the file is received so go there to follow the update process
+            Let Me.bluDownload.Tag = Run.UpdateFile
+            Call Me.bluDownload.Download( _
+                Run.UpdateURL, _
+                Run.AppData & Run.UpdateFile, vbAsyncReadForceUpdate _
+            )
+        End If
+        Set INI = Nothing
     End If
-    Set INI = Nothing
 End Sub
 
 'MDIFORM Reisze _
@@ -447,7 +454,7 @@ Private Sub bluDownload_Complete()
                 )
             Else
                 'Same version. Delete the Update.ini file so that it doesn't confuse _
-                 MaSS1VE should the user manually update
+                 MaSS1VE should the user manually update over the top
                 Call VBA.Kill(Run.AppData & Run.UpdateFile)
             End If
         
@@ -480,9 +487,20 @@ End Sub
 'btnUpdate CLICK : The update button that appears once an update has been downloaded _
  ======================================================================================
 Private Sub btnUpdate_Click()
+    'Display the changelog/update UI
     Load frmUpdate
     Call frmUpdate.bluWebView.Navigate(Run.AppData & "Update.html")
     Call frmUpdate.Show(vbModal, mdiMain)
+    'Was the "Exit & Update" button clicked?
+    If Run.UpdateResponse = vbOK Then
+        'Launch the installer with the path to the installation
+        Call WIN32.shell32_ShellExecute( _
+            0, vbNullString, Run.AppData & "Update.exe", _
+            "/UPDATE /D=" & Left$(Run.Path, Len(Run.Path) - 1), _
+            Run.AppData, SW_SHOWNORMAL _
+        )
+        Unload Me
+    End If
 End Sub
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////

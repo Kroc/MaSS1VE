@@ -20,8 +20,8 @@ Begin VB.Form frmUpdate
       TabIndex        =   3
       Top             =   480
       Width           =   7935
-      _extentx        =   13996
-      _extenty        =   10821
+      _ExtentX        =   13996
+      _ExtentY        =   10821
    End
    Begin MaSS1VE.bluButton btnUpdate 
       Height          =   480
@@ -29,10 +29,10 @@ Begin VB.Form frmUpdate
       TabIndex        =   2
       Top             =   6480
       Width           =   1695
-      _extentx        =   2990
-      _extenty        =   847
-      caption         =   "Exit & Update"
-      style           =   1
+      _ExtentX        =   2990
+      _ExtentY        =   847
+      Caption         =   "Exit & Update"
+      Style           =   1
    End
    Begin MaSS1VE.bluControlBox cbxMin 
       Height          =   480
@@ -40,9 +40,9 @@ Begin VB.Form frmUpdate
       TabIndex        =   1
       Top             =   0
       Width           =   480
-      _extentx        =   847
-      _extenty        =   847
-      kind            =   1
+      _ExtentX        =   847
+      _ExtentY        =   847
+      Kind            =   1
    End
    Begin MaSS1VE.bluControlBox cbxClose 
       Height          =   480
@@ -50,14 +50,14 @@ Begin VB.Form frmUpdate
       TabIndex        =   0
       Top             =   0
       Width           =   480
-      _extentx        =   847
-      _extenty        =   847
+      _ExtentX        =   847
+      _ExtentY        =   847
    End
    Begin MaSS1VE.bluWindow bluWindow 
       Left            =   6360
       Top             =   120
-      _extentx        =   847
-      _extenty        =   847
+      _ExtentX        =   847
+      _ExtentY        =   847
    End
 End
 Attribute VB_Name = "frmUpdate"
@@ -73,6 +73,12 @@ Option Explicit
 '======================================================================================
 'FORM :: frmUpdate
 
+'FORM Load _
+ ======================================================================================
+Private Sub Form_Load()
+    Let Run.UpdateResponse = vbCancel
+End Sub
+
 'FORM Resize _
  ======================================================================================
 Private Sub Form_Resize()
@@ -85,16 +91,7 @@ End Sub
 'EVENT btnUpdate CLICK _
  ======================================================================================
 Private Sub btnUpdate_Click()
-    'Quit the main application, leaving this form loaded
-    Unload mdiMain
-    'Launch the installer
-    Call WIN32.shell32_ShellExecute( _
-        Me.hWnd, _
-        vbNullString, Run.AppData & "Update.exe", _
-        "/UPDATE /D=" & Left$(Run.Path, Len(Run.Path) - 1), _
-        Run.AppData, SW_SHOWNORMAL _
-    )
-    'Unload this form, where upon the application should quit fully
+    Let Run.UpdateResponse = vbOK
     Unload Me
 End Sub
 

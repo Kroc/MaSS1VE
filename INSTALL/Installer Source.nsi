@@ -320,18 +320,19 @@ Function .onInit
                         path${CRLF}"
                 Quit
         ${EndIf}
-
+	
         ;Is the installer being "run as administrator"? We don't support running as
         ; admin just yet, it would prevent us from automatically updating
-        !insertmacro UAC_IsAdmin
-        StrCpy $IsAdmin $0
-        ${If} $IsAdmin = 1
-                MessageBox MB_ICONSTOP|MB_SETFOREGROUND "\
-                        ${PRODUCT_NAME} does not support being installed as \
-                        Administrator (it prevents updates installing correctly). \
-                        Please re-run the installer normally."
-                Abort
-        ${EndIf}
+;;NOT WORKING IN WIN7??
+;        !insertmacro UAC_IsAdmin
+;        StrCpy $IsAdmin $0
+;        ${If} $IsAdmin = 1
+;                MessageBox MB_ICONSTOP|MB_SETFOREGROUND "\
+;                        ${PRODUCT_NAME} does not support being installed as \
+;                        Administrator (it prevents updates installing correctly). \
+;                        Please re-run the installer normally."
+;                Abort
+;        ${EndIf}
 
         ClearErrors
         ${GetOptions} $9 "/PORTABLE" $8
