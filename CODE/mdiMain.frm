@@ -33,8 +33,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   8
          Top             =   480
          Width           =   1815
-         _extentx        =   3201
-         _extenty        =   2778
+         _ExtentX        =   3201
+         _ExtentY        =   2778
       End
       Begin VB.PictureBox picHelpToolbar 
          Appearance      =   0  'Flat
@@ -71,10 +71,10 @@ Begin VB.MDIForm mdiMain
          Top             =   0
          Visible         =   0   'False
          Width           =   1095
-         _extentx        =   1931
-         _extenty        =   847
-         caption         =   "UPDATE!"
-         state           =   1
+         _ExtentX        =   1931
+         _ExtentY        =   847
+         Caption         =   "UPDATE!"
+         State           =   1
       End
       Begin MaSS1VE.bluControlBox cbxClose 
          Height          =   480
@@ -82,8 +82,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   4
          Top             =   0
          Width           =   480
-         _extentx        =   847
-         _extenty        =   847
+         _ExtentX        =   847
+         _ExtentY        =   847
       End
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
@@ -91,8 +91,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   3
          Top             =   495
          Width           =   1200
-         _extentx        =   2117
-         _extenty        =   873
+         _ExtentX        =   2117
+         _ExtentY        =   873
       End
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
@@ -101,9 +101,9 @@ Begin VB.MDIForm mdiMain
          Top             =   495
          Visible         =   0   'False
          Width           =   975
-         _extentx        =   1720
-         _extenty        =   873
-         caption         =   "HELP"
+         _ExtentX        =   1720
+         _ExtentY        =   873
+         Caption         =   "HELP"
       End
       Begin MaSS1VE.bluControlBox cbxMin 
          Height          =   480
@@ -111,9 +111,9 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   5
          Top             =   0
          Width           =   480
-         _extentx        =   847
-         _extenty        =   847
-         kind            =   1
+         _ExtentX        =   847
+         _ExtentY        =   847
+         Kind            =   1
       End
       Begin MaSS1VE.bluControlBox cbxMax 
          Height          =   480
@@ -121,54 +121,54 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   6
          Top             =   0
          Width           =   480
-         _extentx        =   847
-         _extenty        =   847
-         kind            =   2
+         _ExtentX        =   847
+         _ExtentY        =   847
+         Kind            =   2
       End
       Begin MaSS1VE.bluLabel lblMaSS1VE 
          Height          =   495
          Left            =   3840
          Top             =   0
          Width           =   4455
-         _extentx        =   7858
-         _extenty        =   873
-         caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
-         enabled         =   0   'False
+         _ExtentX        =   7858
+         _ExtentY        =   873
+         Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
+         Enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblTip 
          Height          =   495
          Left            =   10320
          Top             =   495
          Width           =   3855
-         _extentx        =   6800
-         _extenty        =   873
-         alignment       =   1
-         caption         =   "The quick brown fox jumps over the lazy dog"
-         enabled         =   0   'False
+         _ExtentX        =   6800
+         _ExtentY        =   873
+         Alignment       =   1
+         Caption         =   "The quick brown fox jumps over the lazy dog"
+         Enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblVersion 
          Height          =   480
          Left            =   12000
          Top             =   0
          Width           =   1815
-         _extentx        =   3201
-         _extenty        =   847
-         alignment       =   1
-         caption         =   "v0.0.0"
-         enabled         =   0   'False
+         _ExtentX        =   3201
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "v0.0.0"
+         Enabled         =   0   'False
       End
    End
    Begin MaSS1VE.bluDownload bluDownload 
       Left            =   720
       Top             =   1200
-      _extentx        =   847
-      _extenty        =   847
+      _ExtentX        =   847
+      _ExtentY        =   847
    End
    Begin MaSS1VE.bluWindow bluWindow 
       Left            =   120
       Top             =   1200
-      _extentx        =   847
-      _extenty        =   847
+      _ExtentX        =   847
+      _ExtentY        =   847
    End
 End
 Attribute VB_Name = "mdiMain"
@@ -178,7 +178,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013
+'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================

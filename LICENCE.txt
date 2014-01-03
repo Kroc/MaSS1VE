@@ -1,6 +1,6 @@
 
 	MaSS1VE :: The Master System Sonic 1 Visual Editor
-		Copyright (CC-BY) Kroc Camen 2013
+		Copyright (CC-BY) Kroc Camen 2013-14
 ========================================================================
 
 The source code and other resources of this project are licensed

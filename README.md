@@ -12,7 +12,7 @@ If you can help, contact kroc@camendesign.com
 
 * Icon / art work
 * VB6 programming
-* ROM research (see details [here] (http://info.sonicretro.org/SCHG:Sonic_the_Hedgehog_%288-bit%29#Community_Help))
+* Help [disassembling the game] (https://github.com/Kroc/Sonic1-Z80-ASM)
 
 Discuss the project here:
 http://forum.camendesign.com/mass1ve-the-master-system-sonic-1-visual-editor
@@ -27,5 +27,5 @@ This project has been made possible by:
   http://planet-source-code.com/vb/scripts/ShowCode.asp?lngWId=1&txtCodeId=68737
 
 * Tanner Helland's PhotoDemon's source code has been a valuable reference
-  http://tannerhelland.com/photodemon
+  http://photodemon.org
 

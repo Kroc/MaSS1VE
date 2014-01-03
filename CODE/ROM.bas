@@ -1,7 +1,7 @@
 Attribute VB_Name = "ROM"
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013
+'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================

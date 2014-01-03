@@ -20,10 +20,10 @@ Begin VB.Form frmWelcome
       Top             =   8040
       Visible         =   0   'False
       Width           =   360
-      _extentx        =   635
-      _extenty        =   635
-      style           =   1
-      kind            =   3
+      _ExtentX        =   635
+      _ExtentY        =   635
+      Style           =   1
+      Kind            =   3
    End
    Begin VB.Label Label2 
       Appearance      =   0  'Flat
@@ -74,7 +74,7 @@ Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013
+'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
