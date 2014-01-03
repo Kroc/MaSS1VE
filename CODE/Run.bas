@@ -13,7 +13,7 @@ Option Explicit
 Public Const INI_Name = "MaSS1VE.ini"
 
 Public Const UpdateFile = "Update.ini"
-Public Const UpdateURL = "http://localhost/mass1ve/" & UpdateFile
+Public Const UpdateURL = "http://localhost/mass1ve/download/" & UpdateFile
 
 'We need to know what action was taken on the update form after it was closed
 Public UpdateResponse As VBA.VbMsgBoxResult

@@ -358,14 +358,10 @@ Continue_LevelPointers:
         'Copy across the unknown and unimplemented stuff from the ROM header, it's _
          needed when it comes to exporting
         Let .ROM_SP = BIN.B(LevelHeader)          'Solidity pointer -- UNDOCUMENTED
-        Let .ROM_CL = BIN.B(LevelHeader + 5)      'Crop Left
-        Let .ROM_LX = BIN.B(LevelHeader + 6)      'Level X Offset
-        Let .ROM_XX = BIN.B(LevelHeader + 7)      'Unknown byte 2
-        Let .ROM_LW = BIN.B(LevelHeader + 8)      'Level Width
-        Let .ROM_CT = BIN.B(LevelHeader + 9)      'Crop Top
-        Let .ROM_LY = BIN.B(LevelHeader + 10)     'Level Y Offset
-        Let .ROM_XH = BIN.B(LevelHeader + 11)     'Extend Height
-        Let .ROM_LH = BIN.B(LevelHeader + 12)     'Level height
+        Let .ROM_LX = BIN.IntLE(LevelHeader + 5)  'Level X Offset
+        Let .ROM_LW = BIN.IntLE(LevelHeader + 7)  'Level Width
+        Let .ROM_LY = BIN.IntLE(LevelHeader + 9)  'Level Y Offset
+        Let .ROM_LH = BIN.IntLE(LevelHeader + 11) 'Level height
         Let .ROM_BM = BIN.IntLE(LevelHeader + 19) 'Pointer from $10000 to the Block Mappings ($10000)
         Let .ROM_LA = BIN.IntLE(LevelHeader + 21) 'Pointer from $30000 to the Level Art ($32FE6)
         Let .ROM_SA = BIN.IntLE(LevelHeader + 24) 'Pointer from $24000 to the Sprite Art ($2A12A)
@@ -761,13 +757,10 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
                 'Level dimensions:
                 Let BIN.IntLE(Pointer + 1) = .Width     'Floor Layout width
                 Let BIN.IntLE(Pointer + 3) = .Height    'Floor Layout height
-                Let BIN.B(Pointer + 6) = .ROM_LX        'Level X offset
-                Let BIN.B(Pointer + 10) = .ROM_LY       'Level Y offset
-                Let BIN.B(Pointer + 8) = .ROM_LW        'Level Width
-                Let BIN.B(Pointer + 12) = .ROM_LH       'Level Height
-                Let BIN.B(Pointer + 11) = .ROM_XH       'Extend Height
-                Let BIN.B(Pointer + 5) = .ROM_CL        'Crop Left
-                Let BIN.B(Pointer + 9) = .ROM_CT        'Crop Top
+                Let BIN.IntLE(Pointer + 5) = .ROM_LX    'Level X offset
+                Let BIN.IntLE(Pointer + 9) = .ROM_LY    'Level Y offset
+                Let BIN.IntLE(Pointer + 7) = .ROM_LW    'Level Width
+                Let BIN.IntLE(Pointer + 11) = .ROM_LH   'Level Height
                 
                 'Level attributes
                 Let BIN.B(Pointer + 36) = .ROM_MU       'Music index
@@ -788,7 +781,6 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
                 Let BIN.IntLE(Pointer + 30) = .ROM_OL   'Object Layout pointer
                 
                 'Unknown / unimplemented bytes:
-                Let BIN.B(Pointer + 7) = .ROM_XX        'Unknown byte
                 Let BIN.B(Pointer + 35) = 0             'Always 0
                 Let BIN.B(Pointer + 23) = 9             'Always 9
             End With

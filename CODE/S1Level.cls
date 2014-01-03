@@ -62,13 +62,9 @@ Private My_Rings As Long
 'Documentation for these variables can be found here: _
  <info.sonicretro.org/SCHG:Sonic_the_Hedgehog_%288-bit%29#Level_Headers>
 Public ROM_SP As Byte       'Solidity pointer (what tiles are solid / passable)
-Public ROM_CL As Byte       'Crop Left
-Public ROM_LX As Byte       'Level X Offset
-Public ROM_XX As Long       'Unknown byte
+Public ROM_LX As Long       'Level X Offset
 Public ROM_LW As Long       'Level Width
-Public ROM_CT As Long       'Crop Top
 Public ROM_LY As Long       'Level Y Offset
-Public ROM_XH As Long       'Extend Height
 Public ROM_LH As Long       'Level Height
 Public ROM_BM As Long       'Pointer from $10000 to the Block Mapping ($10000)
 Public ROM_LA As Long       'Pointer from $30000 to the Level Art ($32FE6)
@@ -162,8 +158,6 @@ End Property
 Public Property Get FloorLayout() As S1FloorLayout: Set FloorLayout = My_FloorLayout: End Property
 Public Property Set FloorLayout(ByRef NewFloorLayout As S1FloorLayout)
     'TODO: Update the level header width/height
-    'Problem: The LW/LH headers are not understood and mean that we currently cannot _
-              allow swapping of floor layouts
     Set My_FloorLayout = NewFloorLayout
     'Re-count the number of rings on the level
     Let My_Rings = CountRings()
@@ -287,6 +281,7 @@ Private Function CountRings() As Long
     For i = 0 To 255
         'Is there a ring monitor object here?
         If My_ObjectLayout.Object(i).O = Monitor_Ring Then
+            'TODO: This should be level dimensions, not floor layout dimensions!
             'Is it within the level dimensions? _
              (don't count ring monitors that lie outside of the floor layout because _
               the object layout is larger than the floor layout)
