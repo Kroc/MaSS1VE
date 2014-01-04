@@ -24,8 +24,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       WIN32.bas
-'Last Updated       02-OCT-13
-'Last Update        Improvement in `Save` error handling
+'Last Updated       03-JAN-14
+'Last Update        Paint function now returns a value!
 
 'By Kroc Camen <kroc@camendesign.com>
 'Written using MSDN documentaion with hints and tricks learnt from: _
@@ -557,7 +557,7 @@ Public Function Paint( _
     
     'Should we exclude the background? (use transparency)
     If IsTransparent = True Then
-        Call gdi32_GdiTransparentBlt( _
+        Let Paint = gdi32_GdiTransparentBlt( _
             hndDestDC:=hndDeviceContext, _
             DestLeft:=DestLeft, DestTop:=DestTop, _
             DestWidth:=DestWidth, DestHeight:=DestHeight, _
@@ -569,7 +569,7 @@ Public Function Paint( _
     Else
         'Do we need to stretch?
         If SrcWidth <> DestWidth Or SrcHeight <> DestHeight Then
-            Call gdi32_StretchBlt( _
+            Let Paint = gdi32_StretchBlt( _
                 hndDestDC:=hndDeviceContext, _
                 DestLeft:=DestLeft, DestTop:=DestTop, _
                 Width:=DestWidth, Height:=DestHeight, _
@@ -580,7 +580,7 @@ Public Function Paint( _
             )
         Else
             'Do a simple straight copy without stretching:
-            Call gdi32_BitBlt( _
+            Let Paint = gdi32_BitBlt( _
                 hndDestDC:=hndDeviceContext, _
                 DestLeft:=DestLeft, DestTop:=DestTop, _
                 Width:=DestWidth, Height:=DestHeight, _

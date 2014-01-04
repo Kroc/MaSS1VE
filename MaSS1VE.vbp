@@ -36,6 +36,7 @@ Class=INIFile; CODE\INIFile.cls
 UserControl=CODE\Blu\bluWebView.ctl
 Form=CODE\frmUpdate.frm
 ResFile32="RES\CompiledResources.res"
+Class=S1SpriteLayout; CODE\S1SpriteLayout.cls
 IconForm="frmROM"
 Startup="Sub Main"
 HelpFile=""
