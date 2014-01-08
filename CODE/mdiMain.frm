@@ -13,6 +13,7 @@ Begin VB.MDIForm mdiMain
    ScrollBars      =   0   'False
    StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
+   WindowState     =   2  'Maximized
    Begin VB.PictureBox picHelp 
       Align           =   4  'Align Right
       Appearance      =   0  'Flat

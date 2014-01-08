@@ -34,13 +34,21 @@ Public EndSignPalette As S1Palette
 Public EndSignTileset As S1Tileset
     
 Public BossPalette As S1Palette
-Public BossTileset As S1Tileset
+Public BossTileset1 As S1Tileset
+Public BossTileset2 As S1Tileset
+Public BossTileset3 As S1Tileset
+Public CapsuleTileset As S1Tileset
+
+'The list of objects in the game (i.e. for ObjectLayouts)
+Public Objects() As S1SpriteLayout
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'Clear : Free the project data from the app, clearing the memory in use _
  ======================================================================================
 Public Sub Clear()
+    Erase Objects
+    
     Erase Levels
     Set LevelPalettes = Nothing:    Set LevelPalettes = New Collection
     Set SpritePalettes = Nothing:   Set SpritePalettes = New Collection
@@ -62,5 +70,7 @@ Public Sub Clear()
     Set EndSignTileset = Nothing
     
     Set BossPalette = Nothing
-    Set BossTileset = Nothing
+    Set BossTileset1 = Nothing
+    Set BossTileset2 = Nothing
+    Set BossTileset3 = Nothing
 End Sub

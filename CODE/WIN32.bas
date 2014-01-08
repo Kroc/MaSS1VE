@@ -11,8 +11,8 @@ Option Explicit
 
 'Status             In Flux
 'Dependencies       Lib.bas
-'Last Updated       16-OCT-13
-'Last Update        Added `ShellExecute`
+'Last Updated       08-JAN-14
+'Last Update        Added an enum for setBkMode
 
 'COMMON _
  --------------------------------------------------------------------------------------
@@ -725,8 +725,13 @@ End Enum
  <msdn.microsoft.com/en-us/library/windows/desktop/dd162965%28v=vs.85%29.aspx>
 Public Declare Function gdi32_SetBkMode Lib "gdi32" Alias "SetBkMode" ( _
     ByVal hndDeviceContext As Long, _
-    ByVal Mode As Long _
+    ByVal Mode As BKMODE _
 ) As Long
+
+Public Enum BKMODE
+    TRANSPARENT = 1
+    OPAQUE = 2
+End Enum
 
 'Draw some text _
  <msdn.microsoft.com/en-us/library/windows/desktop/dd145133%28v=vs.85%29.aspx>

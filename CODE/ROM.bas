@@ -235,12 +235,13 @@ Public Function Import() As Boolean
     Set GAME.UnderwaterSpritePalette = Import_Palette(ROM_UWPALETTE + 16)
     Debug.Print "* End Sign"
     Set GAME.EndSignPalette = Import_Palette(ROM_ENDSIGN_PALETTE)
-    Set GAME.EndSignTileset = Import_Art(ROM_ENDSIGN_ART)
-    Call GAME.EndSignTileset.ApplyPalette(GAME.EndSignPalette)
-    Debug.Print "* Boss"
+    Set GAME.EndSignTileset = Import_Art(ROM_ENDSIGN_ART, GAME.EndSignPalette)
+    Debug.Print "* Bosses pt.I, II, III"
     Set GAME.BossPalette = Import_Palette(ROM_BOSS_PALETTE)
-    Set GAME.BossTileset = Import_Art(ROM_BOSS_ART)
-    Call GAME.BossTileset.ApplyPalette(GAME.BossPalette)
+    Set GAME.BossTileset1 = Import_Art(ROM_BOSS_ART, GAME.BossPalette)
+    Set GAME.BossTileset2 = Import_Art(&H3E508, GAME.BossPalette)
+    Set GAME.BossTileset3 = Import_Art(&H3EF3F, GAME.BossPalette)
+    Set GAME.CapsuleTileset = Import_Art(&H3DA28, GAME.BossPalette)
     
     'Load Levels: _
      ==================================================================================
@@ -597,6 +598,101 @@ Continue_LevelPointers:
         Set FloorLayout1 = Nothing
         Set FloorLayout2 = Nothing
     End If
+    
+    'OBJECTS: _
+     ==================================================================================
+    Debug.Print "Objects:"
+    'In the ROM, object #0 is always the player, added in code before loading the _
+     Object Layout
+    ReDim GAME.Objects(1 To 85) As S1SpriteLayout
+    
+    'Power Ups: -----------------------------------------------------------------------
+    Set GAME.Objects(&H1) = Import_SpriteLayout(SL_Monitor_Rings, &H5BBF&, "Monitor - Rings", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H2) = Import_SpriteLayout(SL_Monitor_Speed, &H5BBF&, "Monitor - Speed Shoes", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H3) = Import_SpriteLayout(SL_Monitor_Life, &H5BBF&, "Monitor - Extra Life", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H4) = Import_SpriteLayout(SL_Monitor_Shield, &H5BBF&, "Monitor - Shield", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H5) = Import_SpriteLayout(SL_Monitor_Stars, &H5BBF&, "Monitor - Invincibility", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H51) = Import_SpriteLayout(SL_Monitor_Check, &H5BBF&, "Monitor - Checkpoint", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H52) = Import_SpriteLayout(SL_Monitor_Cont, &H5BBF&, "Monitor - Continue", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H6) = Import_SpriteLayout(SL_Emerald, &H5F10&, "Emerald", GAME.HUD, GAME.Levels(0).SpritePalette)
+    'TODO: Bubbles (&H41) will require special construction
+    
+    'End Sign / Boss / Capsule: -------------------------------------------------------
+    Set GAME.Objects(&H7) = Import_SpriteLayout(SL_Normal, &H61DC&, "End Sign", GAME.EndSignTileset, GAME.EndSignPalette)
+    Set GAME.Objects(&H12) = Import_SpriteLayout(SL_Normal, &H72F8&, "Boss - Green Hill", GAME.BossTileset1, GAME.BossPalette)
+    Set GAME.Objects(&H48) = Import_SpriteLayout(SL_Normal, &H865A&, "Boss - Bridge", GAME.BossTileset2, GAME.BossPalette)
+    Set GAME.Objects(&H2C) = Import_SpriteLayout(SL_Normal, &H81F4&, "Boss - Jungle", GAME.BossTileset1, GAME.BossPalette)
+    'TODO: Fix underwater boss palette
+    Set GAME.Objects(&H49) = Import_SpriteLayout(SL_Normal, &H865A&, "Boss - Labyrinth", GAME.BossTileset2, GAME.UnderwaterSpritePalette)
+    Set GAME.Objects(&H4A) = Import_SpriteLayout(SL_Normal, &HBAF9&, "Boss - Scrap Brain", GAME.BossTileset3, GAME.BossPalette)
+    'TODO: The capsule (&H25) is incomplete
+    Set GAME.Objects(&H25) = Import_SpriteLayout(SL_Normal, &H752E&, "Capsule", GAME.CapsuleTileset, GAME.BossPalette)
+'    Set GAME.Objects(&H22) = Import_SpriteLayout(SL_Normal, &H7638&, "Capsule - Rabbit", GAME.CapsuleTileset, GAME.BossPalette)
+'    Set GAME.Objects(&H24) = Import_SpriteLayout(SL_Normal, &H7752&, "Capsule - Bird", GAME.CapsuleTileset, GAME.BossPalette)
+    'TODO: Boss - Scrap Brain (&H22) will require special construction
+    
+    'Badnicks: ------------------------------------------------------------------------
+    Set GAME.Objects(&H8) = Import_SpriteLayout(SL_Normal, &H66F9&, "Badnick - Crabmeat", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&HE) = Import_SpriteLayout(SL_Normal, &H6CF9&, "Badnick - Buzz Bomber", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H10) = Import_SpriteLayout(SL_Normal, &H6ECB&, "Badnick - Moto Bug", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H11) = Import_SpriteLayout(SL_Normal, &H6FED&, "Badnick - Newtron", GAME.Levels(6).SpriteArt, GAME.Levels(6).SpritePalette)
+    Set GAME.Objects(&H1B) = Import_SpriteLayout(SL_Normal, &HA30B&, "Badnick - Ballhog", GAME.Levels(12).SpriteArt, GAME.Levels(12).SpritePalette)
+    Set GAME.Objects(&H26) = Import_SpriteLayout(SL_Normal, &H7DE1&, "Badnick - Chopper", GAME.Levels(3).SpriteArt, GAME.Levels(3).SpritePalette)
+    Set GAME.Objects(&H2D) = Import_SpriteLayout(SL_Normal, &H837E&, "Badnick - Yadrin", GAME.Levels(3).SpriteArt, GAME.Levels(3).SpritePalette)
+    Set GAME.Objects(&H32) = Import_SpriteLayout(SL_Normal, &HAD0B&, "Badnick - Bomb", GAME.Levels(15).SpriteArt, GAME.Levels(15).SpritePalette)
+    'TODO: Need to draw spikes around Unidos
+    Set GAME.Objects(&H35) = Import_SpriteLayout(SL_Normal, &HB0D5&, "Badnick - Unidos", GAME.Levels(9).SpriteArt, GAME.Levels(9).SpritePalette)
+    Set GAME.Objects(&H3C) = Import_SpriteLayout(SL_Normal, &H88E2&, "Badnick - Jaws", GAME.Levels(9).SpriteArt, GAME.UnderwaterSpritePalette)
+    Set GAME.Objects(&H44) = Import_SpriteLayout(SL_Normal, &H90B3&, "Badnick - Burrobot", GAME.Levels(9).SpriteArt, GAME.UnderwaterSpritePalette)
+    'TODO: Caterkiller (&H1F) will require special construction
+    
+    'Platforms: -----------------------------------------------------------------------
+    Set GAME.Objects(&H9) = Import_SpriteLayout(SL_Normal, &H6911&, "Platform - Swinging", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    'NOTE: this object uses a sprite layout at $6923 for Jungle, though the object _
+           appears unused
+    Set GAME.Objects(&HB) = Import_SpriteLayout(SL_Normal, &H6911&, "Platform", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    'NOTE: this object uses a sprite layout at $6923 for Jungle, though the object _
+           appears unused
+    Set GAME.Objects(&HF) = Import_SpriteLayout(SL_Normal, &H6911&, "Platform - Moving", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
+    Set GAME.Objects(&H27) = Import_SpriteLayout(SL_Normal, &H7E89&, "Platform - Vertical Log", GAME.Levels(6).SpriteArt, GAME.Levels(6).SpritePalette)
+    Set GAME.Objects(&H28) = Import_SpriteLayout(SL_Normal, &H7ED9&, "Platform - Horizontal Log", GAME.Levels(6).SpriteArt, GAME.Levels(6).SpritePalette)
+    Set GAME.Objects(&H29) = Import_SpriteLayout(SL_Normal, &H8022&, "Platform - Rolling Log", GAME.Levels(6).SpriteArt, GAME.Levels(6).SpritePalette)
+    'TODO: Something wrong with the sprite layout here
+'    Set GAME.Objects(&H3B) = Import_SpriteLayout(SL_Normal, &HB5B5&, "Platform - Flying Up-Down", GAME.Levels(16).SpriteArt, GAME.Levels(16).SpritePalette)
+    Set GAME.Objects(&H2E) = Import_SpriteLayout(SL_Normal, &H8481&, "Platform - Falling Bridge", GAME.Levels(3).SpriteArt, GAME.Levels(3).SpritePalette)
+    Set GAME.Objects(&H38) = Import_SpriteLayout(SL_Normal, &HB37B&, "Platform - Flying", GAME.Levels(15).SpriteArt, GAME.Levels(15).SpritePalette)
+    Set GAME.Objects(&H45) = Import_SpriteLayout(SL_Normal, &H91DE&, "Platform - Float Up", GAME.Levels(9).SpriteArt, GAME.UnderwaterSpritePalette)
+    'TODO: Where is the left flipper?
+    Set GAME.Objects(&H4C) = Import_SpriteLayout(SL_Normal, &H9A7E&, "Platform - Flipper", GAME.Levels(28).SpriteArt, GAME.Levels(28).SpritePalette)
+    Set GAME.Objects(&H21) = Import_SpriteLayout(SL_Normal, &H9B6E&, "Platform - Moving Bumper", GAME.Levels(28).SpriteArt, GAME.Levels(28).SpritePalette)
+    'TODO: Balance (&H4E) will require special construction
+    
+    'Traps: ---------------------------------------------------------------------------
+    Set GAME.Objects(&H1A) = Import_SpriteLayout(SL_Normal, &HA197&, "Trap - Electric Sphere", GAME.Levels(12).SpriteArt, GAME.Levels(12).SpritePalette)
+    Set GAME.Objects(&H33) = Import_SpriteLayout(SL_Normal, &HAE81&, "Trap - Cannon", GAME.Levels(15).SpriteArt, GAME.Levels(15).SpritePalette)
+    Set GAME.Objects(&H39) = Import_SpriteLayout(SL_Normal, &HB45B&, "Trap - Spiked Wall", GAME.Levels(15).SpriteArt, GAME.Levels(15).SpritePalette)
+    Set GAME.Objects(&H3D) = Import_SpriteLayout(SL_Normal, &H8987&, "Trap - Rotating Spiked Ball", GAME.Levels(9).SpriteArt, GAME.Levels(9).SpritePalette)
+    Set GAME.Objects(&H3F) = Import_SpriteLayout(SL_Normal, &H8D39&, "Trap - Fireball Head", GAME.Levels(9).SpriteArt, GAME.Levels(9).SpritePalette)
+    'TODO: Flame Thrower (&H16) will require special construction
+    'TODO: Propeller (&H31) will require special construction
+    'TODO: Spear (&H3D) will require special construction
+    'TODO: Rotating Turret (&H37) will require special construction
+    'TODO: Fixed Turret (&H3A) will require special construction
+    
+    'Misc: ----------------------------------------------------------------------------
+    Set GAME.Objects(&H17) = Import_SpriteLayout(SL_Normal, &H9F2B&, "Door - Left Only", GAME.Levels(12).SpriteArt, GAME.Levels(12).SpritePalette)
+    Set GAME.Objects(&H18) = Import_SpriteLayout(SL_Normal, &H9FEE&, "Door - Right Only", GAME.Levels(12).SpriteArt, GAME.Levels(12).SpritePalette)
+    Set GAME.Objects(&H19) = Import_SpriteLayout(SL_Normal, &HA0B1&, "Door - Auto", GAME.Levels(12).SpriteArt, GAME.Levels(12).SpritePalette)
+    Set GAME.Objects(&H1D) = Import_SpriteLayout(SL_Normal, &HA493&, "Switch", GAME.Levels(12).SpriteArt, GAME.Levels(12).SpritePalette)
+    Set GAME.Objects(&H1E) = Import_SpriteLayout(SL_Normal, &HA51A&, "Door - Switch Activated", GAME.Levels(12).SpriteArt, GAME.Levels(12).SpritePalette)
+    'TODO: Flower (&H50) will require special construction
+    
+    'Meta: ----------------------------------------------------------------------------
+    'TODO: Clouds (&H30) will require a symbol (or a tick box?)
+    'TODO: Water line (&H40) will require a symbol
+    'TODO: Trip zone (&H4B) will require a symbol
+    
+    
     
     'BLOCK MAPPINGS: _
      ==================================================================================
@@ -1200,3 +1296,39 @@ End Function
 Private Function EncodeSMSColour(Colour As Long) As Byte
     '
 End Function
+
+'Import_SpriteLayout _
+ ======================================================================================
+Private Function Import_SpriteLayout( _
+    ByVal Kind As S1SpriteLayout_Kind, ByVal ROMOffset As Long, _
+    Optional ByVal Title As String = "", _
+    Optional ByVal Tileset As S1Tileset = Nothing, _
+    Optional ByVal Palette As S1Palette = Nothing _
+) As S1SpriteLayout
+    'Create a new sprite layout in the return field
+    Set Import_SpriteLayout = New S1SpriteLayout
+    'Set the sprite type (for handling special cases)
+    Let Import_SpriteLayout.Kind = Kind
+    
+    'If a title is provided, assign it
+    Let Import_SpriteLayout.Title = Title
+    Debug.Print "- SpriteLayout: @$" & Hex(ROMOffset) & " '" & Title & "'"
+    
+    'Set Palette and Tileset
+    Set Import_SpriteLayout.Tileset = Tileset
+    Set Import_SpriteLayout.Palette = Palette
+    
+    Dim Y As Long
+    For Y = 0 To 2
+        'If the first index in a row is a $FF, then finish the layout early _
+         (the remaining indexes remain $FF)
+        If BIN.B(ROMOffset) = &HFF Then Exit Function
+        
+        Dim X As Long
+        For X = 0 To 5
+            Let Import_SpriteLayout.Layout((Y * 6) + X) = BIN.B(ROMOffset)
+            Let ROMOffset = ROMOffset + 1
+        Next X
+    Next Y
+End Function
+

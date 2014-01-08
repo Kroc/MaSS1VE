@@ -135,9 +135,9 @@ End Sub
 'EVENT My_ObjectLayout WATERLEVELCHANGE : Some action changed the water level _
  ======================================================================================
 Private Sub My_ObjectLayout_WaterLevelChange()
-    'The ObjectLayout will trigger an event when object &H40 is set which controls the _
-     where the water line is in the level (i.e. Labyrinth). Pass this up to the editor _
-     so it can repaint
+    'The ObjectLayout will trigger an event when object &H40 is set which controls _
+     where the water line is in the level (i.e. Labyrinth), _
+     Pass this up to the editor so it can repaint
     RaiseEvent WaterLevelChange
 End Sub
 
@@ -284,7 +284,7 @@ Private Function CountRings() As Long
             'TODO: This should be level dimensions, not floor layout dimensions!
             'Is it within the level dimensions? _
              (don't count ring monitors that lie outside of the floor layout because _
-              the object layout is larger than the floor layout)
+              the object layout could be larger than the floor layout!)
             If My_ObjectLayout.Object(i).X < Me.Width _
             And My_ObjectLayout.Object(i).Y < Me.Height Then
                 Let CountRings = CountRings + 10

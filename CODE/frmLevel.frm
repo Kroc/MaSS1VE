@@ -1235,43 +1235,43 @@ Private Sub PaintBlock( _
     )
 End Sub
 
-'PaintObject _
- ======================================================================================
-Private Sub PaintObject(ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal Index As OBJECT_TYPE)
-    Select Case Index
-        'POWER UPS
-        Case OBJECT_TYPE.Monitor_Ring
-            Call Sprites.Monitor_Ring.Paint(hDC, X + 4, Y - 7)
-        Case OBJECT_TYPE.Monitor_Speed
-            Call Sprites.Monitor_Speed.Paint(hDC, X + 4, Y - 7)
-        Case OBJECT_TYPE.Monitor_Life
-            Call Sprites.Monitor_Life.Paint(hDC, X + 4, Y - 7)
-        Case OBJECT_TYPE.Monitor_Shield
-            Call Sprites.Monitor_Shield.Paint(hDC, X + 4, Y - 7)
-        Case OBJECT_TYPE.Monitor_Stars
-            Call Sprites.Monitor_Stars.Paint(hDC, X + 4, Y - 7)
-        Case OBJECT_TYPE.Monitor_Check
-            Call Sprites.Monitor_Check.Paint(hDC, X + 4, Y - 7)
-        Case OBJECT_TYPE.Monitor_Cont
-            Call Sprites.Monitor_Cont.Paint(hDC, X + 4, Y - 7)
-        Case OBJECT_TYPE.Emerald
-            Call Sprites.Emerald.Paint(hDC, X + 8, Y)
-            
-        Case OBJECT_TYPE.END_SIGN
-            Call Sprites.EndSign.Paint(hDC, X, Y + 9)
-            
-        Case OBJECT_TYPE.BAD_MOTO
-            Call Sprites.Badnick_Motobug.Paint(hDC, X, Y)
-        Case OBJECT_TYPE.BAD_CRAB
-            Call Sprites.Badnick_Crabmeat.Paint(hDC, X, Y - 8)
-        Case OBJECT_TYPE.BAD_BUZZ
-            Call Sprites.Badnick_BuzzBomber.Paint(hDC, X, Y)
-        Case OBJECT_TYPE.BAD_NEWT
-            Call Sprites.Badnick_Newtron.Paint(hDC, X + 8, Y)
-        Case OBJECT_TYPE.BAD_CHOP
-            Call Sprites.Badnick_Chopper.Paint(hDC, X + 8, Y + 8)
-    End Select
-End Sub
+''PaintObject _
+' ======================================================================================
+'Private Sub PaintObject(ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByVal Index As OBJECT_TYPE)
+'    Select Case Index
+'        'POWER UPS
+'        Case OBJECT_TYPE.Monitor_Ring
+'            Call Sprites.Monitor_Ring.Paint(hDC, X + 4, Y - 7)
+'        Case OBJECT_TYPE.Monitor_Speed
+'            Call Sprites.Monitor_Speed.Paint(hDC, X + 4, Y - 7)
+'        Case OBJECT_TYPE.Monitor_Life
+'            Call Sprites.Monitor_Life.Paint(hDC, X + 4, Y - 7)
+'        Case OBJECT_TYPE.Monitor_Shield
+'            Call Sprites.Monitor_Shield.Paint(hDC, X + 4, Y - 7)
+'        Case OBJECT_TYPE.Monitor_Stars
+'            Call Sprites.Monitor_Stars.Paint(hDC, X + 4, Y - 7)
+'        Case OBJECT_TYPE.Monitor_Check
+'            Call Sprites.Monitor_Check.Paint(hDC, X + 4, Y - 7)
+'        Case OBJECT_TYPE.Monitor_Cont
+'            Call Sprites.Monitor_Cont.Paint(hDC, X + 4, Y - 7)
+'        Case OBJECT_TYPE.Emerald
+'            Call Sprites.Emerald.Paint(hDC, X + 8, Y)
+'
+'        Case OBJECT_TYPE.END_SIGN
+'            Call Sprites.EndSign.Paint(hDC, X, Y + 9)
+'
+'        Case OBJECT_TYPE.BAD_MOTO
+'            Call Sprites.Badnick_Motobug.Paint(hDC, X, Y)
+'        Case OBJECT_TYPE.BAD_CRAB
+'            Call Sprites.Badnick_Crabmeat.Paint(hDC, X, Y - 8)
+'        Case OBJECT_TYPE.BAD_BUZZ
+'            Call Sprites.Badnick_BuzzBomber.Paint(hDC, X, Y)
+'        Case OBJECT_TYPE.BAD_NEWT
+'            Call Sprites.Badnick_Newtron.Paint(hDC, X + 8, Y)
+'        Case OBJECT_TYPE.BAD_CHOP
+'            Call Sprites.Badnick_Chopper.Paint(hDC, X + 8, Y + 8)
+'    End Select
+'End Sub
 
 'RepaintLevel : Redraw the whole level and refresh the viewport _
  ======================================================================================
@@ -1338,21 +1338,38 @@ Private Sub RepaintLevel()
         With My_Level.ObjectLayout.Object(i)
             'If there's an object in this slot
             If .O > 0 Then
-                'Above or below the water line?
-                If .Y < MyLevel_ObjectLayout_WaterLevel Then
-                    'Above, use the level's given palette
-                    If Not Sprites.Palette Is My_Level.SpritePalette _
-                        Then Set Sprites.Palette = My_Level.SpritePalette
+                If Not GAME.Objects(.O) Is Nothing Then
+                    'Above or below the water line?
+                    If .Y < MyLevel_ObjectLayout_WaterLevel Then
+                        'Above, use the level's given palette
+    '                    If Not Sprites.Palette Is My_Level.SpritePalette _
+    '                        Then Set Sprites.Palette = My_Level.SpritePalette
+                        If Not Sprites.Palette Is My_Level.SpritePalette _
+                            Then Set GAME.Objects(.O).Palette = My_Level.SpritePalette
+                    Else
+                        'Below, use the specific underwater palette
+    '                    If Not Sprites.Palette Is GAME.UnderwaterSpritePalette _
+    '                        Then Set Sprites.Palette = GAME.UnderwaterSpritePalette
+                        If Not Sprites.Palette Is GAME.UnderwaterSpritePalette _
+                            Then Set GAME.Objects(.O).Palette = GAME.UnderwaterSpritePalette
+                    End If
+                    'Now paint the object
+    '                Call PaintObject( _
+    '                    hDC:=vwpLevel_hDC1, X:=x32(.X), Y:=x32(.Y), _
+    '                    Index:=.O _
+    '                )
+                    Call GAME.Objects(.O).Paint( _
+                        vwpLevel_hDC1, x32(.X), x32(.Y) _
+                    )
                 Else
-                    'Below, use the specific underwater palette
-                    If Not Sprites.Palette Is GAME.UnderwaterSpritePalette _
-                        Then Set Sprites.Palette = GAME.UnderwaterSpritePalette
+                    'Display a number for unimplemented objects
+                    Dim BoundingBox As WIN32.RECT
+                    Call WIN32.gdi32_SetBkMode(vwpLevel_hDC1, TRANSPARENT)
+                    Call WIN32.user32_SetRect(BoundingBox, x32(.X), x32(.Y), x32(.X + 1), x32(.Y + 1))
+                    blu.DrawText vwpLevel_hDC1, BoundingBox, Hex(.O), vbBlack, vbCenter
+                    Call WIN32.user32_OffsetRect(BoundingBox, -1, -1)
+                    blu.DrawText vwpLevel_hDC1, BoundingBox, Hex(.O), vbWhite, vbCenter
                 End If
-                'Now paint the object
-                Call PaintObject( _
-                    hDC:=vwpLevel_hDC1, X:=x32(.X), Y:=x32(.Y), _
-                    Index:=.O _
-                )
             End If
         End With
     Next i
