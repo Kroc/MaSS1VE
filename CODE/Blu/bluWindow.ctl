@@ -265,11 +265,23 @@ Private Enum WS
     'Standard window styles (via `GWL_STYLE`)
     WS_BORDER = &H800000            'Thin-line border
     WS_CAPTION = &HC00000           'Title bar (includes WS_BORDER)
+    WS_CHILD = &H40000000           'Is a child window
+    WS_CLIPCHILDREN = &H2000000     'Don't paint in the area of child windows
+    WS_CLIPSIBLINGS = &H4000000     'Clip sibling windows (to deal with overlap)
+    WS_DISABLED = &H8000000         'Window is initially disabled
     WS_DLGFRAME = &H400000          'Dialog box style border, cannot have title bar
+    WS_GROUP = &H20000              'Part of a group - i.e. radio buttons
+    WS_HSCROLL = &H100000           'Has a horizontal scroll bar
+    WS_MAXIMIZE = &H1000000         'Window is initially maximised
     WS_MAXIMIZEBOX = &H10000        'Has maximize button
+    WS_MINIMIZE = &H20000000        'Window is initally minimised
     WS_MINIMIZEBOX = &H20000        'Has minimize button
+    WS_POPUP = &H80000000           'Is a popup window (cannot be WS_CHILD too)
     WS_SYSMENU = &H80000            'Has system menu (ALT+SPACE)
+    WS_TABSTOP = &H10000            'Receives focus with the tab key
     WS_THICKFRAME = &H40000         'Has resizing borders
+    WS_VISIBLE = &H10000000         'Is initially visible
+    WS_VSCROLL = &H200000           'Has a vertical scroll bar
     'Extended window styles (via `GWL_EXSTYLE`)
     WS_EX_APPWINDOW = &H40000       'Show in taskbar
     WS_EX_CLIENTEDGE = &H200        'Sunken border
