@@ -64,7 +64,7 @@ Private Sub Main()
         'If the user clicked to "Exit & Update" then do so now
         If Run.UpdateResponse = vbOK Then
             'Launch the installer with the path to the installation
-            Call WIN32.shell32_ShellExecute( _
+            Call Lib.shell32_ShellExecute( _
                 0, vbNullString, Run.AppData & "Update.exe", _
                 "/UPDATE /D=" & Left$(Run.Path, Len(Run.Path) - 1), _
                 Run.AppData, SW_SHOWNORMAL _
@@ -120,10 +120,10 @@ ReadOnly:
     'If we can't write the log file, don't go any further, we can't operate in a _
      read-only environment
      MsgBox _
-        "Cannot write to " & Chr(34) & Run.AppData & Chr(34) & ". " _
+        "Cannot write to " & Chr$(34) & Run.AppData & Chr$(34) & ". " _
         & "MaSS1VE cannot be run from a folder it does not have write permissions " _
         & "for. (e.g. read-only media such as CD or an Administrator owned folder " _
-        & "such as " & Chr(34) & "Program Files" & Chr(34) & ")", _
+        & "such as " & Chr$(34) & "Program Files" & Chr$(34) & ")", _
         vbCritical Or vbOKOnly
 End Sub
 
@@ -174,6 +174,6 @@ End Property
  ======================================================================================
 Public Property Get VersionString() As String
     Let VersionString = _
-        "v" & Format(App.Major & "." & App.Minor, "##0.0#") & _
+        "v" & Format$(App.Major & "." & App.Minor, "##0.0#") & _
         "," & App.Revision & " pre-alpha"
 End Property

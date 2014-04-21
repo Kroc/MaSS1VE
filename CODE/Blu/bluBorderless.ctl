@@ -1,54 +1,48 @@
 VERSION 5.00
-Begin VB.UserControl bluWindow 
+Begin VB.UserControl bluBorderless 
    Appearance      =   0  'Flat
-   BackColor       =   &H00FFAA00&
-   CanGetFocus     =   0   'False
+   AutoRedraw      =   -1  'True
+   BackColor       =   &H80000005&
    ClientHeight    =   480
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   480
-   ClipBehavior    =   0  'None
-   ClipControls    =   0   'False
-   Enabled         =   0   'False
-   HasDC           =   0   'False
-   HitBehavior     =   0  'None
-   InvisibleAtRuntime=   -1  'True
-   ScaleHeight     =   480
-   ScaleWidth      =   480
-   ToolboxBitmap   =   "bluWindow.ctx":0000
-   Windowless      =   -1  'True
-   Begin VB.Image imgIcon 
-      Appearance      =   0  'Flat
-      Height          =   480
-      Left            =   0
-      Picture         =   "bluWindow.ctx":0312
-      Stretch         =   -1  'True
-      Top             =   0
-      Width           =   480
-   End
+   ScaleHeight     =   32
+   ScaleMode       =   3  'Pixel
+   ScaleWidth      =   32
+   ToolboxBitmap   =   "bluBorderless.ctx":0000
 End
-Attribute VB_Name = "bluWindow"
+Attribute VB_Name = "bluBorderless"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = True
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
-'CONTROL :: bluWindow
+'CONTROL :: bluBorderless
 
-'Transforms the parent form into borderless Win8/Metro style, whilst still preserving _
- the system-provided window shadow. This is done using APIs available on Vista and _
- above for the Desktop Window Manager which provides hardware-accelerated compositing _
- (buffered display)
+'This control does multiple, complex things for creating a modern metro-esque UI:
+
+'1. Transforms the parent form into borderless Win8/Metro style, whilst still _
+    preserving the system-provided window shadow. This is done using APIs available _
+    on Vista and above for the Desktop Window Manager
+
+'2. Provides a Minimise / Maximise / Close Window control box for the borderless form _
+    that automatically adjusts to the state of the form
+
+'On systems and settings where hardware accelerated DWM compositing is not available _
+ bluBorderless disables itself and reverts to the standard window chrome. _
+ It also does this in real time should the user disable the DWM by switching to a _
+ non-accelerated theme
 
 'Status             INCOMPLETE, DO NOT USE
-'Dependencies       blu.bas, Lib.bas, WIN32.bas
-'Last Updated       19-SEP-13
-'Last Update        Moved `SendMessage` / `PostMessage` APIs to WIN32
+'Dependencies       blu.bas, Lib.bas
+'Last Updated       18-APR-14
+'Last Update        Merged into the rewrite of bluControlBox
 
 '--------------------------------------------------------------------------------------
 
@@ -113,47 +107,15 @@ Option Explicit
     The first blog post I found with the true answer to solving 24-bit control _
     backgrounds using the `BufferedPaint` APIs
 
+'Modifying the window attributes was based upon "FormBdr" by Karl E. Peterson _
+ <vb.mvps.org/samples/FormBdr/>
+
+'TODO: Fold the mouse tracking APIs into this class? (Only need MouseOut)
+
 '/// API CALLS ////////////////////////////////////////////////////////////////////////
-
-'Check if a DLL procedure exists (we'll test if the DWM procedures are available) _
- --------------------------------------------------------------------------------------
-
-'Try load a DLL _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms6831   99%28v=vs.85%29.aspx>
-'"The GetModuleHandle function returns a handle to a mapped module without _
- incrementing its reference count. Therefore, do not pass a handle returned by _
- GetModuleHandle to the FreeLibrary function"
-Private Declare Function kernel32_GetModuleHandle Lib "kernel32" Alias "GetModuleHandleA" ( _
-    ByVal ModuleName As String _
-) As Long
-
-'The above can apparently be buggy so this is used as a fallback _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms684175%28v=vs.85%29.aspx>
-Private Declare Function kernel32_LoadLibrary Lib "kernel32" Alias "LoadLibraryA" ( _
-    ByVal FileName As String _
-) As Long
-
-'Free the resource associated with the above call _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms683152%28v=vs.85%29.aspx>
-Private Declare Function kernel32_FreeLibrary Lib "kernel32" Alias "FreeLibrary" ( _
-    ByVal hndModule As Long _
-) As BOOL
-
-'Get the address of a DLL procedure _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms683212%28v=vs.85%29.aspx/html>
-Private Declare Function kernel32_GetProcAddress Lib "kernel32" Alias "GetProcAddress" ( _
-    ByVal hndModule As Long, _
-    ByVal ProcedureName As String _
-) As Long
 
 'Window manipulation: _
  --------------------------------------------------------------------------------------
-
-'A surpirsingly simple way of telling if a window is maximised _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms633531%28v=vs.85%29.aspx>
-Private Declare Function user32_IsZoomed Lib "user32" Alias "IsZoomed" ( _
-    ByVal hndWindow As Long _
-) As BOOL
 
 'Set the window state - show / hide / minimise / maximise &c. _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms633548%28v=vs.85%29.aspx>
@@ -209,6 +171,16 @@ Private Enum SWP
     SWP_SHOWWINDOW = &H40           'Make visible
 End Enum
 
+'The System Menu is what you get when you: _
+ 1. Click the app-icon on the left of the title bar _
+ 2. Right-click the title bar, or _
+ 3. Press Alt+Spc
+'<msdn.microsoft.com/en-us/library/windows/desktop/ms647985%28v=vs.85%29.aspx>
+Private Declare Function user32_GetSystemMenu Lib "user32" Alias "GetSystemMenu" ( _
+    ByVal hWnd As Long, _
+    ByVal revert As Long _
+) As Long
+
 'The DWM APIs to expand the borders into the client area _
  --------------------------------------------------------------------------------------
 'NOTE: Windows Vista+
@@ -239,59 +211,6 @@ End Type
 'Stuff to set the Layered Window attributes for fixing the form transparency _
  --------------------------------------------------------------------------------------
 
-'Retrieve current window attributes _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms633584%28v=vs.85%29.aspx>
-Private Declare Function user32_GetWindowLong Lib "user32" Alias "GetWindowLongA" ( _
-    ByVal hndWindow As Long, _
-    ByVal Index As GWL _
-) As Long
-
-Private Enum GWL
-    GWL_STYLE = -16                 'Standard window styles
-    GWL_EXSTYLE = -20               'Extended window styles
-End Enum
-
-'Set window attributes _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms633591%28v=vs.85%29.aspx>
-Private Declare Function user32_SetWindowLong Lib "user32" Alias "SetWindowLongA" ( _
-    ByVal hndWindow As Long, _
-    ByVal Index As GWL, _
-    ByVal NewLong As WS _
-) As Long
-
-'Window styles _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms632600%28v=vs.85%29.aspx>
-Private Enum WS
-    'Standard window styles (via `GWL_STYLE`)
-    WS_BORDER = &H800000            'Thin-line border
-    WS_CAPTION = &HC00000           'Title bar (includes WS_BORDER)
-    WS_CHILD = &H40000000           'Is a child window
-    WS_CLIPCHILDREN = &H2000000     'Don't paint in the area of child windows
-    WS_CLIPSIBLINGS = &H4000000     'Clip sibling windows (to deal with overlap)
-    WS_DISABLED = &H8000000         'Window is initially disabled
-    WS_DLGFRAME = &H400000          'Dialog box style border, cannot have title bar
-    WS_GROUP = &H20000              'Part of a group - i.e. radio buttons
-    WS_HSCROLL = &H100000           'Has a horizontal scroll bar
-    WS_MAXIMIZE = &H1000000         'Window is initially maximised
-    WS_MAXIMIZEBOX = &H10000        'Has maximize button
-    WS_MINIMIZE = &H20000000        'Window is initally minimised
-    WS_MINIMIZEBOX = &H20000        'Has minimize button
-    WS_POPUP = &H80000000           'Is a popup window (cannot be WS_CHILD too)
-    WS_SYSMENU = &H80000            'Has system menu (ALT+SPACE)
-    WS_TABSTOP = &H10000            'Receives focus with the tab key
-    WS_THICKFRAME = &H40000         'Has resizing borders
-    WS_VISIBLE = &H10000000         'Is initially visible
-    WS_VSCROLL = &H200000           'Has a vertical scroll bar
-    'Extended window styles (via `GWL_EXSTYLE`)
-    WS_EX_APPWINDOW = &H40000       'Show in taskbar
-    WS_EX_CLIENTEDGE = &H200        'Sunken border
-    WS_EX_DLGMODALFRAME = &H1       'Double border
-    WS_EX_LAYERED = &H80000         'Layered, that is, can be translucent
-    WS_EX_STATICEDGE = &H20000      '3D border for items that do not accept user input
-    WS_EX_TOOLWINDOW = &H80
-    WS_EX_WINDOWEDGE = &H100        'Border with raised edge
-End Enum
-
 'Set the transparency information on the Layered Window _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms633540%28v=vs.85%29.aspx>
 Private Declare Function user32_SetLayeredWindowAttributes Lib "user32" Alias "SetLayeredWindowAttributes" ( _
@@ -308,20 +227,6 @@ End Enum
 
 'Subclassing Definitions _
  --------------------------------------------------------------------------------------
-
-'Window messages we'll want to tap into
-Private Enum WM
-    WM_ACTIVATE = &H6                   'Window got / lost focus
-    WM_SETCURSOR = &H20                 'Which cursor should the mouse have?
-    WM_GETMINMAXINFO = &H24             'Determine min/max allowed window size
-    WM_NCCALCSIZE = &H83                'Calculate non-client (border) area
-    WM_NCLBUTTONDOWN = &HA1             'Left mouse button is down in a non-client area
-    WM_SYSCOMMAND = &H112               'System menu interaction (move / size &c.)
-    WM_LBUTTONDOWN = &H201              'Left mouse button is down
-    WM_LBUTTONDBLCLK = &H203            'Left double-click
-    WM_THEMECHANGED = &H31A             'Windows theme changed
-    WM_DWMCOMPOSITIONCHANGED = &H31E    'DWM was enabled / disabled
-End Enum
 
 'Response codes for `WM_ACTIVATE`
 Private Enum WA
@@ -434,13 +339,18 @@ End Enum
  a borderless form will have a shadow added and this flag will be True. However, that _
  also means that if the magic is not working (On Windows XP / Aero is off / high _
  contrast theme) then this flag will be False even if your form was borderless to _
- begin with. Remember this flag is to tell you if bluWindow has control of the form _
- borders, and not the border state of your form (use `Form.BorderStyle` for that)
+ begin with. Remember this flag is to tell you if bluBorderless has control of the _
+ form borders, and not the border state of your form (use `Form.BorderStyle` for that)
 Private My_IsBorderless As Boolean
 
 'Which colour should be transparent on the form _
  (you'll want to set this to a colour that won't likely appear in your app)
 Private My_ChromaKey As OLE_COLOR
+
+'Button colours
+Private My_ActiveColour As OLE_COLOR
+Private My_BaseColour As OLE_COLOR
+Private My_Style As bluSTYLE
 
 'Minimum and maximum window size
 Private My_MinWidth As Long
@@ -456,8 +366,21 @@ Private My_AlwaysOnTop As Boolean
 'Our subclassing object
 Private Magic As bluMagic
 
+'We'll use this to provide MouseIn/Out events
+Private WithEvents MouseEvents As bluMouseEvents
+Attribute MouseEvents.VB_VarHelpID = -1
+'TODO: Replace this with proper `GetAsynckeyState` use
+Private IsMouseDown As Boolean
+Private WhichButton As bluBorderless_ButtonType
+
+Private Enum bluBorderless_ButtonType
+    Quit = 0
+    Max = 1
+    Min = 2
+End Enum
+
 'We need to refer to the parent form's handle a lot and unbound lookups are slow
-Private hndParentForm As Long
+Private ParentForm_hWnd As Long
 
 'If the form was borderless to begin with. In order to give an already borderless _
  form a shadow we have to add a border before we run our subclassing to remove it. _
@@ -495,32 +418,112 @@ Event Activate()
  may need to do something to reduce the jarring effect of the shadowless form
 Event Deactivate()
 
-'CONTROL InitProperties : When a new instance of bluWindow gets plopped on a form _
+'CONTROL InitProperties : When a new instance of bluBorderless gets plopped on a form _
  ======================================================================================
 Private Sub UserControl_InitProperties()
-    Let hndParentForm = GetUltimateParent().hWnd
-    Let My_ChromaKey = &H123456
+    'Get the handle to the parent form, even if the control is in a container
+    Let ParentForm_hWnd = blu.GetParentForm_hWnd( _
+        StartWith:=UserControl.Parent, GetMDIParent:=False _
+    )
+    'Initialise some defaults since `ReadProperties` is not called after this!
+    Let Me.BaseColour = blu.BaseColour
+    Let Me.ActiveColour = blu.ActiveColour
+    Let Me.Style = Normal
+    Let Me.ChromaKey = &H123456
+End Sub
+
+'CONTROL MouseDown _
+ ======================================================================================
+Private Sub UserControl_MouseDown(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    'Remember when the mouse is down so that any calls to repaint keep the clicked _
+     effect in place
+    If IsMouseDown = False Then
+        Let IsMouseDown = True
+        Call Refresh
+    End If
+End Sub
+
+'CONTROL MouseMove _
+ =====================================================================================
+Private Sub UserControl_MouseMove(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    Call Refresh
+End Sub
+
+'CONTROL MouseUp _
+ ======================================================================================
+Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single, Y As Single)
+    'When letting go of the mouse, refresh, removing the click effect
+    Let IsMouseDown = False
+    Call Refresh
+    
+    'If you hold the mouse button down inside the control but release the button _
+     outside then it doesn't count (allows you to escape from an accidental close)
+    Dim ClientRect As RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRect)
+    If blu.user32_PtInRect(ClientRect, X, Y) = API_FALSE Then Exit Sub
+    
+    'Only left button applies to action
+    If Button <> VBRUN.MouseButtonConstants.vbLeftButton Then Exit Sub
+    
+    'Determine which button was clicked
+    If WhichButton = Quit Then
+        Unload blu.GetParentForm(UserControl.Parent, False)
+    ElseIf WhichButton = Max Then
+        'Flip between maximised / restore
+        Call user32_ShowWindow( _
+            ParentForm_hWnd, _
+            IIf( _
+                blu.user32_IsZoomed(ParentForm_hWnd) = API_TRUE, _
+                SW_RESTORE, SW.SW_SHOWMAXIMIZED _
+            ) _
+        )
+    ElseIf WhichButton = Min Then
+        'Just minimise
+        Call user32_ShowWindow(ParentForm_hWnd, SW_MINIMIZE)
+    End If
+End Sub
+
+'CONTROL Paint _
+ ======================================================================================
+Private Sub UserControl_Paint()
+    'During run-time the control is painted via `WM_PAINT` subclass, but to make the _
+     buttons visible during design-time we call the shared paint routine here
+    If blu.UserMode = False Then Call PaintButtons
 End Sub
 
 'CONTROL ReadPropertes : The ActiveX control is being loaded _
  ======================================================================================
 Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     'Get the handle to the parent form, even if the control is in a container
-    Let hndParentForm = GetUltimateParent().hWnd
+    Let ParentForm_hWnd = blu.GetParentForm_hWnd( _
+        StartWith:=UserControl.Parent, GetMDIParent:=False _
+    )
     
     'Proceed only if code is running (don't run in IDE's design mode)
     If blu.UserMode = True Then
-    
+        
+        'Attach the mouse tracking
+        Set MouseEvents = New bluMouseEvents
+        'Show the hand-pointer on the control
+        Let MouseEvents.MousePointer = IDC_HAND
+        Call MouseEvents.Attach(UserControl.hWnd)
+        
+        'Subclass this user control to do flicker-free painting
+        Set Magic = New bluMagic
+        Call Magic.ssc_Subclass(UserControl.hWnd, 0, 1, Me)
+        Call Magic.ssc_AddMsg( _
+            UserControl.hWnd, MSG_BEFORE, _
+            WM_PAINT, WM_ERASEBKGND _
+        )
+        
+        '------------------------------------------------------------------------------
+        
         'Determine if the form is borderless to begin with; we will need to add a _
          temporary border in order to add a shadow to the form:
-         
-        'Fetch the attributes of the window
-        Dim WStyle As Long, XStyle As Long
-        Let WStyle = user32_GetWindowLong(hndParentForm, GWL_STYLE)
-        Let XStyle = user32_GetWindowLong(hndParentForm, GWL_EXSTYLE)
+        
         'Check if there's not any kind of window border
-        If Not CBool(WStyle And (WS.WS_BORDER Or WS.WS_DLGFRAME Or WS.WS_THICKFRAME)) _
-        And Not CBool(XStyle And WS.WS_EX_TOOLWINDOW) _
+        If Not CBool(WindowStyle And (WS.WS_BORDER Or WS.WS_DLGFRAME Or WS.WS_THICKFRAME)) _
+        And Not CBool(WindowStyleEx And WS_EX.WS_EX_TOOLWINDOW) _
         Then
             'Mark as originally borderless. Should the DWM switch off we normally _
              restore the border, but we can remember to leave it off
@@ -528,7 +531,9 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         End If
         
         'Set the extended window style to allow the chroma key transparency
-        Call user32_SetWindowLong(hndParentForm, GWL_EXSTYLE, XStyle Or WS_EX_LAYERED)
+        Call user32_SetWindowLongEx( _
+            ParentForm_hWnd, GWL_EXSTYLE, WindowStyleEx Or WS_EX_LAYERED _
+        )
         
         'Check if we will be able to (at the moment) do the borderless trick. _
          This is only possible on Vista and above, as long as the Desktop Window _
@@ -539,11 +544,10 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         
         'Subclass the parent form and begin listening into the message stream; _
          see the subclass section at the bottom of this file
-        Set Magic = New bluMagic
-        'We pass the user param as `HTCAPTION` so you can drag the form from anywhere
-        Call Magic.ssc_Subclass(hndParentForm, HT.HTCAPTION, 1, Me)
+        '(We pass the user param as `HTCAPTION` so you can drag the form from anywhere)
+        Call Magic.ssc_Subclass(ParentForm_hWnd, HT.HTCAPTION, 1, Me)
         Call Magic.ssc_AddMsg( _
-            hndParentForm, MSG_BEFORE, _
+            ParentForm_hWnd, MSG_BEFORE, _
             WM_NCCALCSIZE, WM_GETMINMAXINFO, _
             WM_DWMCOMPOSITIONCHANGED, WM_THEMECHANGED, _
             WM_ACTIVATE, WM_NCLBUTTONDOWN, WM_LBUTTONDOWN, WM_LBUTTONDBLCLK _
@@ -561,7 +565,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
             'Basically force `WM_NCCALCSIZE` to fire (removes the borders). _
              `RepositionForm` above does that, but here we need to do so ourselves
             Call user32_SetWindowPos( _
-                hndParentForm, 0, 0, 0, 0, 0, _
+                ParentForm_hWnd, 0, 0, 0, 0, 0, _
                 SWP_FRAMECHANGED Or SWP_NOMOVE Or SWP_NOSIZE Or SWP_NOACTIVATE _
             )
         End If
@@ -569,6 +573,9 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
     
     'Read and set up the ActiveX properties
     With PropBag
+        Let Me.ActiveColour = .ReadProperty(Name:="ActiveColour", DefaultValue:=blu.ActiveColour)
+        Let Me.BaseColour = .ReadProperty(Name:="BaseColour", DefaultValue:=blu.BaseColour)
+        Let Me.Style = .ReadProperty(Name:="Style", DefaultValue:=bluSTYLE.Normal)
         Let Me.AlwaysOnTop = .ReadProperty(Name:="AlwaysOnTop", DefaultValue:=False)
         'Apply the chroma key, fixing the transparent pixel row
         Let Me.ChromaKey = .ReadProperty(Name:="ChromaKey", DefaultValue:=&H123456)
@@ -583,10 +590,9 @@ End Sub
  ======================================================================================
 Private Sub UserControl_Resize()
     'This control can't be resized
-    Let UserControl.Width = 32 * Screen.TwipsPerPixelX
-    Let UserControl.Height = 32 * Screen.TwipsPerPixelY
-    Let imgIcon.Width = UserControl.Width
-    Let imgIcon.Height = UserControl.Height
+    Let UserControl.Height = blu.Ypx(blu.Metric)
+    Let UserControl.Width = blu.Xpx(blu.Metric * 3)
+    Call UserControl_Paint
 End Sub
 
 'CONTROL Terminate : Clean up _
@@ -594,14 +600,21 @@ End Sub
 Private Sub UserControl_Terminate()
     'The object won't have been initialised in the IDE at design time
     If Not Magic Is Nothing Then
+        'Detach subclassing from the control for flicker-free painting
+        Call Magic.ssc_DelMsg( _
+            UserControl.hWnd, MSG_BEFORE, _
+            WM_PAINT, WM_ERASEBKGND _
+        )
+        Call Magic.ssc_UnSubclass(UserControl.hWnd)
+        
         'Detatch the window messages
         Call Magic.ssc_DelMsg( _
-            hndParentForm, MSG_BEFORE, _
+            ParentForm_hWnd, MSG_BEFORE, _
             WM_NCCALCSIZE, WM_GETMINMAXINFO, _
             WM_DWMCOMPOSITIONCHANGED, WM_THEMECHANGED, _
             WM_ACTIVATE, WM_NCLBUTTONDOWN, WM_LBUTTONDOWN, WM_LBUTTONDBLCLK _
         )
-        Call Magic.ssc_UnSubclass(hndParentForm)
+        Call Magic.ssc_UnSubclass(ParentForm_hWnd)
         
         'Detatch the subclassing from the controls registered as non-client handlers _
          (i.e. move / resize boxes). There might be an error here if you destroyed _
@@ -620,12 +633,19 @@ Private Sub UserControl_Terminate()
         Set Magic = Nothing
         Set NonClientHandlers = Nothing
     End If
+    'Detatch the mouse tracking subclassing
+    Set MouseEvents = Nothing
 End Sub
 
 'CONTROL WriteProperties _
  ======================================================================================
 Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
     With PropBag
+        'Common blu properties
+        Call .WriteProperty(Name:="ActiveColour", Value:=My_ActiveColour, DefaultValue:=blu.ActiveColour)
+        Call .WriteProperty(Name:="BaseColour", Value:=My_BaseColour, DefaultValue:=blu.BaseColour)
+        Call .WriteProperty(Name:="Style", Value:=My_Style, DefaultValue:=bluSTYLE.Normal)
+        'Window properties
         Call .WriteProperty(Name:="AlwaysOnTop", Value:=My_AlwaysOnTop, DefaultValue:=False)
         Call .WriteProperty(Name:="ChromaKey", Value:=My_ChromaKey, DefaultValue:=&H123456)
         Call .WriteProperty(Name:="MinWidth", Value:=My_MinWidth, DefaultValue:=0)
@@ -635,7 +655,54 @@ Private Sub UserControl_WriteProperties(PropBag As PropertyBag)
     End With
 End Sub
 
-'/// PROPERTIES ///////////////////////////////////////////////////////////////////////
+'EVENT <MouseEvents> MouseIn : The mouse has entered the control _
+ ======================================================================================
+Private Sub MouseEvents_MouseIn()
+    Let IsMouseDown = False
+    Call Refresh
+End Sub
+
+'EVENT <MouseEvents> MouseOut : The mouse has gone out of the control _
+ ======================================================================================
+Private Sub MouseEvents_MouseOut()
+    Let IsMouseDown = False
+    Call Refresh
+End Sub
+
+'/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
+
+'PROPERTY ActiveColour _
+ ======================================================================================
+Public Property Get ActiveColour() As OLE_COLOR
+    Let ActiveColour = My_ActiveColour
+End Property
+Public Property Let ActiveColour(ByVal NewColour As OLE_COLOR)
+    Let My_ActiveColour = NewColour
+    Call Refresh
+    Call UserControl.PropertyChanged("ActiveColour")
+End Property
+
+'PROPERTY BaseColour _
+ ======================================================================================
+Public Property Get BaseColour() As OLE_COLOR
+    Let BaseColour = My_BaseColour
+End Property
+Public Property Let BaseColour(ByVal NewColour As OLE_COLOR)
+    Let My_BaseColour = NewColour
+    Call Refresh
+    Call UserControl.PropertyChanged("BaseColour")
+End Property
+
+'PROPERTY Style _
+ ======================================================================================
+Public Property Get Style() As bluSTYLE
+    Let Style = My_Style
+End Property
+Public Property Let Style(ByVal NewStyle As bluSTYLE)
+    Let My_Style = NewStyle
+    Call Refresh
+    Call UserControl.PropertyChanged("Style")
+End Property
 
 'PROPERTY AlwaysOnTop _
  ======================================================================================
@@ -650,7 +717,7 @@ Public Property Let AlwaysOnTop(ByVal State As Boolean)
         'NOTE: The form won't always stay on top when running from the IDE _
          <support.microsoft.com/kb/192254>
         Call user32_SetWindowPos( _
-            hndParentForm, IIf(State = True, HWND_TOPMOST, HWND_NOTOPMOST), _
+            ParentForm_hWnd, IIf(State = True, HWND_TOPMOST, HWND_NOTOPMOST), _
             0, 0, 0, 0, SWP_NOMOVE Or SWP_NOSIZE _
         )
     End If
@@ -666,15 +733,27 @@ Public Property Let ChromaKey(ByVal Colour As OLE_COLOR)
     If blu.UserMode = True Then
         'Update the transparent colour used on the form
         Call user32_SetLayeredWindowAttributes( _
-            hndParentForm, WIN32.OLETranslateColor(My_ChromaKey), 0, LWA.LWA_COLORKEY _
+            ParentForm_hWnd, blu.OLETranslateColor(My_ChromaKey), 0, LWA.LWA_COLORKEY _
         )
     End If
     Call UserControl.PropertyChanged("ChromaKey")
 End Property
 
+'PROPERTY CloseButton : If the form has a close button _
+ ======================================================================================
+Public Property Get CloseButton() As Boolean
+Attribute CloseButton.VB_MemberFlags = "400"
+    Let CloseButton = CBool(WindowStyle And WS_SYSMENU)
+End Property
+Public Property Let CloseButton(ByVal State As Boolean)
+    'NOTE: Min/Max buttons will not show if there is no close button
+    'TODO
+End Property
+
 'PROPERTY IsBorderless : If the form has been made borderless, with shadow _
  ======================================================================================
 Public Property Get IsBorderless() As Boolean
+Attribute IsBorderless.VB_MemberFlags = "400"
     Let IsBorderless = My_IsBorderless
 End Property
 
@@ -710,6 +789,32 @@ Public Property Let MaxHeight(ByVal Height As Long)
     Call UserControl.PropertyChanged("MaxHeight")
 End Property
 
+'PROPERTY MinButton : If the form has a minimise button or not _
+ ======================================================================================
+Public Property Get MinButton() As Boolean
+Attribute MinButton.VB_MemberFlags = "400"
+    Let MinButton = CBool(WindowStyle And WS_MINIMIZEBOX)
+End Property
+Public Property Let MinButton(ByVal State As Boolean)
+    'Remove the minimise button from the form
+    Call ToggleWindowBits(WS_MINIMIZEBOX, State)
+    'TODO: Remove the minimise menu item in the system menu (alt+spc)
+    'TODO: Update our control box display
+End Property
+
+'PROPERTY MaxButton : If the form has a maximise button or not _
+ ======================================================================================
+Public Property Get MaxButton() As Boolean
+Attribute MaxButton.VB_MemberFlags = "400"
+    Let MaxButton = CBool(WindowStyle And WS_MAXIMIZEBOX)
+End Property
+Public Property Let MaxButton(ByVal State As Boolean)
+    'Remove the maximise button from the form
+    Call ToggleWindowBits(WS_MAXIMIZEBOX, State)
+    'TODO: Remove the maximise menu item in the system menu (alt+spc)
+    'TODO: Update our control box display
+End Property
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'RegisterMoveHandler : Set a control to act as a title bar, moving the form _
@@ -723,6 +828,30 @@ End Sub
 Public Sub RegisterSizeHandler(ByVal Target As Object)
     Call RegisterNonClientHandler(Target.hWnd, SizeHandler)
 End Sub
+
+'/// PRIVATE PROPERTIES ///////////////////////////////////////////////////////////////
+
+'PROPERTY WindowStyle _
+ ======================================================================================
+Private Property Get WindowStyle() As WS
+    'Retrieve the window style bits
+    Let WindowStyle = blu.user32_GetWindowLong(ParentForm_hWnd, GWL_STYLE)
+End Property
+Private Property Let WindowStyle(ByVal NewStyle As WS)
+    'Set the new window bits
+    Call blu.user32_SetWindowLong(ParentForm_hWnd, GWL_STYLE, NewStyle)
+End Property
+
+'PROPERTY WindowStyleEx _
+ ======================================================================================
+Private Property Get WindowStyleEx() As WS_EX
+    'Retrieve the extended window style bits
+    Let WindowStyleEx = blu.user32_GetWindowLong(ParentForm_hWnd, GWL_EXSTYLE)
+End Property
+Private Property Let WindowStyleEx(ByVal NewStyle As WS_EX)
+    'Set the new extended window bits
+    Call blu.user32_SetWindowLongEx(ParentForm_hWnd, GWL_EXSTYLE, NewStyle)
+End Property
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
@@ -759,11 +888,11 @@ Private Function IsDWMAvailable() As Boolean
     'If the "Show shadows under windows" option is off we will want to skip going _
      borderless. We could put a sinle pixel border around the window, but I leave _
      that to perhaps sometime in the future
-    If WIN32.DropShadows = False Then Exit Function
+    If blu.DropShadows = False Then Exit Function
     
     'We don't want to go borderless if the high contrast mode is on _
      (Windows 8 will return false for `DwmIsCompositionEnabled` anyway)
-    If WIN32.IsHighContrastMode = True Then Exit Function
+    If blu.IsHighContrastMode = True Then Exit Function
     
     'Check if the DWM APIs we want to use are available on the system
     If IsDLLAndProcedureAvailable("dwmapi", "DwmIsCompositionEnabled") = True Then
@@ -788,10 +917,10 @@ End Function
 Private Function GetNonClientSize() As RECT
     'TODO: Different frame sizes (dialog / tool window)
     With GetNonClientSize
-        Let .Bottom = WIN32.GetSystemMetric(SM_CYSIZEFRAME)
-        Let .Top = .Bottom + WIN32.GetSystemMetric(SM_CYCAPTION)
-        Let .Left = WIN32.GetSystemMetric(SM_CXSIZEFRAME)
-        Let .Right = WIN32.GetSystemMetric(SM_CXSIZEFRAME)
+        Let .Bottom = blu.GetSystemMetric(SM_CYSIZEFRAME)
+        Let .Top = .Bottom + blu.GetSystemMetric(SM_CYCAPTION)
+        Let .Left = blu.GetSystemMetric(SM_CXSIZEFRAME)
+        Let .Right = blu.GetSystemMetric(SM_CXSIZEFRAME)
     End With
     
 '    Debug.Print "Borders: Top " & GetNonClientSize.Top & _
@@ -808,16 +937,122 @@ Private Function GetNonClientSize() As RECT
 '    Debug.Print "CXPADDEDBORDER " & blu.GetSystemMetric(SM_CXPADDEDBORDER)
 End Function
 
-'GetUltimateParent : Recurses through the parent objects until we hit the top form _
+'PaintButtons : Shared routine to paint all three buttons (for subclassed/IDE display) _
  ======================================================================================
-Private Function GetUltimateParent() As Object
-    Set GetUltimateParent = UserControl.Parent
-    Do
-        On Error GoTo Fail
-        Set GetUltimateParent = GetUltimateParent.Parent
-    Loop
-Fail:
-End Function
+Private Sub PaintButtons()
+    'Clear the background
+    
+    'Set up the bounding box
+    Dim Box As blu.RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, Box)
+    'Fill the background colour
+    Call blu.gdi32_SetDCBrushColor( _
+        UserControl.hDC, blu.OLETranslateColor(My_BaseColour) _
+    )
+    Call blu.user32_FillRect( _
+        UserControl.hDC, Box, blu.gdi32_GetStockObject(DC_BRUSH) _
+    )
+    
+    'Any buttons at all?
+    If CloseButton = False Then Exit Sub
+    
+    Dim Pos As Long
+    Let Pos = 1
+    
+    Call PaintButton(Quit, UserControl.ScaleWidth - (32 * Pos))
+    
+    If MaxButton Then
+        Let Pos = Pos + 1
+        Call PaintButton(Max, UserControl.ScaleWidth - (32 * Pos))
+    End If
+    
+    If MinButton Then
+        Let Pos = Pos + 1
+        Call PaintButton(Min, UserControl.ScaleWidth - (32 * Pos))
+    End If
+End Sub
+
+'PaintButton : Draw a min/max/close button _
+ ======================================================================================
+Private Sub PaintButton( _
+    ByVal ButtonType As bluBorderless_ButtonType, ByVal Left As Long _
+)
+    Dim BackColour As OLE_COLOR
+    Dim ForeColour As OLE_COLOR
+    
+    'Set up the bounding box
+    Dim Box As blu.RECT
+    Call blu.user32_SetRect(RECTToSet:=Box, _
+        Left:=Left, Top:=0, Right:=Left + 32, Bottom:=UserControl.ScaleHeight _
+    )
+    
+    'Is the mouse in it?
+    Dim MousePos As blu.POINT
+    Let MousePos = blu.GetMousePos_Window(UserControl.hWnd)
+    
+    If blu.user32_PtInRect(Box, MousePos.X, MousePos.Y) = API_TRUE Then
+        'Mark which button is hovered to act upon mouse-up
+        Let WhichButton = ButtonType
+        
+        If IsMouseDown Then
+            If ButtonType = Quit Then
+                Let BackColour = blu.ClosePressColour
+            Else
+                Let BackColour = My_ActiveColour
+            End If
+            Let ForeColour = My_BaseColour
+        Else
+            If ButtonType = Quit Then
+                Let ForeColour = My_BaseColour
+                Let BackColour = blu.CloseHoverColour
+            Else
+                Let ForeColour = blu.TextHoverColour
+                Let BackColour = My_BaseColour
+            End If
+        End If
+        
+    ElseIf My_Style = Normal Then
+        Let BackColour = My_BaseColour
+        Let ForeColour = blu.TextColour
+    Else
+        Let BackColour = My_ActiveColour
+        Let ForeColour = My_BaseColour
+    End If
+    
+    'Draw the button background
+    Call blu.gdi32_SetDCBrushColor( _
+        UserControl.hDC, blu.OLETranslateColor(BackColour) _
+    )
+    Call blu.user32_FillRect( _
+        UserControl.hDC, Box, blu.gdi32_GetStockObject(DC_BRUSH) _
+    )
+    
+    'Draw the glyph
+    Dim Letter As String
+    Select Case ButtonType
+        Case bluBorderless_ButtonType.Quit: Let Letter = "r"
+        Case bluBorderless_ButtonType.Min: Let Letter = "0"
+        Case bluBorderless_ButtonType.Max
+            'Use maximise or restore glyph?
+            If blu.user32_IsZoomed(ParentForm_hWnd) = API_TRUE Then _
+                Let Letter = "2" Else Let Letter = "1"
+    End Select
+    
+    Call blu.DrawText( _
+        hndDeviceContext:=UserControl.hDC, BoundingBox:=Box, _
+        Text:=Letter, Colour:=ForeColour, Alignment:=vbCenter, _
+        Orientation:=Horizontal, FontName:="Marlett", FontSizePx:=14 _
+    )
+End Sub
+
+'Refresh _
+ ======================================================================================
+Private Sub Refresh()
+    'Queue a `WM_PAINT` message to repaint the control box
+    Dim ClientRect As blu.RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRect)
+    Call user32_InvalidateRect(UserControl.hWnd, ClientRect, API_FALSE)
+End Sub
 
 'RegisterNonClientHandler _
  ======================================================================================
@@ -852,7 +1087,7 @@ Private Function RepositionForm(Optional ByVal DoRemove As Boolean = True)
     'Get the internal size of the window (sans-borders), on a window that has been _
      made borderless this will of course be the size of the whole window
     Dim WindowRECT As RECT
-    Call WIN32.user32_GetWindowRect(hndParentForm, WindowRECT)
+    Call blu.user32_GetWindowRect(ParentForm_hWnd, WindowRECT)
     
     'Are the borders being added or removed?
     If DoRemove = True Then
@@ -876,12 +1111,24 @@ Private Function RepositionForm(Optional ByVal DoRemove As Boolean = True)
     'Move / resize the window and fire `WM_NCCALCSIZE` to ensure the borders are _
      added / removed accordingly
     Call user32_SetWindowPos( _
-        hndParentForm, 0, _
+        ParentForm_hWnd, 0, _
         WindowRECT.Left, WindowRECT.Top, _
         (WindowRECT.Right - WindowRECT.Left), _
         (WindowRECT.Bottom - WindowRECT.Top), _
         SWP_NOSENDCHANGING Or SWP_NOACTIVATE Or SWP_FRAMECHANGED _
     )
+End Function
+
+'ToggleWindowBits : Turn Window features on/off _
+ ======================================================================================
+Private Function ToggleWindowBits( _
+    ByVal WindowBit As WS, ByVal State As Boolean _
+) As Long
+    If State Then
+        Let WindowStyle = WindowStyle Or WindowBit
+    Else
+        Let WindowStyle = WindowStyle And Not WindowBit
+    End If
 End Function
 
 '/// SUBCLASS /////////////////////////////////////////////////////////////////////////
@@ -920,7 +1167,7 @@ Private Sub SubclassWindowProcedure( _
         If WasBorderless = True Then
             'Get the current border style on the window
             Dim WStyle As Long
-            Let WStyle = user32_GetWindowLong(hndParentForm, GWL_STYLE)
+            Let WStyle = blu.user32_GetWindowLong(ParentForm_hWnd, GWL_STYLE)
             
             'Are we adding or removing the temporary border? (when DWM state changes)
             If My_IsBorderless = True Then
@@ -932,7 +1179,7 @@ Private Sub SubclassWindowProcedure( _
                 Let WStyle = WStyle And Not WS.WS_CAPTION
             End If
             'Apply the new border style
-            Call user32_SetWindowLong(hndParentForm, GWL_STYLE, WStyle)
+            Call user32_SetWindowLong(ParentForm_hWnd, GWL_STYLE, WStyle)
         End If
         
         'At this point, if DWM is off we can't expand the form into the borders, _
@@ -944,7 +1191,7 @@ Private Sub SubclassWindowProcedure( _
          appears transparent, which is fixed by use of `SetLayeredWindowAttributes`
         Let Margin.Bottom = 1
         Call dwmapi_DwmExtendFrameIntoClientArea( _
-            hndParentForm, Margin _
+            ParentForm_hWnd, Margin _
         )
         
         'There's an issue with maximising the form -- maximised forms are actually _
@@ -952,10 +1199,10 @@ Private Sub SubclassWindowProcedure( _
          edges of the screen. We need to check if the form has been maximised and _
          adjust the borders specifcally
         '<blogs.msdn.com/b/oldnewthing/archive/2012/03/26/10287385.aspx>
-        If user32_IsZoomed(hndParentForm) = API_TRUE Then
+        If blu.user32_IsZoomed(ParentForm_hWnd) = API_TRUE Then
             'Coerce the lParam value into a structure
             Dim Params As NCCALCSIZE_PARAMS
-            Call WIN32.kernel32_RtlMoveMemory(Params, ByVal lParam, Len(Params))
+            Call blu.kernel32_RtlMoveMemory(Params, ByVal lParam, Len(Params))
             'Remove the borders when maximised
             With Params.Rectangles(0)
                 'When maximised the title bar is still visible, so we only need to _
@@ -966,7 +1213,7 @@ Private Sub SubclassWindowProcedure( _
                 Let .Right = .Right - Borders.Right
             End With
             'Return our changes into the pointer provided to us
-            Call WIN32.kernel32_RtlMoveMemory(ByVal lParam, Params, Len(Params))
+            Call blu.kernel32_RtlMoveMemory(ByVal lParam, Params, Len(Params))
         End If
         'We've handled this ourselves, don't allow Windows to further process this
         Let Handled = True
@@ -976,11 +1223,11 @@ Private Sub SubclassWindowProcedure( _
     ElseIf Message = WM_GETMINMAXINFO Then '-------------------------------------------
         'TODO: Must listen for work area change?
         Dim MinMax As MINMAXINFO
-        Call WIN32.kernel32_RtlMoveMemory(MinMax, ByVal lParam, Len(MinMax))
+        Call blu.kernel32_RtlMoveMemory(MinMax, ByVal lParam, Len(MinMax))
 
         Dim hndMonitor As Long
         Let hndMonitor = user32_MonitorFromWindow( _
-            hndParentForm, MONITOR_DEFAULTTONEAREST _
+            ParentForm_hWnd, MONITOR_DEFAULTTONEAREST _
         )
         If hndMonitor <> 0 Then
             Dim Info As MONITORINFO
@@ -1006,7 +1253,7 @@ Private Sub SubclassWindowProcedure( _
             End If
         End If
 
-        Call WIN32.kernel32_RtlMoveMemory(ByVal lParam, MinMax, Len(MinMax))
+        Call blu.kernel32_RtlMoveMemory(ByVal lParam, MinMax, Len(MinMax))
         Let Handled = True
     
     ElseIf Message = WM_THEMECHANGED _
@@ -1017,7 +1264,7 @@ Private Sub SubclassWindowProcedure( _
          the user changed to a high contrast theme. Windows Vista & 7 will send *BOTH* _
          messages, so we need to ignore one of them to avoid changing the borders _
          twice in one theme change
-        If WIN32.WindowsVersion < 6.2 And Message = WM_THEMECHANGED Then Exit Sub
+        If blu.WindowsVersion < 6.2 And Message = WM_THEMECHANGED Then Exit Sub
         
         'Is DWM switching on or off?
         Dim Old As Boolean
@@ -1035,7 +1282,7 @@ Private Sub SubclassWindowProcedure( _
             
             Let Margin.Bottom = 1
             Call dwmapi_DwmExtendFrameIntoClientArea( _
-                hndParentForm, Margin _
+                ParentForm_hWnd, Margin _
             )
         End If
         
@@ -1073,16 +1320,16 @@ Private Sub SubclassWindowProcedure( _
          out the necessary action
         'WARNING: This causes the `Click` event of the form to no longer fire for the _
          left mouse button, but will for the right mouse button!
-        Call WIN32.user32_SendMessage(hndParentForm, WM.WM_NCLBUTTONDOWN, UserParam, 0)
+        Call blu.user32_SendMessage(ParentForm_hWnd, WM.WM_NCLBUTTONDOWN, UserParam, 0)
     
     '`WM_LBUTTONDBLCLK` : Left mouse button double click -- maximise / restore form _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms645606%28v=vs.85%29.aspx>
     ElseIf Message = WM_LBUTTONDBLCLK Then '-------------------------------------------
         'Is the form currently maximised?
         Call user32_ShowWindow( _
-            hndParentForm, _
+            ParentForm_hWnd, _
             IIf( _
-                user32_IsZoomed(hndParentForm) = API_TRUE, _
+                blu.user32_IsZoomed(ParentForm_hWnd) = API_TRUE, _
                 SW_RESTORE, SW.SW_SHOWMAXIMIZED _
             ) _
         )
@@ -1093,18 +1340,31 @@ Private Sub SubclassWindowProcedure( _
         'When sending the window message to fake clicking the title bar or size box _
          Windows repositions the mouse! To stop this we combine the action (`SC_MOVE`) _
          with the non-client area (`HTCAPTION`). _
-         This criticaly important discovery due to this page, and it's project: _
+         This criticaly important discovery due to this page, and its project: _
          <www.codeproject.com/script/Content/ViewAssociatedFile.aspx?rzp=%2FKB%2Fvbscript%2Flavolpecw32%2Flvcw32h.zip&zep=DLLclasses%2FclsCustomWindow.cls&obid=11916&obtid=2&ovid=4> _
          <www.planet-source-code.com/vb/scripts/ShowCode.asp?txtCodeId=62605&lngWId=1>
         If wParam = HT.HTCAPTION Then
-            Call WIN32.user32_PostMessage(hndParentForm, WM_SYSCOMMAND, SC_MOVE Or HT.HTCAPTION, lParam)
+            Call blu.user32_PostMessage(ParentForm_hWnd, WM_SYSCOMMAND, SC_MOVE Or HT.HTCAPTION, lParam)
         ElseIf wParam = HT.HTBOTTOMRIGHT Then
-            Call WIN32.user32_PostMessage(hndParentForm, WM_SYSCOMMAND, SC_SIZE Or (HT.HTBOTTOMRIGHT - 9), lParam)
+            Call blu.user32_PostMessage(ParentForm_hWnd, WM_SYSCOMMAND, SC_SIZE Or (HT.HTBOTTOMRIGHT - 9), lParam)
         End If
     
-    '`WM_SETCURSOR` documentation: _
+    '`WM_SETCURSOR` : Windows is asking which mouse pointer to show _
      <msdn.microsoft.com/en-us/library/windows/desktop/ms648382%28v=vs.85%29.aspx>
     ElseIf Message = WM_SETCURSOR Then '-----------------------------------------------
+    
+    '`WM_ERASEBKGND` _
+     <msdn.microsoft.com/en-us/library/windows/desktop/ms648055%28v=vs.85%29.aspx>
+    ElseIf Message = WM_ERASEBKGND Then '----------------------------------------------
+        'Don't paint the background so as to avoid flicker, _
+         all painting will be done in `WM_PAINT`
+        Let ReturnValue = 1
+        Let Handled = True
+     
+    '`WM_PAINT` _
+     <msdn.microsoft.com/en-us/library/windows/desktop/dd145213%28v=vs.85%29.aspx>
+    ElseIf Message = WM_PAINT Then '---------------------------------------------------
+        Call PaintButtons
         
     End If
     

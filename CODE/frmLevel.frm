@@ -14,113 +14,6 @@ Begin VB.Form frmLevel
    ScaleWidth      =   14655
    Visible         =   0   'False
    WindowState     =   2  'Maximized
-   Begin VB.PictureBox picStatusbar 
-      Appearance      =   0  'Flat
-      BackColor       =   &H00FFFFFF&
-      BorderStyle     =   0  'None
-      ForeColor       =   &H80000008&
-      HasDC           =   0   'False
-      Height          =   360
-      Left            =   0
-      ScaleHeight     =   360
-      ScaleWidth      =   14655
-      TabIndex        =   15
-      Top             =   8040
-      Width           =   14655
-      Begin MaSS1VE.bluControlBox cbxSizer 
-         Height          =   360
-         Left            =   14280
-         TabIndex        =   20
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   360
-         _ExtentX        =   635
-         _ExtentY        =   635
-         Kind            =   3
-      End
-      Begin MaSS1VE.bluButton btnZoom2 
-         Height          =   360
-         Left            =   12840
-         TabIndex        =   16
-         Top             =   0
-         Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   635
-         Caption         =   "2×"
-      End
-      Begin MaSS1VE.bluButton btnZoomTV 
-         Height          =   360
-         Left            =   13800
-         TabIndex        =   17
-         Top             =   0
-         Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   635
-         Caption         =   "TV"
-      End
-      Begin MaSS1VE.bluButton btnGrid 
-         Height          =   360
-         Left            =   11160
-         TabIndex        =   18
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   615
-         _ExtentX        =   1085
-         _ExtentY        =   635
-         Caption         =   "OFF"
-      End
-      Begin MaSS1VE.bluButton btnZoom1 
-         Height          =   360
-         Left            =   12360
-         TabIndex        =   19
-         Top             =   0
-         Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   635
-         Caption         =   "1×"
-      End
-      Begin MaSS1VE.bluButton btnZoom3 
-         Height          =   360
-         Left            =   13320
-         TabIndex        =   23
-         Top             =   0
-         Width           =   495
-         _ExtentX        =   873
-         _ExtentY        =   635
-         Caption         =   "3×"
-      End
-      Begin MaSS1VE.bluLabel lblMemory 
-         Height          =   375
-         Left            =   240
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   3735
-         _ExtentX        =   6588
-         _ExtentY        =   661
-         Caption         =   "1,319 bytes floor layout memory free"
-      End
-      Begin MaSS1VE.bluLabel lblZoom 
-         Height          =   360
-         Left            =   11640
-         Top             =   0
-         Width           =   735
-         _ExtentX        =   1296
-         _ExtentY        =   635
-         Alignment       =   1
-         Caption         =   "zoom"
-      End
-      Begin MaSS1VE.bluLabel lblGrid 
-         Height          =   360
-         Left            =   10560
-         Top             =   0
-         Visible         =   0   'False
-         Width           =   615
-         _ExtentX        =   1085
-         _ExtentY        =   635
-         Alignment       =   1
-         Caption         =   "grid"
-      End
-   End
    Begin MaSS1VE.bluTab bluTab 
       Height          =   1200
       Left            =   0
@@ -252,6 +145,85 @@ Begin VB.Form frmLevel
          _ExtentX        =   1508
          _ExtentY        =   847
          Caption         =   "PASTE"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluButton btnZoom2 
+         Height          =   480
+         Left            =   12240
+         TabIndex        =   17
+         Top             =   0
+         Width           =   480
+         _ExtentX        =   847
+         _ExtentY        =   847
+         Caption         =   "2×"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluButton btnZoomTV 
+         Height          =   480
+         Left            =   13200
+         TabIndex        =   18
+         Top             =   0
+         Width           =   480
+         _ExtentX        =   847
+         _ExtentY        =   847
+         Caption         =   "TV"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluButton btnGrid 
+         Height          =   480
+         Left            =   10560
+         TabIndex        =   19
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   615
+         _ExtentX        =   1085
+         _ExtentY        =   847
+         Caption         =   "OFF"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluButton btnZoom1 
+         Height          =   480
+         Left            =   11760
+         TabIndex        =   20
+         Top             =   0
+         Width           =   480
+         _ExtentX        =   847
+         _ExtentY        =   847
+         Caption         =   "1×"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluButton btnZoom3 
+         Height          =   480
+         Left            =   12720
+         TabIndex        =   21
+         Top             =   0
+         Width           =   480
+         _ExtentX        =   847
+         _ExtentY        =   847
+         Caption         =   "3×"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluLabel lblGrid 
+         Height          =   480
+         Left            =   9960
+         Top             =   0
+         Visible         =   0   'False
+         Width           =   615
+         _ExtentX        =   1085
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "grid"
+         Style           =   1
+      End
+      Begin MaSS1VE.bluLabel lblZoom 
+         Height          =   480
+         Left            =   11040
+         Top             =   0
+         Width           =   735
+         _ExtentX        =   1296
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "zoom"
          Style           =   1
       End
       Begin VB.Line lineSplit 
@@ -388,13 +360,13 @@ Begin VB.Form frmLevel
       ScaleHeight     =   505
       ScaleMode       =   3  'Pixel
       ScaleWidth      =   729
-      TabIndex        =   21
+      TabIndex        =   15
       Top             =   480
       Width           =   10935
       Begin MaSS1VE.bluViewport vwpLevel 
          Height          =   2295
          Left            =   0
-         TabIndex        =   22
+         TabIndex        =   16
          Top             =   0
          Width           =   2655
          _ExtentX        =   4683
@@ -466,12 +438,12 @@ Private Sub Form_Initialize()
     'We're doing this here, instead of in `Sub Main`, because other forms do not _
      contain any common controls and this causes the EXE to crash on exit. _
      See the below function comments for further details
-    Call WIN32.InitCommonControls( _
+    Call blu.InitCommonControls( _
         ICC_STANDARD_CLASSES Or ICC_INTERNET_CLASSES _
     )
     
     'Setup the look up tables
-    Dim i As Long: For i = 0 To 256: Let x32(i) = i * 32: Let x8(i) = i * 8: Next i
+    Dim i As Long: For i = 0 To 256: Let x32(i) = i * 32: Let x8(i) = i * 8: Next
 End Sub
 
 'FORM Load _
@@ -498,7 +470,7 @@ Private Sub Form_Load()
             Call cmbLevels.AddItem(GAME.Levels(i).Title)
             Let cmbLevels.ItemData(cmbLevels.ListCount - 1) = i
         End If
-    Next i
+    Next
     
     'Set the zoom to default
     Let Me.Zoom = 1
@@ -520,36 +492,6 @@ Private Sub Form_Resize()
         0, 0, Me.ScaleWidth, blu.Ypx(blu.Metric) _
     )
     
-    'Statusbar: _
-     ----------------------------------------------------------------------------------
-    'Size the status bar along the bottom
-    Call Me.picStatusbar.Move( _
-        0, Me.ScaleHeight - blu.Ypx(24), _
-        Me.ScaleWidth, blu.Ypx(24) _
-    )
-    
-    Let Me.lblMemory.Left = Me.bluTab.Width - blu.Xpx(8)
-    
-    'Put the sizing box in the corner, _
-     make it square according to the statusbar height
-    Call cbxSizer.Move( _
-        Me.picStatusbar.ScaleWidth - Me.picStatusbar.ScaleHeight, _
-        0, Me.picStatusbar.ScaleHeight, Me.picStatusbar.ScaleHeight _
-    )
-    
-    'Zoom levels (when the form is maximised, the size box is hidden)
-    Let Me.btnZoomTV.Left = IIf( _
-        mdiMain.WindowState = VBRUN.FormWindowStateConstants.vbMaximized, _
-        Me.picStatusbar.ScaleWidth, Me.cbxSizer.Left _
-    ) - Me.btnZoomTV.Width
-    Let Me.btnZoom3.Left = Me.btnZoomTV.Left - Me.btnZoom3.Width
-    Let Me.btnZoom2.Left = Me.btnZoom3.Left - Me.btnZoom2.Width
-    Let Me.btnZoom1.Left = Me.btnZoom2.Left - Me.btnZoom1.Width
-    Let Me.lblZoom.Left = Me.btnZoom1.Left - Me.lblZoom.Width
-    'Grid ON/OFF
-    Let Me.btnGrid.Left = Me.lblZoom.Left - Me.btnGrid.Width
-    Let Me.lblGrid.Left = Me.btnGrid.Left - Me.lblGrid.Width
-    
     'Side Pane Area: _
      ----------------------------------------------------------------------------------
     'Move the vertical tab strip into place
@@ -565,12 +507,10 @@ Private Sub Form_Resize()
         Me.picToolbar.Top + Me.picToolbar.Height, _
         blu.Xpx( _
             (x32(PaneBlockWidth) + PaneBlockWidth) + _
-            WIN32.GetSystemMetric(SM_CXVSCROLL) _
+            blu.GetSystemMetric(SM_CXVSCROLL) _
         ), _
-        Me.ScaleHeight - ( _
-            Me.picToolbar.Top + Me.picToolbar.Height + Me.picStatusbar.Height _
-        ) _
-    ): Next i
+        Me.ScaleHeight - (Me.picToolbar.Top + Me.picToolbar.Height) _
+    ): Next
     
     'Blocks (Layout) Side Pane: _
      ----------------------------------------------------------------------------------
@@ -639,6 +579,16 @@ Private Sub Form_Resize()
     'Share button, aligned to the right
     Let Me.btnShare.Left = Me.picToolbar.Width - Me.btnShare.Width
     
+    'Zoom levels
+    Let Me.btnZoomTV.Left = Me.picToolbar.ScaleWidth - Me.btnZoomTV.Width
+    Let Me.btnZoom3.Left = Me.btnZoomTV.Left - Me.btnZoom3.Width
+    Let Me.btnZoom2.Left = Me.btnZoom3.Left - Me.btnZoom2.Width
+    Let Me.btnZoom1.Left = Me.btnZoom2.Left - Me.btnZoom1.Width
+    Let Me.lblZoom.Left = Me.btnZoom1.Left - Me.lblZoom.Width
+    'Grid ON/OFF
+    Let Me.btnGrid.Left = Me.lblZoom.Left - Me.btnGrid.Width
+    Let Me.lblGrid.Left = Me.btnGrid.Left - Me.lblGrid.Width
+    
     'Level viewport: _
      ----------------------------------------------------------------------------------
     'Position the viewport container to fill the form, this provides a backing space _
@@ -647,9 +597,7 @@ Private Sub Form_Resize()
         Me.picSidePane(0).Left + Me.picSidePane(0).Width, _
         Me.picToolbar.Top + Me.picToolbar.Height, _
         Me.ScaleWidth - (Me.picSidePane(0).Left + Me.picSidePane(0).Width), _
-        Me.ScaleHeight - ( _
-            Me.picToolbar.Top + Me.picToolbar.Height + Me.picStatusbar.Height _
-        ) _
+        Me.ScaleHeight - (Me.picToolbar.Top + Me.picToolbar.Height) _
     )
     
     'Are we in "TV" mode? Fix the viewport to 248x192px at the maximum zoom that will _
@@ -659,10 +607,10 @@ Private Sub Form_Resize()
         'How many times will the fixed resolution fit into the viewport? _
          (this will give us the maximum zoom factor usable)
         Let Ratio.Width = ( _
-            Me.picViewport.ScaleWidth - WIN32.GetSystemMetric(SM_CXVSCROLL) _
+            Me.picViewport.ScaleWidth - blu.GetSystemMetric(SM_CXVSCROLL) _
         ) \ 248
         Let Ratio.Height = ( _
-            Me.picViewport.ScaleHeight - WIN32.GetSystemMetric(SM_CYHSCROLL) _
+            Me.picViewport.ScaleHeight - blu.GetSystemMetric(SM_CYHSCROLL) _
         ) \ 192
         'Whichever of these is the lowest determines the zoom level we will use
         Dim ZoomLevel As Long
@@ -684,13 +632,13 @@ Private Sub Form_Resize()
             'Centre the viewport in the work area
             Call Me.vwpLevel.Move( _
                 (Me.picViewport.ScaleWidth - ( _
-                    (248 * ZoomLevel) + WIN32.GetSystemMetric(SM_CXVSCROLL) _
+                    (248 * ZoomLevel) + blu.GetSystemMetric(SM_CXVSCROLL) _
                 )) \ 2, _
                 (Me.picViewport.ScaleHeight - ( _
-                    (192 * ZoomLevel) + WIN32.GetSystemMetric(SM_CYHSCROLL) _
+                    (192 * ZoomLevel) + blu.GetSystemMetric(SM_CYHSCROLL) _
                 )) \ 2, _
-                (248 * ZoomLevel) + WIN32.GetSystemMetric(SM_CXVSCROLL), _
-                (192 * ZoomLevel) + WIN32.GetSystemMetric(SM_CYHSCROLL) _
+                (248 * ZoomLevel) + blu.GetSystemMetric(SM_CXVSCROLL), _
+                (192 * ZoomLevel) + blu.GetSystemMetric(SM_CYHSCROLL) _
             )
         End If
     Else
@@ -767,11 +715,11 @@ Private Sub btnShare_Click()
 '    )
 '
 '    'Paint the level into the image
-'    Call WIN32.gdi32_BitBlt( _
+'    Call blu.gdi32_BitBlt( _
 '        Screenshot.hDC, 0, 0, LevelCache.Width, LevelCache.Height, _
 '        LevelCache.hDC, 0, 0, vbSrcCopy _
 '    )
-'    Call WIN32.gdi32_GdiTransparentBlt( _
+'    Call blu.gdi32_GdiTransparentBlt( _
 '        Screenshot.hDC, 0, 0, LevelCache.Width, LevelCache.Height, _
 '        ObjectCache.hDC, 0, 0, LevelCache.Width, LevelCache.Height, _
 '        &H123456 _
@@ -839,13 +787,13 @@ Private Sub vwpLevel_Paint(ByVal hDC As Long)
     Let X = Me.vwpLevel.CentreX + (x32(Hover.X) - Me.vwpLevel.ScrollX) * ZoomLevel
     Let Y = Me.vwpLevel.CentreY + (x32(Hover.Y) - Me.vwpLevel.ScrollY) * ZoomLevel
     
-    Dim Box As RECT
-    Call WIN32.user32_SetRect(Box, X, Y, X + x32(ZoomLevel) + 3, Y + x32(ZoomLevel) + 3)
-    Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(BLACK_BRUSH))
-    Call WIN32.user32_SetRect(Box, X - 1, Y - 1, X + x32(ZoomLevel) + 1, Y + x32(ZoomLevel) + 1)
-    Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(WHITE_BRUSH))
-    Call WIN32.user32_SetRect(Box, X - 2, Y - 2, X + x32(ZoomLevel) + 2, Y + x32(ZoomLevel) + 2)
-    Call WIN32.user32_FrameRect(hDC, Box, WIN32.gdi32_GetStockObject(WHITE_BRUSH))
+    Dim Box As blu.RECT
+    Call blu.user32_SetRect(Box, X, Y, X + x32(ZoomLevel) + 3, Y + x32(ZoomLevel) + 3)
+    Call blu.user32_FrameRect(hDC, Box, blu.gdi32_GetStockObject(BLACK_BRUSH))
+    Call blu.user32_SetRect(Box, X - 1, Y - 1, X + x32(ZoomLevel) + 1, Y + x32(ZoomLevel) + 1)
+    Call blu.user32_FrameRect(hDC, Box, blu.gdi32_GetStockObject(WHITE_BRUSH))
+    Call blu.user32_SetRect(Box, X - 2, Y - 2, X + x32(ZoomLevel) + 2, Y + x32(ZoomLevel) + 2)
+    Call blu.user32_FrameRect(hDC, Box, blu.gdi32_GetStockObject(WHITE_BRUSH))
 End Sub
 
 'EVENT vwpLevel ZOOM : When the user zooms with Ctrl+Scroll _
@@ -947,10 +895,10 @@ Public Property Set Level(ByVal TheLevel As S1Level)
         
         Dim X As Long
         For X = 0 To My_Level.Width - 1
-            Call WIN32.gdi32_GdiTransparentBlt(WaterLineCache.hDC, x32(X), 0, 8, 8, MyLevel_SpriteArt_Tiles_hDC, 0, 0, 8, 8, MyLevel_SpritePalette_Colour0)
-            Call WIN32.gdi32_GdiTransparentBlt(WaterLineCache.hDC, x32(X) + 8, 0, 8, 8, MyLevel_SpriteArt_Tiles_hDC, 16, 0, 8, 8, MyLevel_SpritePalette_Colour0)
-            Call WIN32.gdi32_GdiTransparentBlt(WaterLineCache.hDC, x32(X) + 16, 0, 8, 8, MyLevel_SpriteArt_Tiles_hDC, 0, 0, 8, 8, MyLevel_SpritePalette_Colour0)
-            Call WIN32.gdi32_GdiTransparentBlt(WaterLineCache.hDC, x32(X) + 24, 0, 8, 8, MyLevel_SpriteArt_Tiles_hDC, 16, 0, 8, 8, MyLevel_SpritePalette_Colour0)
+            Call blu.gdi32_GdiTransparentBlt(WaterLineCache.hDC, x32(X), 0, 8, 8, MyLevel_SpriteArt_Tiles_hDC, 0, 0, 8, 8, MyLevel_SpritePalette_Colour0)
+            Call blu.gdi32_GdiTransparentBlt(WaterLineCache.hDC, x32(X) + 8, 0, 8, 8, MyLevel_SpriteArt_Tiles_hDC, 16, 0, 8, 8, MyLevel_SpritePalette_Colour0)
+            Call blu.gdi32_GdiTransparentBlt(WaterLineCache.hDC, x32(X) + 16, 0, 8, 8, MyLevel_SpriteArt_Tiles_hDC, 0, 0, 8, 8, MyLevel_SpritePalette_Colour0)
+            Call blu.gdi32_GdiTransparentBlt(WaterLineCache.hDC, x32(X) + 24, 0, 8, 8, MyLevel_SpriteArt_Tiles_hDC, 16, 0, 8, 8, MyLevel_SpritePalette_Colour0)
         Next
         
         'Update the ring count display
@@ -1000,7 +948,7 @@ Public Property Set Level(ByVal TheLevel As S1Level)
                 Y:=(i \ PaneBlockWidth) * 33, _
                 Index:=i _
             )
-        Next i
+        Next
         Call vwpBlocks.Refresh
         
         'Set the app colour scheme
@@ -1091,7 +1039,7 @@ Public Sub SetTheme()
         Let Me.lineSplit(i).BorderColor = ActiveColour
         'For some reason, this is necessary otherwise the line can randomly disappear!
         Call Me.lineSplit(i).Refresh
-    Next i
+    Next
     
     'Update the ring counter
     Let Me.picRings.BackColor = ActiveColour
@@ -1126,8 +1074,8 @@ Private Sub CacheBlocks()
                     BlockIndex:=i, TileIndex:=(iY * 4) + iX _
                 ) _
             )
-        Next iX: Next iY
-    Next i
+        Next: Next
+    Next
 End Sub
 
 'HandleMouse : The MouseDown / Move / Up events are handled the same _
@@ -1229,7 +1177,7 @@ Private Sub PaintBlock( _
     'Paint the block from the cache, which is a whole ton faster than painting _
      every tile in the block
     
-    Call WIN32.gdi32_BitBlt( _
+    Call blu.gdi32_BitBlt( _
         hndDeviceContext, X, Y, 32, 32, _
         BlocksCache.hDC, x32(Index), 0, vbSrcCopy _
     )
@@ -1309,7 +1257,7 @@ Private Sub RepaintLevel()
      to calculate the index in the loop
     Dim xY() As Long
     ReDim xY(0 To MyLevel_Height) As Long
-    For i = 0 To MyLevel_Height: Let xY(i) = i * (MyLevel_Width + 1): Next i
+    For i = 0 To MyLevel_Height: Let xY(i) = i * (MyLevel_Width + 1): Next
     
     'Paint the entire floor layout in one go
     For iY = 0 To MyLevel_Height: For iX = 0 To MyLevel_Width
@@ -1318,7 +1266,7 @@ Private Sub RepaintLevel()
             Index:=MyLevel_FloorLayout(xY(iY) + iX), _
             UnderWater:=(iY >= MyLevel_ObjectLayout_WaterLevel) _
         )
-    Next iX: Next iY
+    Next: Next
     
     'Clean up the temporary copy of the floor layout
     Erase MyLevel_FloorLayout
@@ -1363,16 +1311,16 @@ Private Sub RepaintLevel()
                     )
                 Else
                     'Display a number for unimplemented objects
-                    Dim BoundingBox As WIN32.RECT
-                    Call WIN32.gdi32_SetBkMode(vwpLevel_hDC1, TRANSPARENT)
-                    Call WIN32.user32_SetRect(BoundingBox, x32(.X), x32(.Y), x32(.X + 1), x32(.Y + 1))
-                    blu.DrawText vwpLevel_hDC1, BoundingBox, Hex(.O), vbBlack, vbCenter
-                    Call WIN32.user32_OffsetRect(BoundingBox, -1, -1)
-                    blu.DrawText vwpLevel_hDC1, BoundingBox, Hex(.O), vbWhite, vbCenter
+                    Dim BoundingBox As blu.RECT
+                    Call blu.gdi32_SetBkMode(vwpLevel_hDC1, TRANSPARENT)
+                    Call blu.user32_SetRect(BoundingBox, x32(.X), x32(.Y), x32(.X + 1), x32(.Y + 1))
+                    blu.DrawText vwpLevel_hDC1, BoundingBox, Hex$(.O), vbBlack, vbCenter
+                    Call blu.user32_OffsetRect(BoundingBox, -1, -1)
+                    blu.DrawText vwpLevel_hDC1, BoundingBox, Hex$(.O), vbWhite, vbCenter
                 End If
             End If
         End With
-    Next i
+    Next
     
     'Paint Sonic at the starting point. This will also require checking if above _
      or below the water line
@@ -1410,13 +1358,13 @@ Public Sub WriteNumbers(ByVal hDC As Long, ByVal X As Long, ByVal Y As Long, ByV
     
     Dim i As Long, Letter As String * 1, Index As Byte
     For i = 1 To Len(NumberString)
-        Let Letter = Mid(NumberString, i, 1)
+        Let Letter = Mid$(NumberString, i, 1)
         Select Case Letter
             Case "x": Let Index = 36
             Case ":": Let Index = 48
             Case Else
-                Let Index = CByte(Mid(NumberString, i, 1)) * 2
+                Let Index = CByte(Mid$(NumberString, i, 1)) * 2
         End Select
         Call GAME.HUD.PaintSprite(hDC, X + x8(i), Y, Index)
-    Next i
+    Next
 End Sub

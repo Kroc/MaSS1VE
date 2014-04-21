@@ -18,7 +18,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
@@ -131,16 +131,6 @@ Private Declare Function user32_SetScrollInfo Lib "user32" Alias "SetScrollInfo"
 'Stuff happening in the subclass _
  --------------------------------------------------------------------------------------
 
-Private Enum WM
-    WM_PAINT = &HF
-    WM_ERASEBKGND = &H14
-    WM_NCLBUTTONDOWN = &HA1
-    WM_NCRBUTTONDOWN = &HA4
-    WM_NCMBUTTONDOWN = &HA7
-    WM_HSCROLL = &H114
-    WM_VSCROLL = &H115
-End Enum
-
 '<msdn.microsoft.com/en-us/library/windows/desktop/dd162768%28v=vs.85%29.aspx>
 Private Type PAINTSTRUCT
   hndDC As Long
@@ -177,13 +167,6 @@ Private Declare Function user32_ScrollWindowEx Lib "user32" Alias "ScrollWindowE
 ) As Long
 Private Const SW_INVALIDATE As Long = &H2
 
-'<msdn.microsoft.com/en-us/library/windows/desktop/dd145002%28v=vs.85%29.aspx>
-Private Declare Function user32_InvalidateRect Lib "user32" Alias "InvalidateRect" ( _
-    ByVal hndWindow As Long, _
-    ByRef InvalidRECT As RECT, _
-    ByVal EraseBG As BOOL _
-) As BOOL
-
 '<msdn.microsoft.com/en-us/library/windows/desktop/dd145167%28v=vs.85%29.aspx>
 Private Declare Function user32_UpdateWindow Lib "user32" Alias "UpdateWindow" ( _
     ByVal hndWindow As Long _
@@ -212,7 +195,7 @@ Private Buffer As bluImage
 'To try be fast as possible we cache various values here:
 Private Type CACHEVARS
     UserControl_BackColor As Long       'Back colour, but already OLE translated
-    ClientRECT As RECT                  'The width / height of the viewport
+    ClientRect As RECT                  'The width / height of the viewport
     ImageRECT As RECT                   'The whole image's size
     DC_BRUSH As Long                    'The stock colour brush built in to DCs
     
@@ -301,7 +284,7 @@ Private Sub UserControl_Initialize()
     'The DC brush helps us avoid having to create and destroy a brush when we want _
      to paint. It acts as a built-in brush that we can set the colour on at will _
      <blogs.msdn.com/b/oldnewthing/archive/2005/04/20/410031.aspx>
-    Let c.DC_BRUSH = WIN32.gdi32_GetStockObject(DC_BRUSH)
+    Let c.DC_BRUSH = blu.gdi32_GetStockObject(DC_BRUSH)
     
     'The `SCROLLINFO` structures must state their size, _
      let's do this just once
@@ -349,7 +332,7 @@ Private Sub UserControl_KeyDown(ByRef KeyCode As Integer, ByRef Shift As Integer
     If Send <> -1 Then
         'Send the `WM_HSCROLL` / `WM_VSCROLL` message. _
          See the subclass section at the bottom of the file for details
-        Call WIN32.user32_SendMessage(UserControl.hWnd, Scroll, Send, 0)
+        Call blu.user32_SendMessage(UserControl.hWnd, Scroll, Send, 0)
     End If
 End Sub
 
@@ -391,7 +374,7 @@ Private Sub UserControl_ReadProperties(PropBag As PropertyBag)
         Set MouseEvents = New bluMouseEvents
         Call MouseEvents.Attach( _
             UserControl.hWnd, _
-            Lib.GetParentForm(StartWith:=UserControl.Parent, MDIParent:=True).hWnd _
+            blu.GetParentForm(StartWith:=UserControl.Parent, GetMDIParent:=True).hWnd _
         )
         'Subclass the control to listen to scroll bar events
         Set Magic = New bluMagic
@@ -533,10 +516,10 @@ Public Property Let BackColor(ByVal Color As OLE_COLOR)
     Let UserControl.BackColor = Color
     'Cache the new back colour ready for painting. If it's a system colour _
      (e.g. `vbApplicationWorkspace`, then translate it to the real colour)
-    Let c.UserControl_BackColor = WIN32.OLETranslateColor(Color)
+    Let c.UserControl_BackColor = blu.OLETranslateColor(Color)
     'Apply the colour to the back buffer DC, this will automatically be used at paint
     If Not Buffer Is Nothing Then
-        Call WIN32.gdi32_SetDCBrushColor( _
+        Call blu.gdi32_SetDCBrushColor( _
             Buffer.hDC, c.UserControl_BackColor _
         )
     End If
@@ -554,8 +537,8 @@ Public Property Let Centre(ByVal State As Boolean)
     
     'Raise a mouse move event since the pointer is no longer under the part of the _
      image it was before and the controller might need the new ImageX/Y values
-    Dim MousePos As POINT
-    Let MousePos = GetMousePos()
+    Dim MousePos As blu.POINT
+    Let MousePos = blu.GetMousePos_Window(UserControl.hWnd)
     'TODO: Get mouse button / key state
     RaiseEvent MouseMove( _
         0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
@@ -664,8 +647,8 @@ Public Property Let ScrollX(ByVal Value As Long)
     
     'Raise a mouse move event since the pointer is no longer under the part of the _
      image it was before and the controller might need the new ImageX/Y values
-    Dim MousePos As POINT
-    Let MousePos = GetMousePos()
+    Dim MousePos As blu.POINT
+    Let MousePos = blu.GetMousePos_Window(UserControl.hWnd)
     'TODO: Get mouse button / key state
     RaiseEvent MouseMove( _
         0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
@@ -690,8 +673,8 @@ Public Property Let ScrollY(ByVal Value As Long)
     
     'Raise a mouse move event since the pointer is no longer under the part of the _
      image it was before and the controller might need the new ImageX/Y values
-    Dim MousePos As POINT
-    Let MousePos = GetMousePos()
+    Dim MousePos As blu.POINT
+    Let MousePos = blu.GetMousePos_Window(UserControl.hWnd)
     'TODO: Get mouse button / key state
     RaiseEvent MouseMove( _
         0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
@@ -717,8 +700,8 @@ Public Property Let Zoom(ByVal ZoomLevel As Long)
     
     'Raise a mouse move event since the pointer is no longer under the part of the _
      image it was before and the controller might need the new ImageX/Y values
-    Dim MousePos As POINT
-    Let MousePos = GetMousePos()
+    Dim MousePos As blu.POINT
+    Let MousePos = blu.GetMousePos_Window(UserControl.hWnd)
     'TODO: Get mouse button / key state
     RaiseEvent MouseMove( _
         0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
@@ -798,7 +781,7 @@ Public Sub Cls(Optional ByVal Layer As Long = -1)
         IIf(Layer = -1, UBound(Layers), Layer)
         'Paint the layer clear
         Call Layers(i).IMAGE.Cls
-    Next i
+    Next
     
     'NOTE: This procedure does not refresh the viewport! When you clear the image _
      (or layer), you might be beginning to paint on it and won't want flicker
@@ -809,7 +792,7 @@ End Sub
 Public Sub Refresh()
 Attribute Refresh.VB_UserMemId = -550
     'Queue a `WM_PAINT` message to repaint the whole viewport area
-    Call user32_InvalidateRect(UserControl.hWnd, c.ClientRECT, API_FALSE)
+    Call blu.user32_InvalidateRect(UserControl.hWnd, c.ClientRect, API_FALSE)
 End Sub
 
 'ScrollTo : Scroll to an X and Y location in one call _
@@ -834,8 +817,8 @@ Public Sub ScrollTo(ByVal X As Long, ByVal Y As Long)
     
     'Raise a mouse move event since the pointer is no longer under the part of the _
      image it was before and the controller might need the new ImageX/Y values
-    Dim MousePos As POINT
-    Let MousePos = GetMousePos()
+    Dim MousePos As blu.POINT
+    Let MousePos = blu.GetMousePos_Window(UserControl.hWnd)
     'TODO: Get mouse button / key state
     RaiseEvent MouseMove( _
         0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _
@@ -861,7 +844,7 @@ Public Sub SetImageProperties( _
     Let NumberOfLayers = 1
     
     'Cache details of the image for faster painting
-    Call WIN32.user32_SetRect(c.ImageRECT, 0, 0, Width, Height)
+    Call blu.user32_SetRect(c.ImageRECT, 0, 0, Width, Height)
     
     'When the back buffer changes, recalculate the scrollbars
     Call InitScrollBars
@@ -884,26 +867,13 @@ Private Function GetImageY(ByVal Y As Long) As Long
     Let GetImageY = c.Info(VERT).Pos + (Y - c.Centre.Y) \ My_Zoom
 End Function
 
-'GetMousePos : Get the mouse position within the viewport _
- ======================================================================================
-Private Function GetMousePos() As POINT
-    'When the viewport is scrolled by keyboard or by the controller (`ScrollTo`), _
-     then we want to fire a `MouseMove` event to say that the mouse pointer is under _
-     a different part of the image than before (`ImageX/Y`), but the mouse position _
-     is not always immediately available to us in that event (e.g. keyboard scrolling).
-    'This function retrieves the mouse position on the viewport for those purposes, _
-     just be warned that the X/Y values could be negative!
-    Call WIN32.user32_GetCursorPos(GetMousePos)
-    Call WIN32.user32_ScreenToClient(UserControl.hWnd, GetMousePos)
-End Function
-
 'InitScrollBars _
  ======================================================================================
 Private Sub InitScrollBars()
     'Show / Hide scrollbars? _
      ----------------------------------------------------------------------------------
     'Get the size of the viewport
-    Call WIN32.user32_GetClientRect(UserControl.hWnd, c.ClientRECT)
+    Call blu.user32_GetClientRect(UserControl.hWnd, c.ClientRect)
     
     'The size of the image, accounting for zooming
     Dim ImageSize As SIZE
@@ -912,15 +882,15 @@ Private Sub InitScrollBars()
     
     'Show or hide the scrollbars based on the size of the viewport
     Call user32_ShowScrollBar( _
-        UserControl.hWnd, HORZ, Abs(ImageSize.Width > c.ClientRECT.Right) _
+        UserControl.hWnd, HORZ, Abs(ImageSize.Width > c.ClientRect.Right) _
     )
     Call user32_ShowScrollBar( _
-        UserControl.hWnd, VERT, Abs(ImageSize.Height > c.ClientRECT.Bottom) _
+        UserControl.hWnd, VERT, Abs(ImageSize.Height > c.ClientRect.Bottom) _
     )
     
     'If a scrollbar was visible and gets hidden, it changes the size of the viewport, _
      regrab the size and work from that now on
-    Call WIN32.user32_GetClientRect(UserControl.hWnd, c.ClientRECT)
+    Call blu.user32_GetClientRect(UserControl.hWnd, c.ClientRect)
     
     'Setup the back buffer: _
      ----------------------------------------------------------------------------------
@@ -928,22 +898,22 @@ Private Sub InitScrollBars()
     Set Buffer = Nothing
     Set Buffer = New bluImage
     Call Buffer.Create24Bit( _
-        c.ClientRECT.Right, c.ClientRECT.Bottom, _
+        c.ClientRect.Right, c.ClientRect.Bottom, _
         c.UserControl_BackColor _
     )
     
     'Set the background to be used at painting to the back buffer
-    Call WIN32.gdi32_SetDCBrushColor( _
+    Call blu.gdi32_SetDCBrushColor( _
         Buffer.hDC, c.UserControl_BackColor _
     )
     
     'Calculate portion of image to be displayed: _
      ----------------------------------------------------------------------------------
     'If the image is narrower than than the viewport then centre it horizontally
-    If My_Centre = True And ImageSize.Width < c.ClientRECT.Right Then
+    If My_Centre = True And ImageSize.Width < c.ClientRect.Right Then
         'Offset the image by half the difference in space between the image and _
          the viewport's width so that it appears centred
-        Let c.Centre.X = (c.ClientRECT.Right - ImageSize.Width) \ 2
+        Let c.Centre.X = (c.ClientRect.Right - ImageSize.Width) \ 2
         'We will be painting the full width of the image, nothing clipped
         Let c.Dst.Width = ImageSize.Width
     Else
@@ -957,20 +927,20 @@ Private Sub InitScrollBars()
          To fix this we have to normalise the destination width/height so that it is _
          a multiple of the zoom factor
         Let c.Dst.Width = _
-            c.ClientRECT.Right + (My_Zoom - 1) - (c.ClientRECT.Right Mod My_Zoom)
+            c.ClientRect.Right + (My_Zoom - 1) - (c.ClientRect.Right Mod My_Zoom)
     End If
         
     'If the image is shorter than the viewport then centre it vertically
-    If My_Centre = True And ImageSize.Height < c.ClientRECT.Bottom Then
+    If My_Centre = True And ImageSize.Height < c.ClientRect.Bottom Then
         'Offset the image by half the difference in space between the image and _
          the viewport's height so that it appears centred
-        Let c.Centre.Y = (c.ClientRECT.Bottom - ImageSize.Height) \ 2
+        Let c.Centre.Y = (c.ClientRect.Bottom - ImageSize.Height) \ 2
         'We will be painting the full height of the image, nothing clipped
         Let c.Dst.Height = ImageSize.Height
     Else
         Let c.Centre.Y = 0
         Let c.Dst.Height = _
-            c.ClientRECT.Bottom + (My_Zoom - 1) - (c.ClientRECT.Bottom Mod My_Zoom)
+            c.ClientRect.Bottom + (My_Zoom - 1) - (c.ClientRect.Bottom Mod My_Zoom)
     End If
     
     Let c.Src.Width = c.Dst.Width \ My_Zoom
@@ -986,7 +956,7 @@ Private Sub InitScrollBars()
     With c.Info(HORZ)
         Let OldHpos = .Pos
         Let .Mask = SIF_PAGE Or SIF_RANGE Or SIF_POS
-        Let .Page = c.ClientRECT.Right \ My_Zoom
+        Let .Page = c.ClientRect.Right \ My_Zoom
         Let .Max = Lib.Min(c.ImageRECT.Right)
         Let .Pos = Lib.Range(.Pos, Me.ScrollMax(HORZ), .Min)
     End With
@@ -995,7 +965,7 @@ Private Sub InitScrollBars()
     With c.Info(VERT)
         Let OldVPos = .Pos
         Let .Mask = SIF_PAGE Or SIF_RANGE Or SIF_POS
-        Let .Page = c.ClientRECT.Bottom \ My_Zoom
+        Let .Page = c.ClientRect.Bottom \ My_Zoom
         Let .Max = Lib.Min(c.ImageRECT.Bottom)
         Let .Pos = Lib.Range(.Pos, Me.ScrollMax(VERT), .Min)
     End With
@@ -1038,8 +1008,8 @@ Private Sub SubclassWindowProcedure( _
                 Call user32_BeginPaint(UserControl.hWnd, Paint)
                              
                 'Clear the image with the background colour
-                Call WIN32.user32_FillRect( _
-                    Buffer.hDC, c.ClientRECT, c.DC_BRUSH _
+                Call blu.user32_FillRect( _
+                    Buffer.hDC, c.ClientRect, c.DC_BRUSH _
                 )
                 
                 'Work downward through the layers:
@@ -1049,7 +1019,7 @@ Private Sub SubclassWindowProcedure( _
                     If i = 0 Then
                         'With no zoom, it's ever so slightly faster to non-stretch `BitBlt`
                         If My_Zoom = 1 Then
-                            Call WIN32.gdi32_BitBlt( _
+                            Call blu.gdi32_BitBlt( _
                                 Buffer.hDC, _
                                 c.Centre.X, c.Centre.Y, _
                                 c.Dst.Width, c.Dst.Height, _
@@ -1061,7 +1031,7 @@ Private Sub SubclassWindowProcedure( _
                             'When zoomed, stretch the 1:1 image to the viewport. The source _
                              and destination sizes are calculated in `InitScrollBars`, usually _
                              called upon resizing the viewport
-                            Call WIN32.gdi32_StretchBlt( _
+                            Call blu.gdi32_StretchBlt( _
                                 Buffer.hDC, _
                                 c.Centre.X, c.Centre.Y, _
                                 c.Dst.Width, c.Dst.Height, _
@@ -1073,7 +1043,7 @@ Private Sub SubclassWindowProcedure( _
                         End If
                     Else
                         'For the other layers, mask out their background colour
-                        Call WIN32.gdi32_GdiTransparentBlt( _
+                        Call blu.gdi32_GdiTransparentBlt( _
                             Buffer.hDC, _
                             c.Centre.X, c.Centre.Y, _
                             c.Dst.Width, c.Dst.Height, _
@@ -1083,14 +1053,14 @@ Private Sub SubclassWindowProcedure( _
                             Layers(i).IMAGE.BackgroundColour _
                         )
                     End If
-                Next i
+                Next
                 
                 'Give the controller the opportunity to paint over the final display
                 RaiseEvent Paint(Buffer.hDC)
                 
                 'Copy the back buffer onto the display
-                Call WIN32.gdi32_BitBlt( _
-                    Paint.hndDC, 0, 0, c.ClientRECT.Right, c.ClientRECT.Bottom, _
+                Call blu.gdi32_BitBlt( _
+                    Paint.hndDC, 0, 0, c.ClientRect.Right, c.ClientRect.Bottom, _
                     Buffer.hDC, 0, 0, vbSrcCopy _
                 )
                 
@@ -1180,8 +1150,13 @@ Private Sub SubclassWindowProcedure( _
             'Raise a mouse move event since the pointer is no longer under the part _
              of the image it was before and the controller might need the new _
              ImageX/Y values
-            Dim MousePos As POINT
-            Let MousePos = GetMousePos()
+            Dim MousePos As blu.POINT
+            Let MousePos = blu.GetMousePos_Window(UserControl.hWnd)
+            'When the viewport is scrolled by keyboard or by the controller _
+            (`ScrollTo`), then we want to fire a `MouseMove` event to say that the _
+            mouse pointer is under a different part of the image than before _
+            (`ImageX/Y`), but the mouse position is not always immediately available _
+            to us in that event (e.g. keyboard scrolling)
             'TODO: Get mouse button / key state
             RaiseEvent MouseMove( _
                 0, 0, MousePos.X, MousePos.Y, GetImageX(MousePos.X), GetImageY(MousePos.Y) _

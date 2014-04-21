@@ -113,7 +113,7 @@ Private Sub Class_Initialize()
     Dim Index As Long
     For Index = LBound(My_Layout) To UBound(My_Layout)
         Let My_Layout(Index) = &HFF
-    Next Index
+    Next
 End Sub
 
 'CLASS Terminate _
@@ -188,7 +188,7 @@ Private Sub CacheImage()
                 Call My_Tileset.PaintSprite(Cache.hDC, X * 8, Y * 16, Index)
             End If
         End If
-    Next X: Next Y
+    Next: Next
     
     Select Case Me.Kind
         Case S1SpriteLayout_Kind.SL_Monitor_Rings:

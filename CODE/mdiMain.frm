@@ -13,29 +13,49 @@ Begin VB.MDIForm mdiMain
    ScrollBars      =   0   'False
    StartUpPosition =   2  'CenterScreen
    Visible         =   0   'False
-   WindowState     =   2  'Maximized
+   Begin VB.PictureBox statusbar 
+      Align           =   2  'Align Bottom
+      BorderStyle     =   0  'None
+      Height          =   360
+      Left            =   0
+      ScaleHeight     =   360
+      ScaleWidth      =   15120
+      TabIndex        =   6
+      Top             =   7485
+      Width           =   15120
+      Begin MaSS1VE.bluControlBox cbxSizer 
+         Height          =   360
+         Left            =   14760
+         TabIndex        =   7
+         Top             =   0
+         Width           =   360
+         _extentx        =   635
+         _extenty        =   635
+         kind            =   3
+      End
+   End
    Begin VB.PictureBox picHelp 
       Align           =   4  'Align Right
       Appearance      =   0  'Flat
       BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   6855
+      Height          =   6495
       Left            =   11460
-      ScaleHeight     =   6855
+      ScaleHeight     =   6495
       ScaleWidth      =   3660
       TabIndex        =   1
       Top             =   990
       Visible         =   0   'False
       Width           =   3660
-      Begin MaSS1VE.bluWebView bluWebView 
-         Height          =   1575
+      Begin MaSS1VE.bluHelpView bluHelpView 
+         Height          =   1695
          Left            =   0
          TabIndex        =   8
          Top             =   480
-         Width           =   1815
-         _ExtentX        =   3201
-         _ExtentY        =   2778
+         Width           =   1695
+         _extentx        =   2990
+         _extenty        =   2990
       End
       Begin VB.PictureBox picHelpToolbar 
          Appearance      =   0  'Flat
@@ -65,26 +85,26 @@ Begin VB.MDIForm mdiMain
       TabIndex        =   0
       Top             =   0
       Width           =   15120
+      Begin MaSS1VE.bluBorderless bluBorderless 
+         Height          =   480
+         Left            =   13680
+         TabIndex        =   9
+         Top             =   0
+         Width           =   1440
+         _extentx        =   2540
+         _extenty        =   847
+      End
       Begin MaSS1VE.bluButton btnUpdate 
          Height          =   480
-         Left            =   12840
-         TabIndex        =   9
+         Left            =   12600
+         TabIndex        =   5
          Top             =   0
          Visible         =   0   'False
          Width           =   1095
-         _ExtentX        =   1931
-         _ExtentY        =   847
-         Caption         =   "UPDATE!"
-         State           =   1
-      End
-      Begin MaSS1VE.bluControlBox cbxClose 
-         Height          =   480
-         Left            =   14640
-         TabIndex        =   4
-         Top             =   0
-         Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
+         _extentx        =   1931
+         _extenty        =   847
+         caption         =   "UPDATE!"
+         state           =   1
       End
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
@@ -92,84 +112,57 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   3
          Top             =   495
          Width           =   1200
-         _ExtentX        =   2117
-         _ExtentY        =   873
+         _extentx        =   2117
+         _extenty        =   873
       End
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
          Left            =   14160
-         TabIndex        =   7
+         TabIndex        =   4
          Top             =   495
-         Visible         =   0   'False
          Width           =   975
-         _ExtentX        =   1720
-         _ExtentY        =   873
-         Caption         =   "HELP"
-      End
-      Begin MaSS1VE.bluControlBox cbxMin 
-         Height          =   480
-         Left            =   13920
-         TabIndex        =   5
-         Top             =   0
-         Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
-         Kind            =   1
-      End
-      Begin MaSS1VE.bluControlBox cbxMax 
-         Height          =   480
-         Left            =   14280
-         TabIndex        =   6
-         Top             =   0
-         Width           =   480
-         _ExtentX        =   847
-         _ExtentY        =   847
-         Kind            =   2
+         _extentx        =   1720
+         _extenty        =   873
+         caption         =   "HELP"
       End
       Begin MaSS1VE.bluLabel lblMaSS1VE 
          Height          =   495
          Left            =   3840
          Top             =   0
          Width           =   4455
-         _ExtentX        =   7858
-         _ExtentY        =   873
-         Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
-         Enabled         =   0   'False
+         _extentx        =   7858
+         _extenty        =   873
+         caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
+         enabled         =   0
       End
       Begin MaSS1VE.bluLabel lblTip 
          Height          =   495
          Left            =   10320
          Top             =   495
          Width           =   3855
-         _ExtentX        =   6800
-         _ExtentY        =   873
-         Alignment       =   1
-         Caption         =   "The quick brown fox jumps over the lazy dog"
-         Enabled         =   0   'False
+         _extentx        =   6800
+         _extenty        =   873
+         alignment       =   1
+         caption         =   "The quick brown fox jumps over the lazy dog"
+         enabled         =   0
       End
       Begin MaSS1VE.bluLabel lblVersion 
          Height          =   480
-         Left            =   12000
+         Left            =   11880
          Top             =   0
          Width           =   1815
-         _ExtentX        =   3201
-         _ExtentY        =   847
-         Alignment       =   1
-         Caption         =   "v0.0.0"
-         Enabled         =   0   'False
+         _extentx        =   3201
+         _extenty        =   847
+         alignment       =   1
+         caption         =   "v0.0.0"
+         enabled         =   0
       End
    End
    Begin MaSS1VE.bluDownload bluDownload 
-      Left            =   720
-      Top             =   1200
-      _ExtentX        =   847
-      _ExtentY        =   847
-   End
-   Begin MaSS1VE.bluWindow bluWindow 
       Left            =   120
       Top             =   1200
-      _ExtentX        =   847
-      _ExtentY        =   847
+      _extentx        =   847
+      _extenty        =   847
    End
 End
 Attribute VB_Name = "mdiMain"
@@ -193,14 +186,14 @@ Option Explicit
  ======================================================================================
 Private Sub MDIForm_Load()
     'Load the 32-bit icon from the EXE
-    Call WIN32.SetIcon(mdiMain.hWnd, "AAA")
+    Call blu.SetIcon(mdiMain.hWnd, "AAA")
     
     'Set the minimum allowed size of the form
-    Let Me.bluWindow.MinWidth = 512
-    Let Me.bluWindow.MinHeight = 320
+    Let Me.bluBorderless.MinWidth = 512
+    Let Me.bluBorderless.MinHeight = 320
     
     'Make it so that the window can be dragged via the top area
-    Call Me.bluWindow.RegisterMoveHandler(Me.toolbar)
+    Call Me.bluBorderless.RegisterMoveHandler(Me.toolbar)
     
     'Set the version number label
     Let Me.lblVersion.Caption = Run.VersionString
@@ -212,21 +205,25 @@ Private Sub MDIForm_Load()
     'Apply colour scheme
     Call Me.SetTheme
     
+    'If on a small screen, start up maximised (we need at least 1024x600)
+    'TODO: On 1024x768 (or less) screen, maximise and remove the maximise ability _
+     from the form -- we want 1024 wide to be the absolute minimum allowed
+    If Screen.Width \ Screen.TwipsPerPixelX <= 1024 Then
+        Let mdiMain.WindowState = VBRUN.FormWindowStateConstants.vbMaximized
+    End If
+    
     'Configure the tab strip
     With Me.bluTab
         .Border = False
         .AutoSize = True
-        .TabCount = 2
+        
+        .TabCount = 3
         .Caption(0) = "LEVELS"
         .Caption(1) = "PLAY"
+        .Caption(2) = "ABOUT"
         'Select no tab to begin with, the welcome screen will be shown by default
         .CurrentTab = -1
     End With
-    
-    'If on a small screen, start up maximised (we need at least 1024x600)
-    If Screen.Width \ Screen.TwipsPerPixelX <= 1024 Then
-        Let mdiMain.WindowState = VBRUN.FormWindowStateConstants.vbMaximized
-    End If
     
     'Load the welcome form into the MDI window so the user has something to look at
     Load frmWelcome
@@ -271,8 +268,8 @@ Private Sub MDIForm_Resize()
     
     'The dimensions for aligned controls on an MDIForm are *completely* unreliable. _
      We'll use the WIN32 API to get the size of the MDIForm in a reliable fashion
-    Dim FormSize As RECT
-    Call WIN32.user32_GetClientRect(Me.hWnd, FormSize)
+    Dim FormSize As blu.RECT
+    Call blu.user32_GetClientRect(Me.hWnd, FormSize)
     'WIN32 returns Pixels, so scale up to Twips
     Dim FormWidth As Long, FormHeight As Long
     Let FormWidth = blu.Xpx(FormSize.Right - FormSize.Left)
@@ -281,21 +278,22 @@ Private Sub MDIForm_Resize()
     Let Me.toolbar.Height = 2 * blu.Ypx(blu.Metric)
     
     'Our title text should only be visible if the form is borderless
-    Let Me.lblMaSS1VE.Visible = Me.bluWindow.IsBorderless
+    Let Me.lblMaSS1VE.Visible = Me.bluBorderless.IsBorderless
     'Position the title in the centre
     Call Me.lblMaSS1VE.Move( _
         (FormWidth - Me.lblMaSS1VE.Width) \ 2, 0, _
         Me.lblMaSS1VE.Width, blu.Ypx(blu.Metric) _
     )
     
-    Let Me.cbxClose.Left = FormWidth - Me.cbxClose.Width
-    Let Me.cbxMax.Left = Me.cbxClose.Left - Me.cbxMax.Width
-    Let Me.cbxMin.Left = Me.cbxMax.Left - Me.cbxMin.Width
+    'Position the controlbox
+    Let Me.bluBorderless.Left = FormWidth - Me.bluBorderless.Width
     
     'If the window is borderless, there will be min/max/close controls that _
      the version number will go next to
     Dim LeftPos As Long
-    Let LeftPos = IIf(Me.bluWindow.IsBorderless = True, Me.cbxMin.Left, FormWidth)
+    Let LeftPos = IIf(Me.bluBorderless.IsBorderless = True, _
+        Me.bluBorderless.Left, FormWidth _
+    )
     
     Call Me.lblVersion.Move( _
         LeftPos - Me.lblVersion.Width, 0, _
@@ -321,17 +319,20 @@ Private Sub MDIForm_Resize()
         Call Me.picHelpToolbar.Move( _
             blu.Xpx, 0, Me.picHelp.ScaleWidth - blu.Xpx, blu.Ypx(blu.Metric) _
         )
-        Call Me.bluWebView.Move( _
+        Call Me.bluHelpView.Move( _
             0, Me.picHelpToolbar.Top + Me.picHelpToolbar.Height, _
-            Me.picHelp.ScaleWidth, FormHeight - Me.picHelp.Top - Me.bluWebView.Top _
+            Me.picHelp.ScaleWidth, FormHeight - Me.picHelp.Top - Me.bluHelpView.Top _
         )
     End If
     
-    Call lblTip.Move( _
-        Me.bluTab.Left + Me.bluTab.Width, blu.Ypx(blu.Metric), _
-        Me.btnHelp.Left - Me.bluTab.Left - Me.bluTab.Width, _
-        blu.Ypx(blu.Metric) _
-    )
+    Let Me.cbxSizer.Left = FormWidth - Me.cbxSizer.Width
+    Let Me.cbxSizer.Top = Me.statusbar.ScaleHeight - Me.cbxSizer.Height
+    
+'    Call lblTip.Move( _
+'        Me.bluTab.Left + Me.bluTab.Width, blu.Ypx(blu.Metric), _
+'        Me.btnHelp.Left - Me.bluTab.Left - Me.bluTab.Width, _
+'        blu.Ypx(blu.Metric) _
+'    )
 End Sub
 
 'MDIFORM Terminate _
@@ -351,6 +352,7 @@ Private Sub MDIForm_Unload(Cancel As Integer)
     Unload frmWelcome
     Unload frmPlay
     Unload frmLevel
+    Unload frmAbout
 End Sub
 
 'EVENT bluTab TABCHANGED : The top tabs have been clicked - change zone _
@@ -363,6 +365,9 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
     'In any instance, get rid of the welcome zone
     Unload frmWelcome
     
+    'Don't keep the PLAY tab around
+    If Index <> 1 Then Unload frmPlay
+    
     Select Case Index
         Case 0 'LEVELS ----------------------------------------------------------------
             Load frmLevel
@@ -371,9 +376,6 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
             Call frmLevel.SetTheme
             Call frmLevel.Show
             Call frmLevel.SetFocus
-            
-            'Don't keep the PLAY tab around
-            Unload frmPlay
             
         Case 1 'PLAY ------------------------------------------------------------------
             'The PLAY zone exports the project to a Master System ROM, this happens _
@@ -384,6 +386,14 @@ Private Sub bluTab_TabChanged(ByVal Index As Integer)
             Call Me.SetTheme
             Call frmPlay.Show
             Call frmPlay.SetFocus
+        
+        Case 2 'ABOUT
+            Load frmAbout
+            'Set the colour scheme to default, this will ensure that when changing _
+             from the level editor the tab colours won't mismatch
+            Call Me.SetTheme
+            Call frmAbout.Show
+            Call frmAbout.SetFocus
             
     End Select
 End Sub
@@ -401,9 +411,9 @@ Private Sub btnHelp_Click()
     End If
 End Sub
 
-'EVENT bluWindow BORDERLESSSTATECHANGE _
+'EVENT bluBorderless BORDERLESSSTATECHANGE _
  ======================================================================================
-Private Sub bluWindow_BorderlessStateChange(ByVal Enabled As Boolean)
+Private Sub bluBorderless_BorderlessStateChange(ByVal Enabled As Boolean)
     'When the Desktop Window Manager switches on or off (i.e. user changes Windows _
      theme between hardware accelerated and non-accerlerated -- classic -- themes) _
      force a resize to shift the UI layout around. The min/max/close buttons will _
@@ -418,7 +428,7 @@ Private Sub bluDownload_Progress( _
     ByVal BytesDownloaded As Long, ByVal BytesTotal As Long _
 )
     Debug.Print "bluDownload: " & _
-        bluDownload.StatusCodeText(StatusCode) & " " & Chr(34) & Status & Chr(34) & _
+        bluDownload.StatusCodeText(StatusCode) & " " & Chr$(34) & Status & Chr$(34) & _
         " (" & BytesDownloaded & " / " & BytesTotal & ")"
 End Sub
 
@@ -447,7 +457,7 @@ Private Sub bluDownload_Complete()
             Call INI.Save: Set INI = Nothing
             
             'Is it different from ours?
-            If Trim(Version) <> Run.VersionString Then
+            If Trim$(Version) <> Run.VersionString Then
                 'There's an update! Download first the release notes...
                 Let Me.bluDownload.Tag = "Update.html"
                 Call Me.bluDownload.Download( _
@@ -490,12 +500,12 @@ End Sub
 Private Sub btnUpdate_Click()
     'Display the changelog/update UI
     Load frmUpdate
-    Call frmUpdate.bluWebView.Navigate(Run.AppData & "Update.html")
+    Call frmUpdate.bluHelpView.Navigate(Run.AppData & "Update.html")
     Call frmUpdate.Show(vbModal, mdiMain)
     'Was the "Exit & Update" button clicked?
     If Run.UpdateResponse = vbOK Then
         'Launch the installer with the path to the installation
-        Call WIN32.shell32_ShellExecute( _
+        Call Lib.shell32_ShellExecute( _
             0, vbNullString, Run.AppData & "Update.exe", _
             "/UPDATE /D=" & Left$(Run.Path, Len(Run.Path) - 1), _
             Run.AppData, SW_SHOWNORMAL _
@@ -526,6 +536,8 @@ Public Sub SetTheme( _
     )
     'Specifics for this form
     Let Me.BackColor = ActiveColour
+    Let Me.toolbar.BackColor = BaseColour
+    Let Me.statusbar.BackColor = BaseColour
     Let Me.picHelpToolbar.BackColor = ActiveColour
     Let Me.lblVersion.TextColour = &HD0D0D0
 End Sub

@@ -234,7 +234,7 @@ Public Function Save() As Boolean
                 Else
                     Print #FileNumber, Section.Keys(ii) & "=" & Section.Items(ii)
                 End If
-            Next ii
+            Next
             Set Section = Nothing
         
         'Is this item a comment / blank line?
@@ -245,7 +245,7 @@ Public Function Save() As Boolean
         Else
             Print #FileNumber, Data.Keys(i) & "=" & Data.Items(i)
         End If
-    Next i
+    Next
     
 Fail:
     'If the file was left open at the point of error, try to free the handle

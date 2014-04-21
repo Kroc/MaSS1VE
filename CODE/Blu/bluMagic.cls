@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
@@ -31,7 +31,7 @@ Option Explicit
 'The following documentation is slightly re-formatted from the original and not _
  written by me (Kroc Camen)
 
-'//////////////////////////////////////////////////////////////////////////////////////
+'--------------------------------------------------------------------------------------
 
 'Paul Caton has done some amazing things combining ASM and VB. Unfortunately, he has _
  moved on from VB and left this code to me. His original code can be found at the _
@@ -47,8 +47,8 @@ Option Explicit
     property page or usercontrol to call back to (just like an AddressOf pointer)
 '3. Allow that 'AddressOf' pointer to exist in any VB code object
 
-'Original work done by Paul Caton. Contributions made by Tai Chi Minh Ralph Eastwood _
- and myself
+'Original work done by Paul Caton. _
+ Contributions made by Tai Chi Minh Ralph Eastwood and myself
 
 'Caton: <planetsourcecode.com/vb/scripts/ShowCode.asp?txtCodeId=64867&lngWId=1> _
  Caton: <planetsourcecode.com/vb/scripts/ShowCode.asp?txtCodeId=51403&lngWId=1> _
@@ -119,12 +119,6 @@ Option Explicit
 '           --- Exceptions. If either the following tests (depending on situation) returns false, unicode will not be used
 '           1) Subclassing: The window being subclassed must return non-zero from IsWindowUnicode(hWnd)
 '           2) Hooking: Non-zero must be returned from IsWindowUnicode(GetDesktopWindow)
-
-
-' *******************************************************************************************************************
-'       THE ENTIRE CLASS OR PARTS HEREIN CAN ALSO BE ADDED TO A FORM, USERCONTROL (UC), or PROPERTY PAGE (PPG)
-'       ALLOWING SUBCLASSING, HOOKING, CALLBACKS CONTAINMENT WITHIN THE FORM/UC/PPG ITSELF.
-' *******************************************************************************************************************
 
 '========================================================================================================
 ' COMMON-USE ITEMS USED IN ALL THUNKS
@@ -307,21 +301,24 @@ End Enum
 'CLASS Terminate _
  ======================================================================================
 Private Sub Class_Terminate()
-  'Stop any subclassing
-  ssc_Terminate
-  'Remove any hooks
-  shk_TerminateHooks
-  'Detatch any callbacks
-  scb_TerminateCallbacks
-  ' the above 3 routines are optional and if you didn't add them to your project, you
-  ' could replace those calls with the following three instead, as needed:
+    'Stop any subclassing
+    ssc_Terminate
+    'Remove any hooks
+    shk_TerminateHooks
+    'Detatch any callbacks
+    scb_TerminateCallbacks
+    ' the above 3 routines are optional and if you didn't add them to your project, you
+    ' could replace those calls with the following three instead, as needed:
         'zTerminateThunks SubclassThunk
         'zTerminateThunks HookThunk
         'zTerminateThunks CallbackThunk
 End Sub
 
-'-SelfSub code------------------------------------------------------------------------------------
-'-The following routines are exclusively for the ssc_Subclass routines----------------------------
+'/// SUBCLASSING //////////////////////////////////////////////////////////////////////
+'Routines specific to subclassing
+
+'ssc_Subclass _
+ ======================================================================================
 Public Function ssc_Subclass(ByVal lng_hWnd As Long, _
                     Optional ByVal lParamUser As Long = 0, _
                     Optional ByVal nOrdinal As Long = 1, _
@@ -613,7 +610,7 @@ Private Function zAddMsg(ByVal uMsg As Long, ByVal nTable As Long, ByVal z_ScMem
           ElseIf zData(i, nBase) = uMsg Then                                    'If the message is already in the table...
             GoTo Bail                                                           'Bail
           End If
-        Next i                                                                  'Next message table entry
+        Next                                                                  'Next message table entry
     
         nCount = i                                                             'On drop through: i = nCount + 1, the new table entry count
         If nCount > MSG_ENTRIES Then                                           'Check for message table overflow
@@ -647,7 +644,7 @@ Private Sub zDelMsg(ByVal uMsg As Long, ByVal nTable As Long, ByVal z_ScMem As L
             zData(i, nBase) = 0                                                 'Null the msg value -- also frees the element for re-use
             GoTo Bail                                                           'Bail
           End If
-        Next i                                                                  'Next message table entry
+        Next                                                                  'Next message table entry
         
        ' zError "zDelMsg", "Message &H" & Hex$(uMsg) & " not found in table"
       End If
@@ -1157,7 +1154,7 @@ Private Sub zTerminateThunks(ByVal vType As eThunkType)
                     RtlMoveMemory VarPtr(oCallback), VarPtr(INDX_OWNER), 4&
             End Select
           End If
-        Next i                                        'Next member of the collection
+        Next                                         'Next member of the collection
       End With
       Set thunkCol = Nothing                         'Destroy the hook/thunk-address collection
     End If
@@ -1165,6 +1162,7 @@ Private Sub zTerminateThunks(ByVal vType As eThunkType)
 
 End Sub
 
+'//////////////////////////////////////////////////////////////////////////////////////
 
 ' EXAMPLE FUNCTIONS/CALLBACKS. Examples pulled from various postings
 

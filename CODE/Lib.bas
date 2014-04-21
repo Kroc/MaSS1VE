@@ -16,6 +16,96 @@ Public Type HSL
     Luminance As Long
 End Type
 
+'/// API //////////////////////////////////////////////////////////////////////////////
+
+'Launch a file with its associated application _
+ <msdn.microsoft.com/en-us/library/windows/desktop/bb762153%28v=vs.85%29.aspx>
+Public Declare Function shell32_ShellExecute Lib "shell32" Alias "ShellExecuteA" ( _
+    ByVal hndWindow As Long, _
+    ByVal Operation As String, _
+    ByVal File As String, _
+    ByVal Parameters As String, _
+    ByVal Directory As String, _
+    ByVal ShowCmd As SW _
+) As Long
+
+Public Enum SW
+    SW_HIDE = 0
+    SW_SHOWNORMAL = 1
+    SW_SHOWMINIMIZED = 2
+    SW_SHOWMAXIMIZED = 3
+    SW_SHOWNOACTIVATE = 4
+    SW_SHOW = 5
+    SW_MINIMIZE = 6
+    SW_SHOWMINNOACTIVE = 7
+    SW_SHOWNA = 8
+    SW_RESTORE = 9
+    SW_SHOWDEFAULT = 10
+End Enum
+
+'Get the location of a special folder, e.g. "My Documents", "System32" &c. _
+ <msdn.microsoft.com/en-us/library/windows/desktop/bb762181%28v=vs.85%29.aspx>
+Private Declare Function shfolder_SHGetFolderPath Lib "shfolder" Alias "SHGetFolderPathA" ( _
+    ByVal hWndOwner As Long, _
+    ByVal Folder As CSIDL, _
+    ByVal Token As Long, _
+    ByVal Flags As SHGFP, _
+    ByVal Path As String _
+) As HRESULT
+
+'Full list with descriptions here: _
+ <msdn.microsoft.com/en-us/library/windows/desktop/bb762494%28v=vs.85%29.aspx>
+Public Enum CSIDL
+    CSIDL_APPDATA = &H1A&       'Application data (roaming), intended for app data
+                                 'that should persist with the user between machines
+    CSIDL_LOCAL_APPDATA = &H1C& 'Application data specific to the PC (e.g. cache)
+    CSIDL_COMMON_APPDATA = &H23 'Application data shared between all users
+    
+    
+    CSIDL_FLAG_CREATE = &H8000& 'OR this with any of the above to create the folder
+                                 'if it doesn't exist (e.g. user deleted My Pictures)
+End Enum
+
+Private Enum SHGFP
+    SHGFP_TYPE_CURRENT = 0      'Retrieve the folder's current path (it may have moved)
+    SHGFP_TYPE_DEFAULT = 1      'Get the default path
+End Enum
+
+'Get the location of the temporary files folder _
+ <msdn.microsoft.com/en-us/library/windows/desktop/aa364992%28v=vs.85%29.aspx>
+Private Declare Function kernel32_GetTempPath Lib "kernel32" Alias "GetTempPathA" ( _
+    ByVal BufferLength As Long, _
+    ByVal Buffer As String _
+) As Long
+
+'I need to investigate the actual effectiveness of this lot (preventing repaints to _
+ reduce flicker). I've fixed flicker during resizing, but there are instances - mostly _
+ when switching level, that several things have to repaint close to each other and I'd _
+ like to hold off redrawing the window entirely until the whole process is complete
+'--------------------------------------------------------------------------------------
+'Private Declare Function SendMessage Lib "user32" Alias "SendMessageA" (ByVal hWnd As Long, ByVal wMsg As Long, ByVal wParam As Long, lParam As Any) As Long
+Public Declare Function RedrawWindow Lib "user32" (ByVal hWnd As Long, lprcUpdate As RECT, ByVal hrgnUpdate As Long, ByVal fuRedraw As Long) As Long
+'Private Const WM_SETREDRAW as Long = &HB
+'Private Const RDW_INVALIDATE as Long = &H1
+'Private Const RDW_INTERNALPAINT as Long = &H2
+Public Const RDW_UPDATENOW As Long = &H100
+Public Const RDW_ALLCHILDREN As Long = &H80
+'
+'Private Declare Function InvalidateRect Lib "user32" (ByVal hWnd As Long, lpRect As Any, ByVal bErase As Long) As Long
+'
+'Public Function LockRedraw(ByVal hWnd As Long)
+'    Call SendMessage(hWnd, WM_SETREDRAW, 0&, 0&)
+'End Function
+'
+'Public Function UnlockRedraw(ByVal hWnd As Long)
+'    Dim r As RECT
+'    Call SendMessage(hWnd, WM_SETREDRAW, 1, 0&)
+'    Call user32_GetClientRect(hWnd, r)
+'    'http://www.xtremevbtalk.com/showthread.php?t=189480
+'    Call RedrawWindow(hWnd, r, 0&, RDW_INVALIDATE Or RDW_INTERNALPAINT Or RDW_UPDATENOW Or RDW_ALLCHILDREN)
+'    Call InvalidateRect(hWnd, 0&, 0)
+'End Function
+
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
 'ArrayDimmed : Is an array dimmed? _
@@ -26,17 +116,78 @@ Public Function ArrayDimmed(varArray As Variant) As Boolean
     'Make sure an array was passed in:
     If IsArray(varArray) Then
         'Get the pointer out of the Variant:
-        Call WIN32.kernel32_RtlMoveMemory( _
+        Call blu.kernel32_RtlMoveMemory( _
             ptrDestination:=pSA, ptrSource:=ByVal VarPtr(varArray) + 8, Length:=4 _
         )
         If pSA Then
             'Try to get the descriptor:
-            Call WIN32.kernel32_RtlMoveMemory( _
+            Call blu.kernel32_RtlMoveMemory( _
                 ptrDestination:=pSA, ptrSource:=ByVal pSA, Length:=4 _
             )
             'Array is initialized only if we got the SAFEARRAY descriptor:
             Let ArrayDimmed = (pSA <> 0)
         End If
+    End If
+End Function
+
+'GetSpecialFolder : Get the path to a system folder, e.g. AppData _
+ ======================================================================================
+Public Function GetSpecialFolder(ByVal Folder As CSIDL) As String
+    'Return null should this fail
+    Let GetSpecialFolder = vbNullString
+    
+    'Fill a buffer to receive the path
+    Dim Result As String
+    Let Result = String$(260, " ")
+    'Attempt to get the special folder path, creating it if it doesn't exist _
+     (e.g. the user deleted the "My Pictures" folder)
+    If shfolder_SHGetFolderPath( _
+        0&, Folder Or CSIDL_FLAG_CREATE, 0&, SHGFP_TYPE_CURRENT, Result _
+    ) = S_OK Then
+        'The string will be null-terminated; find the end and trim, _
+         also ensure it always ends in a slash (this can be inconsistent)
+        Let GetSpecialFolder = Lib.EndSlash(Left$( _
+            Result, InStr(1, Result, vbNullChar) - 1 _
+        ))
+    End If
+End Function
+
+'GetTemporaryFile : Get a unique file name in the temporary files folder _
+ ======================================================================================
+Public Function GetTemporaryFile() As String
+    'The Windows `GetTempFileName` API is not reliable, it has a limit of 65'535 files _
+     which could be hit if we generate a lot and the user doesn't clear their cache. _
+     Instead we'll use a timestamp that should be sufficient enough
+        
+    'Generate a unique file name
+    Let GetTemporaryFile = Lib.GetTemporaryFolder _
+        & App.EXEName & "_" _
+        & Year(Now) _
+        & Right$("0" & Month(Now), 2) _
+        & Right$("0" & Day(Now), 2) _
+        & Right$("0" & Hour(Now), 2) _
+        & Right$("0" & Minute(Now), 2) _
+        & Right$("0" & Second(Now), 2) _
+        & "_" & Timer _
+        & ".tmp"
+End Function
+
+'GetTemporaryFolder : Get the path to the temporary files folder _
+ ======================================================================================
+Public Function GetTemporaryFolder() As String
+    'Return null should this fail
+    Let GetTemporaryFolder = vbNullString
+    
+    'Fill a buffer to receive the path
+    Dim Result As String
+    Let Result = String$(260, " ")
+    
+    If kernel32_GetTempPath(Len(Result), Result) > 0 Then
+        'The string will be null-terminated; find the end and trim, _
+         also ensure it always ends in a slash (this can be inconsistent)
+        Let GetTemporaryFolder = Lib.EndSlash(Left$( _
+            Result, InStr(1, Result, vbNullChar) - 1 _
+        ))
     End If
 End Function
 
@@ -84,8 +235,8 @@ End Function
 Public Function BytesToHex(var() As Byte) As String
     Dim i As Long
     For i = LBound(var) To UBound(var)
-        BytesToHex = BytesToHex & Right("0" & Hex(var(i)), 2)
-    Next i
+        BytesToHex = BytesToHex & Right$("0" & Hex$(var(i)), 2)
+    Next
 End Function
 
 'Exists : Check if an item exists in a Collection object _
@@ -182,7 +333,11 @@ End Function
 
 'Range : Limit a number to a minimum and maximum value _
  ======================================================================================
-Public Function Range(ByVal InputNumber As Long, Optional ByVal Maximum = 2147483647, Optional ByVal Minimum = -2147483648#) As Long
+Public Function Range( _
+    ByVal InputNumber As Long, _
+    Optional ByVal Maximum As Long = 2147483647, _
+    Optional ByVal Minimum As Long = -2147483648# _
+) As Long
     Let Range = Max(Min(InputNumber, Minimum), Maximum)
 End Function
 
@@ -212,7 +367,7 @@ Public Function RGBToHSL(ByVal RGBValue As Long) As HSL
         Next
         For init = 1 To 255
             QTab(init) = 60 / init
-        Next init
+        Next
     End If
     
     r = RGBValue And &HFF
@@ -317,46 +472,4 @@ End Function
 '<cuinl.tripod.com/Tips/direxist.htm>
 Public Function DirExists(ByVal Path As String) As Boolean
     Let DirExists = CBool(Dir$(Path, vbDirectory) <> vbNullString)
-End Function
-
-'GetParentForm : Recurses through the parent objects until we hit the top form _
- ======================================================================================
-Public Function GetParentForm( _
-    ByRef StartWith As Object, _
-    Optional ByVal MDIParent As Boolean = False _
-) As Object
-    'Begin with the provided starting object
-    Set GetParentForm = StartWith
-    'Walk up the parent tree as far as we can
-    Do
-        On Error GoTo NowCheckMDI
-        Set GetParentForm = GetParentForm.Parent
-    Loop
-NowCheckMDI:
-    On Error GoTo Complete
-    'Have been asked to negotiate from the MDI child into the MDI parent?
-    If MDIParent = False Then Exit Function
-    
-    'There is no built in way to find the MDI parent of a child form, though of _
-     course you can only have one MDI form in the app, but I wouldn't want to have to _
-     reference that by name here, yours might be named something else. What we do is _
-     use Win32 to go up through the "MDIClient" window (that isn't exposed to VB) _
-     which acts as the viewport of the MDI form and then up again to hit the MDI form
-    If Not TypeOf GetParentForm Is MDIForm Then
-        Dim MDIParent_hWnd As Long
-        Let MDIParent_hWnd = _
-            WIN32.user32_GetParent( _
-            WIN32.user32_GetParent(GetParentForm.hWnd) _
-        )
-        'Once we have the handle, check the list of loaded VB forms to find the _
-         MDI form it belongs to
-        Dim Frm As Object
-        For Each Frm In VB.Forms
-            If Frm.hWnd = MDIParent_hWnd Then
-                Set GetParentForm = Frm
-                Exit Function
-            End If
-        Next Frm
-    End If
-Complete:
 End Function

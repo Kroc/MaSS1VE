@@ -28,14 +28,14 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
 'CONTROL :: BluButton
 
 'Status             Ready to use
-'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), WIN32.bas
+'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls)
 'Last Updated       31-AUG-13
 'Last Update        Colour not being set on new controls
 
@@ -92,16 +92,16 @@ End Sub
  ======================================================================================
 Private Sub UserControl_Paint()
     'Select the background colour
-    Call WIN32.gdi32_SetDCBrushColor( _
+    Call blu.gdi32_SetDCBrushColor( _
         UserControl.hDC, UserControl.BackColor _
     )
     'Get the dimensions of the button
     Dim ClientRECT As RECT
-    Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRECT)
     'Then use those to fill with the selected background colour
-    Call WIN32.user32_FillRect( _
+    Call blu.user32_FillRect( _
         UserControl.hDC, ClientRECT, _
-        WIN32.gdi32_GetStockObject(DC_BRUSH) _
+        blu.gdi32_GetStockObject(DC_BRUSH) _
     )
     'All the text drawing is shared
     Call blu.DrawText( _
@@ -291,11 +291,11 @@ Private Sub SetForeBackColours()
     If My_State = Inactive And IsHovered = True Then Let SwapColours = Not SwapColours
     
     'Set background colour
-    Let UserControl.BackColor = WIN32.OLETranslateColor( _
+    Let UserControl.BackColor = blu.OLETranslateColor( _
         IIf(SwapColours = False, My_BaseColour, My_ActiveColour) _
     )
     'Set the foreground (text) colour
-    Let UserControl.ForeColor = WIN32.OLETranslateColor( _
+    Let UserControl.ForeColor = blu.OLETranslateColor( _
         IIf(SwapColours = False, My_ActiveColour, My_BaseColour) _
     )
 End Sub

@@ -13,39 +13,20 @@ Begin VB.Form frmROM
    ScaleHeight     =   5895
    ScaleWidth      =   6945
    StartUpPosition =   2  'CenterScreen
+   Begin MaSS1VE.bluBorderless bluBorderless 
+      Height          =   480
+      Left            =   6360
+      TabIndex        =   5
+      Top             =   0
+      Width           =   615
+      _ExtentX        =   1085
+      _ExtentY        =   847
+   End
    Begin VB.Timer Shake 
       Enabled         =   0   'False
       Interval        =   50
       Left            =   5880
       Top             =   4680
-   End
-   Begin MaSS1VE.bluControlBox cbxMin 
-      Height          =   480
-      Left            =   6000
-      TabIndex        =   5
-      Top             =   0
-      Width           =   480
-      _ExtentX        =   847
-      _ExtentY        =   847
-      Style           =   1
-      Kind            =   1
-   End
-   Begin MaSS1VE.bluControlBox cbxClose 
-      Height          =   480
-      Left            =   6480
-      TabIndex        =   4
-      Top             =   0
-      Width           =   480
-      _ExtentX        =   847
-      _ExtentY        =   847
-      Style           =   1
-   End
-   Begin MaSS1VE.bluWindow bluWindow1 
-      Left            =   6360
-      Top             =   4680
-      _ExtentX        =   847
-      _ExtentY        =   847
-      AlwaysOnTop     =   -1  'True
    End
    Begin VB.Image imgDrop 
       Appearance      =   0  'Flat
@@ -174,7 +155,7 @@ Begin VB.Form frmROM
       ForeColor       =   &H00FFEABA&
       Height          =   210
       Left            =   6240
-      TabIndex        =   6
+      TabIndex        =   4
       Top             =   5400
       Width           =   450
    End
@@ -241,7 +222,7 @@ Private Sub Form_Load()
     Let Me.lblCopy.Caption = Replace(Me.lblCopy.Caption, "#YEAR", Year(Now))
     
     'Load the 32-bit icon from the EXE
-    Call WIN32.SetIcon(frmROM.hWnd, "AAA")
+    Call blu.SetIcon(frmROM.hWnd, "AAA")
 End Sub
 
 'FORM Resize _
@@ -249,6 +230,9 @@ End Sub
 Private Sub Form_Resize()
     'If the form is invisible or minimised then don't bother resizing
     If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
+    
+    'Position the control box in the corner
+    Let Me.bluBorderless.Left = Me.ScaleWidth - Me.bluBorderless.Width
     
     'We use an empty image control to cover the form so that we don't get multiple _
      drag in / out events if the user drags over labels &c. (The Z-ordering of this _
@@ -340,7 +324,7 @@ Private Sub imgDrop_OLEDragOver( _
                     Let UIState = ROMGood
                     Exit Sub
                 End If
-            Next i
+            Next
             'No valid files, show our displeasure
             Let Effect = vbDropEffectNone
             Let ROMVerified = False
@@ -404,8 +388,7 @@ Public Property Let UIState(ByVal State As frmROM_UIState)
     
     'During importing various elements are hidden / disabled
     Let Me.imgDrop.Enabled = (State <> Importing)       'Enable/Disable Drag-and-drop
-    Let Me.cbxClose.Visible = (State <> Importing)      'Show/Hide close button
-    Let Me.cbxMin.Visible = (State <> Importing)        'Show/Hide minimise button
+    Let Me.bluBorderless.Visible = (State <> Importing) 'Show/Hide control box
     'During importing you get the hourglass cursor
     Let Me.MousePointer = IIf( _
         State = Importing, _

@@ -38,7 +38,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
@@ -116,7 +116,7 @@ Private Sub UserControl_Resize()
                 .Width = MyTabLength
                 .Height = UserControl.ScaleHeight - IIf(My_Border, blu.Ypx, 0)
             End With
-            Next i
+            Next
             
             With UserControl.lineBorder
             .Y1 = UserControl.ScaleHeight - blu.Ypx
@@ -138,7 +138,7 @@ Private Sub UserControl_Resize()
                 .Width = UserControl.ScaleWidth - IIf(My_Border, blu.Xpx, 0)
                 .Height = MyTabLength
             End With
-            Next i
+            Next
             
             With UserControl.lineBorder
             .X1 = UserControl.ScaleWidth - blu.Xpx
@@ -160,7 +160,7 @@ Private Sub UserControl_Resize()
                 .Width = UserControl.ScaleWidth - IIf(My_Border, blu.Xpx, 0)
                 .Height = MyTabLength
             End With
-            Next i
+            Next
             
             With UserControl.lineBorder
             .X1 = 0: .X2 = .X1
@@ -183,7 +183,7 @@ Private Sub UserControl_Terminate()
     Dim i As Long
     For i = 2 To UserControl.bluButton.Count
         Unload UserControl.bluButton(i - 1)
-    Next i
+    Next
 End Sub
 
 'CONTROL WriteProperties _
@@ -287,7 +287,7 @@ Public Property Let CurrentTab(ByVal Index As Integer)
             Expression:=i = My_CurrentTab, _
             TruePart:=bluSTATE.Active, FalsePart:=bluSTATE.Inactive _
         )
-    Next i
+    Next
     
     Call UserControl.PropertyChanged("CurrentTab")
 End Property
@@ -361,7 +361,7 @@ Public Property Let TabCount(ByVal Count As Integer)
                 On Error Resume Next
                 Call Unload(UserControl.bluButton(i))
             End If
-        Next i
+        Next
     End If
         
     Let My_TabCount = Count

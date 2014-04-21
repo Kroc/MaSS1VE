@@ -337,7 +337,7 @@ Continue_LevelPointers:
             Case &H1A9528B9: Let .Title = "Special Stage 8"
             Case Else: Let .Title = "Level #" & LevelIndex + 1
         End Select
-        Debug.Print .Title & " Header: $" & Hex(LevelHeader) & " (#" & Hex(Pointer) & ")"
+        Debug.Print .Title & " Header: $" & Hex$(LevelHeader) & " (#" & Hex$(Pointer) & ")"
         
         'Record the "Mapping Location" (pointer to the level's Block Mappings)
         Call Lib.PushLong( _
@@ -347,7 +347,7 @@ Continue_LevelPointers:
         'Record which Block Mapping this level uses so it can be set after the _
          Block Mappings have been loaded
         ReDim Preserve LevelBlockMappings(LevelIndex) As String
-        Let LevelBlockMappings(LevelIndex) = Hex(BIN.IntLE(LevelHeader + 19))
+        Let LevelBlockMappings(LevelIndex) = Hex$(BIN.IntLE(LevelHeader + 19))
         
         'Sonic's starting location
         Let .StartX = BIN.B(LevelHeader + 13)
@@ -383,11 +383,11 @@ Continue_LevelPointers:
         
         'Has this floor layout been seen before? (Some levels share the same layout, _
          such as the special stages and parts of Scrap Brain)
-        If Not Lib.Exists(Key:=Hex(Pointer), Col:=GAME.FloorLayouts) Then
+        If Not Lib.Exists(Key:=Hex$(Pointer), Col:=GAME.FloorLayouts) Then
             'Create a new Floor Layout object for the editor
             Dim FloorLayout As S1FloorLayout
             Set FloorLayout = New S1FloorLayout
-            Let FloorLayout.ID = Hex(Pointer)
+            Let FloorLayout.ID = Hex$(Pointer)
             
             'Set the size of the level
             Call FloorLayout.Resize( _
@@ -444,10 +444,10 @@ Continue_LevelPointers:
             'Add the Floor Layout to the global pool of layouts available
             Call GAME.FloorLayouts.Add(Item:=FloorLayout, Key:=FloorLayout.ID)
         End If
-        Debug.Print "- Floor Layout: $" & Hex(ROM_FLOORDATA + Pointer) & " (#" & Hex(Pointer) & ") '" & FloorLayout.Title & "'"
+        Debug.Print "- Floor Layout: $" & Hex$(ROM_FLOORDATA + Pointer) & " (#" & Hex$(Pointer) & ") '" & FloorLayout.Title & "'"
         
         'Apply the Floor Layout to the level
-        Set .FloorLayout = GAME.FloorLayouts(Hex(Pointer))
+        Set .FloorLayout = GAME.FloorLayouts(Hex$(Pointer))
         
         'OBJECT LAYOUT: _
          ------------------------------------------------------------------------------
@@ -455,13 +455,13 @@ Continue_LevelPointers:
         Let Pointer = BIN.IntLE(LevelHeader + 30)
         
         'Has this Object Layout been seen before?
-        If Not Lib.Exists(Key:=Hex(Pointer), Col:=GAME.ObjectLayouts) Then
-            Debug.Print "- Object Layout: $" & Hex(ROM_OBJECTLAYOUT + Pointer) & " (#" & Hex(Pointer) & ")"
+        If Not Lib.Exists(Key:=Hex$(Pointer), Col:=GAME.ObjectLayouts) Then
+            Debug.Print "- Object Layout: $" & Hex$(ROM_OBJECTLAYOUT + Pointer) & " (#" & Hex$(Pointer) & ")"
             
             'Create a new Object Layout to populate from the ROM
             Dim ObjectLayout As S1ObjectLayout
             Set ObjectLayout = New S1ObjectLayout
-            ObjectLayout.ID = Hex(Pointer)
+            ObjectLayout.ID = Hex$(Pointer)
             
             'The first byte of the Object Layout is the number of objects
             For i = 0 To BIN.B(ROM_OBJECTLAYOUT + Pointer) - 1
@@ -479,7 +479,7 @@ Continue_LevelPointers:
             Call GAME.ObjectLayouts.Add(Item:=ObjectLayout, Key:=ObjectLayout.ID)
         End If
         'Apply the Object Layout to this level
-        Set .ObjectLayout = GAME.ObjectLayouts(Hex(Pointer))
+        Set .ObjectLayout = GAME.ObjectLayouts(Hex$(Pointer))
         
         'PALETTE: _
          ------------------------------------------------------------------------------
@@ -518,35 +518,35 @@ Continue_LevelPointers:
          ------------------------------------------------------------------------------
         Let Pointer = BIN.IntLE(LevelHeader + 21)
         'Has this Level Art been processed yet?
-        If Not Lib.Exists(Key:=Hex(Pointer), Col:=GAME.LevelArt) Then
-            Debug.Print "- Level Art: $" & Hex(ROM_LEVELART + Pointer) & " (#" & Hex(Pointer) & ")"
+        If Not Lib.Exists(Key:=Hex$(Pointer), Col:=GAME.LevelArt) Then
+            Debug.Print "- Level Art: $" & Hex$(ROM_LEVELART + Pointer) & " (#" & Hex$(Pointer) & ")"
             
             Dim LevelArt As S1Tileset
             Set LevelArt = Import_Art(ROM_LEVELART + Pointer, .LevelPalette)
-            Let LevelArt.ID = Hex(Pointer)
+            Let LevelArt.ID = Hex$(Pointer)
             
             'Add this Level Art to the global stock
             Call GAME.LevelArt.Add(Item:=LevelArt, Key:=LevelArt.ID)
         End If
         'Apply the Level Art to the level
-        Set .LevelArt = GAME.LevelArt(Hex(Pointer))
+        Set .LevelArt = GAME.LevelArt(Hex$(Pointer))
         
         'SPRITE ART: _
          ------------------------------------------------------------------------------
         Let Pointer = BIN.IntLE(LevelHeader + 24)
         'Has this Level Art been processed yet?
-        If Not Lib.Exists(Key:=Hex(Pointer), Col:=GAME.SpriteArt) Then
-            Debug.Print "- Sprite Art: $" & Hex(ROM_SPRITEART + Pointer) & " (#" & Hex(Pointer) & ")"
+        If Not Lib.Exists(Key:=Hex$(Pointer), Col:=GAME.SpriteArt) Then
+            Debug.Print "- Sprite Art: $" & Hex$(ROM_SPRITEART + Pointer) & " (#" & Hex$(Pointer) & ")"
             
             Dim SpriteArt As S1Tileset
             Set SpriteArt = Import_Art(ROM_SPRITEART + Pointer, .SpritePalette, True)
-            Let SpriteArt.ID = Hex(Pointer)
+            Let SpriteArt.ID = Hex$(Pointer)
             
             'Add this sprite Art to the global stock
             Call GAME.SpriteArt.Add(Item:=SpriteArt, Key:=SpriteArt.ID)
         End If
         'Apply the sprite Art to the level
-        Set .SpriteArt = GAME.SpriteArt(Hex(Pointer))
+        Set .SpriteArt = GAME.SpriteArt(Hex$(Pointer))
         
         'Next level -- onwards and upwards!
         End With
@@ -582,12 +582,12 @@ Continue_LevelPointers:
         Dim X As Long, Y As Long
         For Y = 0 To 139: For X = 0 To FloorLayout1.Width - 1
             Let FloorLayout1.Block(X, Y) = 0
-        Next X: Next Y
+        Next: Next
         
         'On Special Stage 4 / 8, erase the Jungle Act 2 data
         For Y = 140 To FloorLayout2.Height - 1: For X = 0 To FloorLayout2.Width - 1
             Let FloorLayout2.Block(X, Y) = 0
-        Next X: Next Y
+        Next: Next
         
         'Add the new layout to the global pool
         Call GAME.FloorLayouts.Add(FloorLayout2, FloorLayout2.ID)
@@ -630,6 +630,7 @@ Continue_LevelPointers:
 '    Set GAME.Objects(&H22) = Import_SpriteLayout(SL_Normal, &H7638&, "Capsule - Rabbit", GAME.CapsuleTileset, GAME.BossPalette)
 '    Set GAME.Objects(&H24) = Import_SpriteLayout(SL_Normal, &H7752&, "Capsule - Bird", GAME.CapsuleTileset, GAME.BossPalette)
     'TODO: Boss - Scrap Brain (&H22) will require special construction
+    'TODO: Boss - Electric Beam (&H46) will require special construction
     
     'Badnicks: ------------------------------------------------------------------------
     Set GAME.Objects(&H8) = Import_SpriteLayout(SL_Normal, &H66F9&, "Badnick - Crabmeat", GAME.Levels(0).SpriteArt, GAME.Levels(0).SpritePalette)
@@ -709,7 +710,7 @@ Continue_LevelPointers:
         'Create our VB object for representing the block mappings
         Dim BlockMapping As S1BlockMapping
         Set BlockMapping = New S1BlockMapping
-        Let BlockMapping.ID = Hex(MappingLocations(i))
+        Let BlockMapping.ID = Hex$(MappingLocations(i))
         
         'The length of the block mappings is based on where one level's block _
          mappings end and the next begin
@@ -727,14 +728,14 @@ Continue_LevelPointers:
             Case &H62535F09: Let BlockMapping.Title = "Special Stage"
             Case Else: Let BlockMapping.Title = "Block Mapping #" & BlockMapping.ID
         End Select
-        Debug.Print "- Block Mapping $" & Hex(MappingLocations(i)) & " (#" & BlockMapping.ID & ") & '" & BlockMapping.Title & "'"
+        Debug.Print "- Block Mapping $" & Hex$(MappingLocations(i)) & " (#" & BlockMapping.ID & ") & '" & BlockMapping.Title & "'"
         
         'Copy the block mappings over into the VB object
         Let BlockMapping.Length = Length \ 16
         For ii = 0 To Length
             BlockMapping.Tile(BlockIndex:=ii \ 16, TileIndex:=ii Mod 16) = _
                 BIN.B(ROM_BLOCKMAPPINGS + MappingLocations(i) + ii)
-        Next ii
+        Next
         
         'Add to the global stock
         Call GAME.BlockMappings.Add(Item:=BlockMapping, Key:=BlockMapping.ID)
@@ -756,7 +757,7 @@ Continue_LevelPointers:
                 
             End With
         End If
-    Next LevelIndex
+    Next
     
     'ROM imported!
     Let Import = True
@@ -827,7 +828,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
                 Let CurrentFloorLocation = CurrentFloorLocation + UBound(Data) + 1
             End If
         End If
-    Next LevelIndex
+    Next
     Debug.Print "Total Compressed Floor Layout Size: " & CurrentFloorLocation & " Bytes"
     If CurrentFloorLocation > ROM_FLOOR_SPACE Then Stop
     
@@ -881,7 +882,7 @@ Public Sub Export(ByVal FilePath As String, Optional ByVal StartingLevel As Byte
                 Let BIN.B(Pointer + 23) = 9             'Always 9
             End With
         End If
-    Next LevelIndex
+    Next
     
     'Customisations: _
      ----------------------------------------------------------------------------------
@@ -967,8 +968,8 @@ Private Function Import_Art_Uncompressed( _
               (Row * NumberOfTiles * 8) + _
               (TileIndex * 8) + Pixel _
             ) = Pixels(Pixel)
-        Next Pixel
-    Next Row: Next TileIndex
+        Next
+    Next: Next
     
     Call Import_Art_Uncompressed.Tiles.SetByteStream(ImageData)
     Erase ImageData
@@ -1095,9 +1096,9 @@ Private Function Import_Art( _
                     (Bit * TileCount * 8) + _
                     (TileIndex * 8) + Pixel _
                 ) = Pixels(Pixel)
-            Next Pixel
-        Next Bit
-    Next TileIndex
+            Next
+        Next
+    Next
     
     Call Import_Art.Tiles.SetByteStream(ImageData)
     Erase ImageData
@@ -1105,19 +1106,19 @@ End Function
 
 'Import_Palette _
  ======================================================================================
-Private Function Import_Palette(ByVal Offset) As S1Palette
+Private Function Import_Palette(ByVal Offset As Long) As S1Palette
     'Create a new palette in the return field
     Set Import_Palette = New S1Palette
     
     Dim i As Long
     For i = 0 To 15
         Let Import_Palette.Colour(i) = DecodeSMSColour(BIN.B(Offset + i))
-    Next i
+    Next
 End Function
 
 'DecompressRLEData : Decompress Run-Length-Encoded ROM data (e.g. floor layouts) _
  ======================================================================================
-Private Function DecompressRLEData(ByVal Offset, ByVal Length As Long) As Byte()
+Private Function DecompressRLEData(ByVal Offset As Long, ByVal Length As Long) As Byte()
     Dim i As Long, ii As Long, Repeat As Long
     Dim Output() As Byte
     
@@ -1138,7 +1139,7 @@ Private Function DecompressRLEData(ByVal Offset, ByVal Length As Long) As Byte()
             'Fill out the space
             For ii = 1 To Repeat
                 Call Lib.PushByte(What:=BIN.B(i), Where:=Output)
-            Next ii
+            Next
             'Don't count the length byte as data
             Let i = i + 1: Let Previous = -1
         Else
@@ -1146,7 +1147,7 @@ Private Function DecompressRLEData(ByVal Offset, ByVal Length As Long) As Byte()
             Call Lib.PushByte(What:=BIN.B(i), Where:=Output)
             Let Previous = BIN.B(i)
         End If
-    Next i
+    Next
     Let DecompressRLEData = Output
 End Function
 
@@ -1192,7 +1193,7 @@ Private Function CompressRLEData(ByRef Data() As Byte) As Byte()
             Call Lib.PushByte(Where:=Output, What:=Data(i))
             Let Previous = Data(i)
         End If
-    Next i
+    Next
     
     Let CompressRLEData = Output
 End Function
@@ -1256,7 +1257,7 @@ Private Function EncodeSMSTileRow( _
         If Index3 And (2 ^ B) Then Bytes(B) = Bytes(B) Or (2 ^ 2)
         If Index2 And (2 ^ B) Then Bytes(B) = Bytes(B) Or (2 ^ 1)
         If Index1 And (2 ^ B) Then Bytes(B) = Bytes(B) Or (2 ^ 0)
-    Next B
+    Next
     
     Let EncodeSMSTileRow = Bytes
 End Function
@@ -1312,7 +1313,7 @@ Private Function Import_SpriteLayout( _
     
     'If a title is provided, assign it
     Let Import_SpriteLayout.Title = Title
-    Debug.Print "- SpriteLayout: @$" & Hex(ROMOffset) & " '" & Title & "'"
+    Debug.Print "- SpriteLayout: @$" & Hex$(ROMOffset) & " '" & Title & "'"
     
     'Set Palette and Tileset
     Set Import_SpriteLayout.Tileset = Tileset
@@ -1328,7 +1329,7 @@ Private Function Import_SpriteLayout( _
         For X = 0 To 5
             Let Import_SpriteLayout.Layout((Y * 6) + X) = BIN.B(ROMOffset)
             Let ROMOffset = ROMOffset + 1
-        Next X
-    Next Y
+        Next
+    Next
 End Function
 

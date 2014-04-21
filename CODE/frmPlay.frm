@@ -13,18 +13,6 @@ Begin VB.Form frmPlay
    ScaleHeight     =   8430
    ScaleWidth      =   15120
    WindowState     =   2  'Maximized
-   Begin MaSS1VE.bluControlBox cbxSizer 
-      Height          =   360
-      Left            =   14760
-      TabIndex        =   3
-      Top             =   8040
-      Visible         =   0   'False
-      Width           =   360
-      _ExtentX        =   635
-      _ExtentY        =   635
-      Style           =   1
-      Kind            =   3
-   End
    Begin VB.PictureBox picROM 
       Appearance      =   0  'Flat
       BackColor       =   &H00FFAF00&
@@ -54,7 +42,7 @@ Begin VB.Form frmPlay
          ForeColor       =   &H00FFFFFF&
          Height          =   495
          Left            =   0
-         TabIndex        =   4
+         TabIndex        =   3
          Top             =   120
          Width           =   5580
       End
@@ -152,7 +140,7 @@ Private Sub Form_Activate()
     'Force a screen refresh here otherwise the form hangs until the export is complete
     DoEvents
     'Export to the temporary folder, when the user drags and drops, it will copy it
-    Let TempFile = WIN32.GetTemporaryFolder() & "Sonic_the_Hedgehog_MaSS1VE.sms"
+    Let TempFile = Lib.GetTemporaryFolder() & "Sonic_the_Hedgehog_MaSS1VE.sms"
     'Export the ROM
     Call ROM.Export(TempFile)
     'Ready
@@ -171,11 +159,6 @@ Private Sub Form_Resize()
     'Ensure that the MDI child form always stays maximised when changing windows
     If Me.WindowState <> vbMaximized Then Let Me.WindowState = vbMaximized: Exit Sub
     
-    'Position the sizing box in the corner
-    Call Me.cbxSizer.Move( _
-        Me.ScaleWidth - Me.cbxSizer.Width, Me.ScaleHeight - Me.cbxSizer.Height _
-    )
-    
     'Centre the cartridge icon and message, though slightly up looks better
     Call Me.picROM.Move( _
         (Me.ScaleWidth - Me.picROM.Width) \ 2, _
@@ -190,7 +173,7 @@ Private Sub imgROM_DblClick()
     Let mdiMain.MousePointer = VBRUN.MousePointerConstants.vbArrowHourglass
     'Open the ROM file using explorer, if no file association is set, _
      the 'choose a program' window should appear
-    Call WIN32.shell32_ShellExecute( _
+    Call Lib.shell32_ShellExecute( _
         mdiMain.hWnd, vbNullString, TempFile, vbNullString, vbNullString, _
         SW_SHOWNORMAL _
     )

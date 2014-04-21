@@ -1,0 +1,25 @@
+/* =================================================================================
+   MaSS1VE: The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+   Licenced under a Creative Commons 3.0 Attribution Licence
+   --You may use and modify this code how you see fit as long as you give credit
+   ================================================================================= */
+
+html, body	{border: 0;
+		 font: normal 14px/1.2em "Segoe", "Tahoma", sans-serif;
+		 color: white; background-color: #00afff;}
+
+body		{margin: 32px; padding: 0;}
+
+
+h1		{margin: 0; padding: 0; line-height: 32px; font-size: 22px;}
+h2		{font-size: 18px;}
+
+ul		{list-style-type: square;}
+
+sup		{vertical-align: text-top; line-height: 0;}
+		 
+.external	{font-family: Marlett; text-decoration: none !important;
+		 vertical-align: middle; line-height: 0;}
+		 
+ a:link, a:hover, a:visited, a:active
+		{color: #0066cc;}

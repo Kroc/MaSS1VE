@@ -30,21 +30,21 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
 'CONTROL :: bluControlBox
 
-'Provides a Minimise / Maximise / Close Window button. bluWindow will make a form _
- borderless, so we need to provide our own window control buttons. bluWindow could _
+'Provides a Minimise / Maximise / Close Window button. bluBorderless will make a form _
+ borderless, so we need to provide our own window control buttons. bluBorderless could _
  draw these itself, but since there's no borders other controls on the form covering _
  where the buttons would be prevent this. This is mainly a problem with MDIForms _
  which must have an aligning picturebox if you want to place anything on the MDIForm
 
 'Status             Ready to use
-'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), bluWindow.cll, _
-                    Lib.bas, WIN32.bas
+'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), bluBorderless.cll, _
+                    Lib.bas
 'Last Updated       19-SEP-13
 'Last Update        `SendMessage` API was moved to WIN32
 
@@ -87,11 +87,11 @@ Attribute ParentFormEvents.VB_VarHelpID = -1
 Private WithEvents ParentMDIFormEvents As MDIForm
 Attribute ParentMDIFormEvents.VB_VarHelpID = -1
 
-'If the parent form has a bluWindow control, we can listen into its events so that _
+'If the parent form has a bluBorderless control, we can listen into its events so that _
  we can automatically hide bluControlBox controls if the window borders are present, _
  i.e. the Windows min / max / close buttons are visible
-Private WithEvents bluWindowEvents As bluWindow
-Attribute bluWindowEvents.VB_VarHelpID = -1
+Private WithEvents bluBorderlessEvents As bluBorderless
+Attribute bluBorderlessEvents.VB_VarHelpID = -1
 
 'If the button is a hovered state
 Private IsHovered As Boolean
@@ -128,8 +128,8 @@ Private Sub UserControl_MouseDown(Button As Integer, Shift As Integer, X As Sing
          <www.vbforums.com/showthread.php?250431-VB-Flexible-Shangle-%28window-resizing-grip%29>
         Call user32_ReleaseCapture
         'Simulate clicking on the lower-right window border
-        Call WIN32.user32_SendMessage( _
-            Lib.GetParentForm(UserControl.Parent, True).hWnd, _
+        Call blu.user32_SendMessage( _
+            blu.GetParentForm_hWnd(UserControl.Parent, True), _
             WM_NCLBUTTONDOWN, HTBOTTOMRIGHT, 0 _
         )
     End If
@@ -144,9 +144,9 @@ Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single
     
     'If you hold the mouse button down inside the control but release the button _
      outside then it doesn't count (allows you to escape from an accidental close)
-    Dim ClientRECT As RECT
-    Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
-    If WIN32.user32_PtInRect(ClientRECT, X, Y) = API_FALSE Then Exit Sub
+    Dim ClientRect As RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRect)
+    If blu.user32_PtInRect(ClientRect, X, Y) = API_FALSE Then Exit Sub
     
     'Only left button applies to action
     If Button <> VBRUN.MouseButtonConstants.vbLeftButton Then Exit Sub
@@ -228,16 +228,16 @@ Private Sub UserControl_Paint()
     If UserControl.BackColor <> BackColour Then _
         Let UserControl.BackColor = BackColour
     'Select the background colour
-    Call WIN32.gdi32_SetDCBrushColor( _
+    Call blu.gdi32_SetDCBrushColor( _
         UserControl.hDC, UserControl.BackColor _
     )
     'Get the dimensions of the control
-    Dim ClientRECT As RECT
-    Call WIN32.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    Dim ClientRect As RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRect)
     'Then use those to fill with the selected background colour
-    Call WIN32.user32_FillRect( _
-        UserControl.hDC, ClientRECT, _
-        WIN32.gdi32_GetStockObject(DC_BRUSH) _
+    Call blu.user32_FillRect( _
+        UserControl.hDC, ClientRect, _
+        blu.gdi32_GetStockObject(DC_BRUSH) _
     )
 
     'Draw the text! _
@@ -256,7 +256,7 @@ Private Sub UserControl_Paint()
     
     'Use the shared text drawing procedure to save effort
     Call blu.DrawText( _
-        hndDeviceContext:=UserControl.hDC, BoundingBox:=ClientRECT, _
+        hndDeviceContext:=UserControl.hDC, BoundingBox:=ClientRect, _
         Text:=Letter, Colour:=ForeColour, Alignment:=vbCenter, Orientation:=Horizontal, _
         FontName:="Marlett", FontSizePx:=14 _
     )
@@ -311,7 +311,7 @@ Private Sub UserControl_Terminate()
     Set ParentForm = Nothing
     Set ParentFormEvents = Nothing
     Set ParentMDIFormEvents = Nothing
-    Set bluWindowEvents = Nothing
+    Set bluBorderlessEvents = Nothing
 End Sub
 
 'CONTROL WriteProperties _
@@ -355,8 +355,9 @@ End Sub
 
 'EVENT Parent[MDI]Form_Events ACTIVATE _
  ======================================================================================
-'When the parent form becomes visible, check for a bluWindow control and hide _
- ourselves if bluWindow is inactive (the Windows min / max /close buttons are visible)
+'When the parent form becomes visible, check for a bluBorderless control and hide _
+ ourselves if bluBorderless is inactive (the Windows min / max /close buttons are _
+ visible)
 Private Sub ParentMDIFormEvents_Activate(): Call ParentFormEvents_Activate: End Sub
 Private Sub ParentFormEvents_Activate()
     'If the form is borderless to begin with, we need to stay visible _
@@ -366,34 +367,34 @@ Private Sub ParentFormEvents_Activate()
             Then Exit Sub
     End If
     
-    'Search the parent form for a bluWindow control
+    'Search the parent form for a bluBorderless control
     Dim VBControl As VB.Control
     For Each VBControl In ParentForm.Controls
-        'Is this is a bluWindow control?
-        If (TypeOf VBControl Is bluWindow) Then
+        'Is this is a bluBorderless control?
+        If (TypeOf VBControl Is bluBorderless) Then
             'Begin listening to its events
-            Set bluWindowEvents = Nothing
-            Set bluWindowEvents = VBControl
+            Set bluBorderlessEvents = Nothing
+            Set bluBorderlessEvents = VBControl
             'If we are min/max/close button, show or hide ourselves based on if _
-             bluWindow's borderless UI is active
+             bluBorderless's borderless UI is active
             If My_Kind <> Sizer Then
-                Let UserControl.Extender.Visible = bluWindowEvents.IsBorderless
+                Let UserControl.Extender.Visible = bluBorderlessEvents.IsBorderless
             End If
             Exit For
         End If
-    Next VBControl
+    Next
     
     'If a sizer control, hide ourselves if the form is maximised
     Call ParentFormEvents_Resize
 End Sub
 
-'EVENT bluWindowEvents BORDERLESSSTATECHANGE _
+'EVENT bluBorderlessEvents BORDERLESSSTATECHANGE _
  ======================================================================================
-Private Sub bluWindowEvents_BorderlessStateChange(ByVal Enabled As Boolean)
+Private Sub bluBorderlessEvents_BorderlessStateChange(ByVal Enabled As Boolean)
     'If we are min/max/close button, show or hide ourselves based on if _
-     bluWindow's borderless UI is active
+     bluBorderless's borderless UI is active
     If My_Kind <> Sizer Then
-        Let UserControl.Extender.Visible = bluWindowEvents.IsBorderless
+        Let UserControl.Extender.Visible = bluBorderlessEvents.IsBorderless
     End If
 End Sub
 
@@ -455,7 +456,7 @@ Private Sub ReferenceParentForm()
      interface of the whole app and not a 'document' window (don't use borderless UI _
      for that). Therefore bluControlBox will control the MDI parent, not the child _
      form when it comes to min / max / close / sizer
-    Set ParentForm = Lib.GetParentForm(UserControl.Parent, True)
+    Set ParentForm = blu.GetParentForm(UserControl.Parent, True)
     
     'NOTE: During compilation, the events won't bind, so we need to skip
     If blu.UserMode = False Then Exit Sub

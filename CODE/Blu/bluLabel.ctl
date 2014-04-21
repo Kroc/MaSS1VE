@@ -21,14 +21,14 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
 'CONTROL :: bluLabel
 
 'Status             Ready to use
-'Dependencies       blu.bas, WIN32.bas
+'Dependencies       blu.bas
 'Last Updated       31-AUG-13
 'Last Update        Ignore errors in `Paint` procedure as `hDC` might not be available
 
@@ -80,19 +80,19 @@ Private Sub UserControl_Paint()
     On Error Resume Next
     
     'Select the background colour
-    Call WIN32.gdi32_SetDCBrushColor( _
+    Call blu.gdi32_SetDCBrushColor( _
         UserControl.hDC, UserControl.BackColor _
     )
     'Get the dimensions of the label _
      (can't use `GetClientRect` as we don't have a hWnd!)
     Dim ClientRECT As RECT
-    Call WIN32.user32_SetRect( _
+    Call blu.user32_SetRect( _
         ClientRECT, 0, 0, UserControl.ScaleWidth, UserControl.ScaleHeight _
     )
     'Then use those to fill with the selected background colour
-    Call WIN32.user32_FillRect( _
+    Call blu.user32_FillRect( _
         UserControl.hDC, ClientRECT, _
-        WIN32.gdi32_GetStockObject(DC_BRUSH) _
+        blu.gdi32_GetStockObject(DC_BRUSH) _
     )
     'All the text drawing is shared
     Call blu.DrawText( _
@@ -300,17 +300,17 @@ Private Sub SetForeBackColours()
     Select Case My_Style
         Case bluSTYLE.Invert
             'Set the background colour
-            Let UserControl.BackColor = WIN32.OLETranslateColor(My_ActiveColour)
+            Let UserControl.BackColor = blu.OLETranslateColor(My_ActiveColour)
             'Set the text colour
-            Let UserControl.ForeColor = WIN32.OLETranslateColor( _
+            Let UserControl.ForeColor = blu.OLETranslateColor( _
                 IIf(My_State = Active, My_BaseColour, My_InertColour) _
             )
 
         Case Else
             'Set the background colour
-            Let UserControl.BackColor = WIN32.OLETranslateColor(My_BaseColour)
+            Let UserControl.BackColor = blu.OLETranslateColor(My_BaseColour)
             'Set the text colour
-            Let UserControl.ForeColor = WIN32.OLETranslateColor( _
+            Let UserControl.ForeColor = blu.OLETranslateColor( _
                 IIf(My_State = Active, My_ActiveColour, My_TextColour) _
             )
     End Select

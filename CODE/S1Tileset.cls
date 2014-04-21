@@ -50,7 +50,7 @@ End Sub
  ======================================================================================
 Public Sub ApplyPalette(ByRef Palette As S1Palette)
     Dim i As Long
-    For i = 0 To 15: Let Tiles.Colour(i) = Palette.Colour(i): Next i
+    For i = 0 To 15: Let Tiles.Colour(i) = Palette.Colour(i): Next
 End Sub
 
 'Create _

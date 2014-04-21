@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
@@ -176,17 +176,6 @@ Private Enum MK
     MK_MBUTTON = &H10           'Middle mouse button
     MK_XBUTTON1 = &H20          'PREV mouse button
     MK_XBUTTON2 = &H40          'NEXT mouse button
-End Enum
-
-'The window messages we're subclassing
-Private Enum WM
-    WM_SETCURSOR = &H20         'For setting the cursor on the control
-    WM_MOUSEMOVE = &H200
-    WM_MOUSEWHEEL = &H20A
-    WM_XBUTTONDOWN = &H20B      'Mouse X button pressed (Back / Forward)
-    WM_MOUSEHWHEEL = &H20E
-    WM_MOUSEHOVER = &H2A1
-    WM_MOUSELEAVE = &H2A3
 End Enum
 
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////

@@ -13,18 +13,6 @@ Begin VB.Form frmWelcome
    ScaleHeight     =   8430
    ScaleWidth      =   15120
    WindowState     =   2  'Maximized
-   Begin MaSS1VE.bluControlBox cbxSizer 
-      Height          =   360
-      Left            =   14760
-      TabIndex        =   2
-      Top             =   8040
-      Visible         =   0   'False
-      Width           =   360
-      _ExtentX        =   635
-      _ExtentY        =   635
-      Style           =   1
-      Kind            =   3
-   End
    Begin VB.Label Label2 
       Appearance      =   0  'Flat
       BackColor       =   &H80000005&
@@ -85,8 +73,4 @@ Private Sub Form_Resize()
     If Me.WindowState = vbMinimized Or Me.Visible = False Then Exit Sub
     'Ensure that the MDI child form always stays maximised when changing windows
     If Me.WindowState <> vbMaximized Then Let Me.WindowState = vbMaximized: Exit Sub
-    
-    Call Me.cbxSizer.Move( _
-        Me.ScaleWidth - Me.cbxSizer.Width, Me.ScaleHeight - Me.cbxSizer.Height _
-    )
 End Sub

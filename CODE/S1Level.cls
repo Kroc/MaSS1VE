@@ -239,7 +239,6 @@ End Sub
 'ApplyPalette : When palettes / layouts / mappings are swapped around, fix the palette _
  ======================================================================================
 Private Sub ApplyPalette()
-    Dim i As Long
     'Because all the components of a level can be swapped about, and shared with other _
      levels, the palette inside the level art's image has to be changed to match with _
      the level's chosen palette whenever a change occurs
@@ -273,8 +272,8 @@ Private Function CountRings() As Long
                 My_BlockMapping.RingsInBlock( _
                     My_FloorLayout.Block(X, Y) _
                 )
-        Next X
-    Next Y
+        Next
+    Next
     
     'Count the rings in the object layout:
     Dim i As Long

@@ -23,13 +23,23 @@ Option Explicit
  to it easily, including using integers in little-endian order
 
 'Status             Ready to use
-'Dependencies       WIN32.bas
-'Last Updated       30-OCT-13
-'Last Update        Allow changing of LOF
+'Dependencies       NONE
+'Last Updated       28-APR-14
+'Last Update        Removed external dependencies
 
 'The CRC function of this class is from "Calculating CRC32 With VB" by Steve McMahon _
  <www.vbaccelerator.com/home/VB/Code/Libraries/CRC32/article.asp> which was _
  derived from from the VB.NET CRC32 algorithm by Paul Caton
+
+'/// API //////////////////////////////////////////////////////////////////////////////
+
+'Copy raw memory from one place to another _
+ <msdn.microsoft.com/en-us/library/windows/desktop/aa366535%28v=vs.85%29.aspx>
+Private Declare Sub kernel32_RtlMoveMemory_ Lib "kernel32" Alias "RtlMoveMemory" ( _
+    ByRef ptrDestination As Any, _
+    ByRef ptrSource As Any, _
+    ByVal Length As Long _
+)
 
 '/// CLASS STORAGE ////////////////////////////////////////////////////////////////////
 
@@ -64,9 +74,9 @@ Private Sub Class_Initialize()
             Else
                 Let Value = ((Value And &HFFFFFFFE) \ 2&) And &H7FFFFFFF
             End If
-        Next ii
+        Next
         Let CRCTable(i) = Value
-    Next i
+    Next
 End Sub
 
 'CLASS Terminate _
@@ -116,7 +126,7 @@ Public Property Let IntBE(ByVal Index As Long, ByVal Value As Long)
     Let Data(Index + 1) = Bytes(0)
 End Property
 
-'PROPERTY LOF : Return the Length Of the File _
+'PROPERTY LOF : Length Of the File _
  ======================================================================================
 Public Property Get LOF() As Long
     'If no file has been loaded yet, return 0
@@ -138,10 +148,7 @@ Public Function GetBArr(ByVal Index As Long, ByVal Length As Long) As Byte()
     Dim Arr() As Byte
     ReDim Arr(0 To Length - 1) As Byte
     
-'    'This _might_ be more memory safe...? (no crashing)
-'    Dim i As Long: For i = 0 To Length - 1: Let Arr(i) = Data(Index + i): Next i
-    
-    Call WIN32.kernel32_RtlMoveMemory( _
+    Call kernel32_RtlMoveMemory_( _
         ptrDestination:=Arr(0), ptrSource:=Data(Index), Length:=Length _
     )
     
@@ -151,17 +158,17 @@ End Function
 'SetBArr : Set a part of the file data using a byte array _
  ======================================================================================
 Public Sub SetBArr(ByVal Index As Long, ByRef Arr() As Byte)
-'    'This _might_ be more memory safe...? (no crashing)
-'    Dim i As Long: For i = 0 To Length - 1: Let Data(Index + i) = Arr(i): Next i
-
-    Call WIN32.kernel32_RtlMoveMemory( _
+    Call kernel32_RtlMoveMemory_( _
         ptrDestination:=Data(Index), ptrSource:=Arr(0), Length:=UBound(Arr) _
     )
 End Sub
 
 'CRC : Perform a Cyclic-Redundancy-Check on all or part of the file _
  ======================================================================================
-Public Function CRC(Optional ByVal OffsetBegin As Long = 0, Optional ByVal Length As Long = 0) As Long
+'Based upon <vbaccelerator.com/home/VB/Code/Libraries/CRC32/article.asp>
+Public Function CRC( _
+    Optional ByVal OffsetBegin As Long = 0, Optional ByVal Length As Long = 0 _
+) As Long
     'If no length is provided, process through to the end of the file, also _
      if the length requested is longer than the file itself run through to the end
     If Length = 0 Or Length > Me.LOF Then Let Length = UBound(Data) - OffsetBegin
@@ -170,11 +177,12 @@ Public Function CRC(Optional ByVal OffsetBegin As Long = 0, Optional ByVal Lengt
     Dim iLookup As Integer
     
     Let CRC = &HFFFFFFFF
-    For i = 0 To Length - 1
+    Let Length = Length - 1
+    For i = 0 To Length
         iLookup = (CRC And &HFF) Xor Data(OffsetBegin + i)
         CRC = ((CRC And &HFFFFFF00) \ &H100) And 16777215 ' nasty shr 8 with vb :/
         CRC = CRC Xor CRCTable(iLookup)
-    Next i
+    Next
    
    Let CRC = Not (CRC)
 End Function
@@ -200,8 +208,8 @@ Public Function Load(ByVal FilePath As String) As Boolean
 Fail:
     Call MsgBox( _
         "Error in BinaryFile.cls: " & _
-        "An unexpected error occurred whilst trying to load " & Chr(34) & FilePath & _
-        Chr(34) & ", the system says: " & _
+        "An unexpected error occurred whilst trying to load " & Chr$(34) & FilePath & _
+        Chr$(34) & ", the system says: " & _
         vbCrLf & vbCrLf & _
         "Err #" & Err.Number & ": " & Err.Description, _
         vbCritical Or vbOKOnly, "Unexepected Error" _
@@ -258,8 +266,7 @@ End Function
  ======================================================================================
 Private Function BytesToInt(ByVal Lo As Byte, ByVal Hi As Byte) As Long
     'Combine a couple of bytes into a number (for dealing with little-endiness), _
-     with thanks to this discssion: _
-     <www.vbforums.com/showthread.php?616645-RESOLVED-Convert-two-bytes-of-hex-to-integer-in-VB6>
+     with thanks to this discssion: <vbforums.com/showthread.php?616645>
     Let BytesToInt = (Hi * 256&) + Lo
 End Function
 
@@ -269,7 +276,7 @@ Private Function IntToBytes(ByVal Value As Long) As Byte()
     Dim Bytes(0 To 1) As Byte
     'Slice the first 8 bits
     Let Bytes(0) = (Value And &HFF&)
-    'and the second 8 bits and shift them down to
+    'and the second 8 bits and shift them down
     Let Bytes(1) = (Value And &HFF00&) / &H100
     Let IntToBytes = Bytes
 End Function

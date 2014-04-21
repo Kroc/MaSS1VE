@@ -13,7 +13,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 '======================================================================================
-'MaSS1VE : The Master System Sonic 1 Visual Editor; Copyright (C) Kroc Camen, 2013-14
+'blu : A Modern Metro-esque graphical toolkit; Copyright (C) Kroc Camen, 2013-14
 'Licenced under a Creative Commons 3.0 Attribution Licence
 '--You may use and modify this code how you see fit as long as you give credit
 '======================================================================================
@@ -23,7 +23,7 @@ Option Explicit
  Supports 8-bit, 24-bit and 32-bit images.
 
 'Status             Ready to use
-'Dependencies       WIN32.bas
+'Dependencies       blu.bas
 'Last Updated       03-JAN-14
 'Last Update        Paint function now returns a value!
 
@@ -428,13 +428,13 @@ Public Sub Cls()
         RECTToSet:=Box, Left:=0, Top:=0, Right:=Me.Width, Bottom:=Me.Height _
     )
     'Set the background colour to fill
-    Call WIN32.gdi32_SetDCBrushColor( _
+    Call blu.gdi32_SetDCBrushColor( _
         My_hndDC, Me.BackgroundColour _
     )
     'Do the filling
     Call user32_FillRect( _
         My_hndDC, Box, _
-        WIN32.gdi32_GetStockObject(DC_BRUSH) _
+        blu.gdi32_GetStockObject(DC_BRUSH) _
     )
 End Sub
 
@@ -442,7 +442,7 @@ End Sub
  ======================================================================================
 Public Function Create8Bit( _
     ByVal ImageWidth As Long, ByVal ImageHeight As Long, _
-    Optional ByRef Palette_LongArray As Variant, _
+    Optional ByRef Palette_LongArray As Variant = Null, _
     Optional ByVal UseTransparency As Boolean = False _
 ) As Long
     'Create the image by proxy
@@ -459,7 +459,7 @@ Public Function Create8Bit( _
         Dim i As Long 'Copy the palette in
         For i = LBound(Palette_LongArray) To UBound(Palette_LongArray)
             Let Me.Colour(i) = Palette_LongArray(i)
-        Next i
+        Next
     End If
     
     'If marked as transparent then all painting operations will exclude the background
@@ -669,7 +669,7 @@ Private Function Create( _
         'Set a quick and dirty test palette
         Dim i As Long: For i = 0 To 255: With BITMAP.Colors(i)
             .Blue = (i Mod 16) * 16: .Green = (i Mod 16) * 16: .Red = (i Mod 16) * 16
-        End With: Next i
+        End With: Next
     End If
     
     'Create a Device Context based on the screen

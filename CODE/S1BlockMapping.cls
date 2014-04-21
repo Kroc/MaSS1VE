@@ -93,5 +93,5 @@ Public Function RingsInBlock(ByVal Index As Byte) As Long
     Dim i As Long
     For i = 0 To 15
         If Me.Tile(Index, i) = &HFF& Then Let RingsInBlock = RingsInBlock + 1
-    Next i
+    Next
 End Function

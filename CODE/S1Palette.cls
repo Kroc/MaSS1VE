@@ -40,7 +40,7 @@ End Sub
  ======================================================================================
 Public Property Get Colours() As Long(): Let Colours = Palette: End Property
 Public Property Let Colours(ByRef NewPalette() As Long)
-    Dim i As Long: For i = 0 To 15: Let Palette(i) = NewPalette(i): Next i
+    Dim i As Long: For i = 0 To 15: Let Palette(i) = NewPalette(i): Next
 End Property
 
 'PROPERTY Colour _
