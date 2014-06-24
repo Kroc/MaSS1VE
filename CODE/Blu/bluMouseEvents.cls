@@ -23,114 +23,11 @@ Option Explicit
  Special thanks to Tanner Helland <tannerhelland.com> for direction and bug-fixes
 
 'Status             Ready to use
-'Dependencies       bluMagic.cls
-'Last Updated       03-SEP-13
-'Last Update        Changed `LenB` use to `Len`, it works safer for some reason
-
-'/// PUBLIC ENUMS /////////////////////////////////////////////////////////////////////
-'Enums you might have to refer to in your own code
-'NOTE: Because these are public enums in a private class, you will need to prefix the _
- value name with the enum name, i.e. `Let a = IDC.IDC_HAND`
-
-'Mouse cursor selection for the `MousePointer` property
-Public Enum IDC
-    'This is our own addition to tell us to not change it one way or another
-    vbDefault = 0
-    
-    IDC_APPSTARTING = 32650&
-    IDC_ARROW = 32512&
-    IDC_CROSS = 32515&
-    IDC_HAND = 32649&
-    IDC_HELP = 32651&
-    IDC_IBEAM = 32513&
-    IDC_ICON = 32641&
-    IDC_NO = 32648&
-    IDC_SIZEALL = 32646&
-    IDC_SIZENESW = 32643&
-    IDC_SIZENS = 32645&
-    IDC_SIZENWSE = 32642&
-    IDC_SIZEWE = 32644&
-    IDC_UPARROW = 32516&
-    IDC_WAIT = 32514&
-End Enum
+'Dependencies       blu.bas, bluMagic.cls
+'Last Updated       24-JUN-14
+'Last Update        Improved integration with blu.bas
 
 '/// API DEFS /////////////////////////////////////////////////////////////////////////
-
-'In VB6 True is -1 and False is 0, but in the Win32 API it's 1 for True
-Private Enum BOOL
-    API_TRUE = 1
-    API_FALSE = 0
-End Enum
-
-'A point _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162805%28v=vs.85%29.aspx>
-Private Type POINT
-   X As Long
-   Y As Long
-End Type
-
-'A rectangle _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162897%28v=vs.85%29.aspx>
-Private Type RECT
-    Left                As Long
-    Top                 As Long
-    'It's important to note that the Right and Bottom edges are _exclusive_, that is, _
-     the right-most and bottom-most pixel are not part of the overall width / height _
-     <blogs.msdn.com/b/oldnewthing/archive/2004/02/18/75652.aspx>
-    Right               As Long
-    Bottom              As Long
-End Type
-
-'Get/set various system configuration info _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms724947%28v=vs.85%29.aspx>
-Private Declare Function user32_SystemParametersInfo Lib "user32" Alias "SystemParametersInfoA" ( _
-    ByVal Action As SPI, _
-    ByVal Param As Long, _
-    ByRef ParamAny As Any, _
-    ByVal WinIni As Long _
-) As BOOL
-
-Private Enum SPI
-    'Number of "lines" to scroll with the mouse wheel
-    SPI_GETWHEELSCROLLLINES = &H68
-    'Number of "chars" to scroll with a horizontal mouse wheel
-    SPI_GETWHEELSCROLLCHARS = &H6C
-End Enum
-
-'Get the dimensions of the whole window, including the border area _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms633519%28v=vs.85%29.aspx>
-Private Declare Function user32_GetWindowRect Lib "user32" Alias "GetWindowRect" ( _
-    ByVal hndWindow As Long, _
-    ByRef IntoRECT As RECT _
-) As BOOL
-
-'Convert an X/Y point on the screen to local coordinates of a window area _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162952%28v=vs.85%29.aspx>
-Private Declare Function user32_ScreenToClient Lib "user32" Alias "ScreenToClient" ( _
-    ByVal hndWindow As Long, _
-    ByRef ScreenPoint As POINT _
-) As BOOL
-
-'Is a point in the rectangle? e.g. check if mouse is within a window _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162882%28v=vs.85%29.aspx>
-Private Declare Function user32_PtInRect Lib "user32" Alias "PtInRect" ( _
-    ByRef InRect As RECT, _
-    ByVal X As Long, _
-    ByVal Y As Long _
-) As BOOL
-
-'Load a mouse cursor _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms648391%28v=vs.85%29.aspx>
-Private Declare Function user32_LoadCursor Lib "user32" Alias "LoadCursorA" ( _
-    ByVal hndInstance As Long, _
-    ByVal CursorName As IDC _
-) As Long
-
-'Sets the screen cursor _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms648393%28v=vs.85%29.aspx>
-Private Declare Function user32_SetCursor Lib "user32" Alias "SetCursor" ( _
-    ByVal hndCursor As Long _
-) As Long
 
 'A mouse event _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms644968%28v=vs.85%29.aspx>
@@ -336,22 +233,6 @@ Public Sub Attach( _
         )
     End If
 End Sub
-
-'/// PRIVATE PROPERTIES ///////////////////////////////////////////////////////////////
-
-'PROPERTY WheelScrollLines : The number of lines to scroll when the mouse wheel rolls _
- ======================================================================================
-Private Property Get WheelScrollLines() As Long
-    Call user32_SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, WheelScrollLines, 0)
-    If WheelScrollLines <= 0 Then Let WheelScrollLines = 3
-End Property
-
-'PROPERTY WheelScrollChars : The number of characters to scroll with horizontal wheel _
- ======================================================================================
-Private Property Get WheelScrollChars() As Long
-    Call user32_SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0, WheelScrollChars, 0)
-    If WheelScrollChars <= 0 Then Let WheelScrollChars = 3
-End Property
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 

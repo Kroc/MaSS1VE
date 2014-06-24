@@ -56,6 +56,41 @@ Public Declare Function user32_ScreenToClient Lib "user32" Alias "ScreenToClient
     ByRef ScreenPoint As POINT _
 ) As BOOL
 
+'Load a mouse cursor _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms648391%28v=vs.85%29.aspx>
+Public Declare Function user32_LoadCursor Lib "user32" Alias "LoadCursorA" ( _
+    ByVal hndInstance As Long, _
+    ByVal CursorName As IDC _
+) As Long
+
+'Mouse cursor selection for the `MousePointer` property
+Public Enum IDC
+    'This is our own addition to tell us to not change it one way or another
+    vbDefault = 0
+    
+    IDC_APPSTARTING = 32650&
+    IDC_ARROW = 32512&
+    IDC_CROSS = 32515&
+    IDC_HAND = 32649&
+    IDC_HELP = 32651&
+    IDC_IBEAM = 32513&
+    IDC_ICON = 32641&
+    IDC_NO = 32648&
+    IDC_SIZEALL = 32646&
+    IDC_SIZENESW = 32643&
+    IDC_SIZENS = 32645&
+    IDC_SIZENWSE = 32642&
+    IDC_SIZEWE = 32644&
+    IDC_UPARROW = 32516&
+    IDC_WAIT = 32514&
+End Enum
+
+'Sets the screen cursor _
+ <msdn.microsoft.com/en-us/library/windows/desktop/ms648393%28v=vs.85%29.aspx>
+Public Declare Function user32_SetCursor Lib "user32" Alias "SetCursor" ( _
+    ByVal hndCursor As Long _
+) As Long
+
 'TODO: GetAsyncKeyState
 '<msdn.microsoft.com/en-us/library/ms646293%28VS.85%29.aspx>
 
