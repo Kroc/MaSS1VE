@@ -111,6 +111,13 @@ Public Declare Sub kernel32_RtlMoveMemory Lib "kernel32" Alias "RtlMoveMemory" (
     ByVal Length As Long _
 )
 
+'Fill memory with zeroes (used to erase a BITMAPINFO structure) _
+ <msdn.microsoft.com/en-us/library/windows/desktop/aa366920%28v=vs.85%29.aspx>
+Public Declare Sub kernel32_RtlZeroMemory Lib "kernel32" Alias "RtlZeroMemory" ( _
+    ByRef ptrDestination As Any, _
+    ByVal Length As Long _
+)
+
 'DLL LOADING _
  --------------------------------------------------------------------------------------
 
@@ -399,7 +406,7 @@ Public Declare Function user32_GetWindowRect Lib "user32" Alias "GetWindowRect" 
  <msdn.microsoft.com/en-us/library/windows/desktop/ms633503%28v=vs.85%29.aspx>
 Public Declare Function user32_GetClientRect Lib "user32" Alias "GetClientRect" ( _
     ByVal hndWindow As Long, _
-    ByRef ClientRect As RECT _
+    ByRef ClientRECT As RECT _
 ) As BOOL
 
 '<msdn.microsoft.com/en-us/library/windows/desktop/dd145002%28v=vs.85%29.aspx>
@@ -456,7 +463,134 @@ Public Enum WM
     WM_DWMCOMPOSITIONCHANGED = &H31E    'DWM was enabled / disabled
 End Enum
 
-'GRAPHICS _
+'BITMAPS: _
+ --------------------------------------------------------------------------------------
+ 
+'The header used on a .BMP file _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd183374%28v=vs.85%29.aspx>
+Public Type BITMAPFILEHEADER
+    Type As Integer
+    SIZE As Long
+    Reserved1 As Integer
+    Reserved2 As Integer
+    OffsetToBits As Long
+End Type
+
+'The header that describes a bitmap _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd183376%28v=vs.85%29.aspx>
+Public Type BITMAPINFOHEADER
+    SizeOfMe            As Long     'Number of bytes required by the structure
+    Width               As Long     'Width of the bitmap, in pixels
+    Height              As Long     'Height of the bitmap, in pixels. If negative the _
+                                     bitmap is top-down instead of upside-down
+    BitPlanes           As Integer  'Number of bit-planes; keep this as 1
+    Depth               As Integer  'Bit-depth
+    Compression         As Long     '=`gdi32_Compression`
+    DataSize            As Long     'Length of the data for the bits (4-Byte aligned)
+    pxpmX               As Long     'Pixels Per Metre on the X-Axis
+    pxpmY               As Long     'Pixles Per Metre on the Y-Axis
+    UsedColors          As Long     'Number of (palette) colours used in the image
+    ImportantColors     As Long     'Number of palette colours deemed critical
+End Type
+
+'Compression descriptor for the DIB image in memory, we don't use this beyond the _
+ `DI_RGB` value as we want our images to be manipulable
+Public Enum gdi32_Compression
+    BI_RGB = 0                      'Uncompressed
+    BI_RLE8 = 1                     'Run-Length-Encoding designed for 8-Bit images
+    BI_RLE4 = 2                     'Run-Length-Encoding designed for 4-Bit images
+    BI_BITFIELDS = 3                'Allows use of 5-5-5 and 5-6-5 bit colours
+    BI_JPEG = 4                     'It's a JPEG!
+    BI_PNG = 5                      'It's a PNG!
+End Enum
+
+'A palette entry in the BITMAPINFO structure _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162938%28v=vs.85%29.aspx>
+Public Type RGBQUAD
+    Blue                As Byte
+    Green               As Byte
+    Red                 As Byte
+    Reserved            As Byte
+End Type
+
+'A bitmap combines the header and the palette _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd183375%28v=vs.85%29.aspx/html>
+Public Type BITMAPINFO
+    Header              As BITMAPINFOHEADER
+    Colors(0 To 255)    As RGBQUAD
+End Type
+
+'Create a memory Device Context compatible with an existing device (screen by default) _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd183489%28v=vs.85%29.aspx>
+Public Declare Function gdi32_CreateCompatibleDC Lib "gdi32" Alias "CreateCompatibleDC" ( _
+    ByVal hndDeviceContext As Long _
+) As Long
+
+'Creates the DIB based on the `BITMAPINFO` structure passed _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd183494%28v=vs.85%29.aspx>
+Public Declare Function gdi32_CreateDIBSection Lib "gdi32" Alias "CreateDIBSection" ( _
+    ByVal hndDeviceContext As Long, _
+    ByRef ptrBITMAPINFO As BITMAPINFO, _
+    ByVal Usage As gdi32_Usage, _
+    ByRef ptrBits As Long, _
+    ByVal hndFileMappingObject As Long, _
+    ByVal Offset As Long _
+) As Long
+
+Public Enum gdi32_Usage
+    DIB_RGB_COLORS = 0
+    DIB_PAL_COLORS = 1
+End Enum
+
+'Delete a Device Context _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd183533%28v=vs.85%29.aspx>
+Public Declare Function gdi32_DeleteDC Lib "gdi32" Alias "DeleteDC" ( _
+    ByVal hndDeviceContext As Long _
+) As Long
+
+'Get the raw data stream of the image (can manipulate as a byte array) _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd144879%28v=vs.85%29.aspx>
+Public Declare Function gdi32_GetDIBits Lib "gdi32" Alias "GetDIBits" ( _
+    ByVal hndDeviceContext As Long, _
+    ByVal hndDIB As Long, _
+    ByVal StartScan As Long, _
+    ByVal NumberOfScans As Long, _
+    ByRef ptrBits As Any, _
+    ByRef ptrBITMAPINFO As BITMAPINFO, _
+    ByVal Usage As gdi32_Usage _
+) As Long
+
+'Set the image pixel data from a byte array _
+ <msdn.microsoft.com/en-us/library/windows/desktop/dd162973%28v=vs.85%29.aspx>
+Public Declare Function gdi32_SetDIBits Lib "gdi32" Alias "SetDIBits" ( _
+    ByVal hndDeviceContext As Long, _
+    ByVal hndDIB As Long, _
+    ByVal StartScan As Long, _
+    ByVal NumberOfScans As Long, _
+    ByRef ptrBits As Any, _
+    ByRef ptrBITMAPINFO As BITMAPINFO, _
+    ByVal Usage As gdi32_Usage _
+) As Long
+
+'Get palette colour(s) on a DIB _
+ <msdn.microsoft.com/en-us/library/dd144878(v=vs.85).aspx>
+Public Declare Function gdi32_GetDIBColorTable Lib "gdi32" Alias "GetDIBColorTable" ( _
+    ByVal hndDeviceContext As Long, _
+    ByVal StartIndex As Long, _
+    ByVal Count As Long, _
+    ByRef ptrRGBQUAD As Any _
+) As Long
+
+'Set palette colour(s) on a DIB _
+ <msdn.microsoft.com/en-us/library/dd162972(v=vs.85).aspx>
+Public Declare Function gdi32_SetDIBColorTable Lib "gdi32" Alias "SetDIBColorTable" ( _
+    ByVal hndDeviceContext As Long, _
+    ByVal StartIndex As Long, _
+    ByVal Count As Long, _
+    ByRef ptrRGBQUAD As Any _
+) As Long
+
+'DRAWING _
  --------------------------------------------------------------------------------------
 
 'Convert a system color (such as "button face" or "inactive window") to a RGB value _
@@ -884,6 +1018,13 @@ Public Const InertColour As Long = &HFFEABA
 Public Const CloseHoverColour As Long = &H4343E0
 Public Const ClosePressColour As Long = &H5050C7 '&H3D3D99
 
+'Used in converting colours to Hue / Saturation / Lightness
+Public Type HSL
+    Hue As Long
+    Saturation As Long
+    Luminance As Long
+End Type
+
 'Public Enums _
  --------------------------------------------------------------------------------------
 'The Blu ActiveX controls use these to define friendly names for some properties
@@ -920,6 +1061,20 @@ Public Property Get DropShadows() As Boolean
     Dim Result As BOOL
     Call user32_SystemParametersInfo(SPI_GETDROPSHADOW, 0, Result, 0)
     Let DropShadows = (Result = API_TRUE)
+End Property
+
+'PROPERTY InIDE : Are we running the code from the Visual Basic IDE? _
+ ======================================================================================
+Public Property Get InIDE() As Boolean
+    On Error GoTo Err_True
+    
+    'Do something that only faults in the IDE
+    Debug.Print 1 \ 0
+    InIDE = False
+    Exit Property
+
+Err_True:
+    InIDE = True
 End Property
 
 'PROPERTY IsHighContrastMode : If high contrast mode is on _
@@ -971,38 +1126,11 @@ End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
 
-'ApplyColoursToForm : Change the colour scheme of the form controls _
- ======================================================================================
-Public Sub ApplyColoursToForm( _
-    ByRef TheForm As Object, _
-    Optional ByVal BaseColour As OLE_COLOR = BaseColour, _
-    Optional ByVal TextColour As OLE_COLOR = TextColour, _
-    Optional ByVal ActiveColour As OLE_COLOR = ActiveColour, _
-    Optional ByVal InertColour As OLE_COLOR = InertColour _
-)
-    'Deal with all blu controls automatically
-    Dim FormControl As Control
-    For Each FormControl In TheForm.Controls
-        If (TypeOf FormControl Is bluLabel) _
-        Or (TypeOf FormControl Is bluButton) _
-        Or (TypeOf FormControl Is bluTab) _
-        Then
-            With FormControl
-                On Error Resume Next
-                Let .BaseColour = BaseColour
-                Let .TextColour = TextColour
-                Let .ActiveColour = ActiveColour
-                Let .InertColour = InertColour
-            End With
-        End If
-    Next
-End Sub
-
 'DrawText : Shared routine for drawing text, used by bluLabel/Button/Tab &c. _
  ======================================================================================
 Public Sub DrawText( _
     ByVal hndDeviceContext As Long, _
-    ByRef BoundingBox As blu.RECT, _
+    ByRef BoundingBox As RECT, _
     ByVal Text As String, _
     ByVal Colour As OLE_COLOR, _
     Optional ByVal Alignment As VBRUN.AlignmentConstants = vbLeftJustify, _
@@ -1014,7 +1142,7 @@ Public Sub DrawText( _
      ----------------------------------------------------------------------------------
     'Create the GDI font object that describes our font properties
     Dim hndFont As Long
-    Let hndFont = blu.gdi32_CreateFont( _
+    Let hndFont = gdi32_CreateFont( _
         Height:=FontSizePx, Width:=0, _
         Escapement:=0, Orientation:=0, _
         Weight:=FW_NORMAL, Italic:=API_FALSE, Underline:=API_FALSE, _
@@ -1026,11 +1154,11 @@ Public Sub DrawText( _
 
     'Select the font (remembering the previous object selected to clean up later)
     Dim hndOld As Long
-    Let hndOld = blu.gdi32_SelectObject(hndDeviceContext, hndFont)
+    Let hndOld = gdi32_SelectObject(hndDeviceContext, hndFont)
     
     'The `DrawText` API doesn't work with the position set by `SetTextAlign`, _
      so we ensure it's set to a safe, non-interfering value
-    Call blu.gdi32_SetTextAlign( _
+    Call gdi32_SetTextAlign( _
         hndDeviceContext, TA_TOP Or TA_LEFT Or TA_NOUPDATECP _
     )
     
@@ -1045,14 +1173,14 @@ Public Sub DrawText( _
         
         'The button is already in a vertical shape, but we want to rotate a horizontal _
          piece of text, so we have to swap the dimensions of the button to begin with
-        Call blu.user32_SetRect( _
+        Call user32_SetRect( _
             BoundingBox, _
             BoundingBox.Left, BoundingBox.Top, BoundingBox.Bottom, BoundingBox.Right _
         )
         'In addition to that, we also need to position our text with its center at _
          0,0, instead of the top-left corner, so that when we rotate, the text stays _
          centered and doesn't swing off out of place
-        Call blu.user32_OffsetRect( _
+        Call user32_OffsetRect( _
             BoundingBox, -BoundingBox.Right \ 2, -BoundingBox.Bottom \ 2 _
         )
         
@@ -1060,11 +1188,11 @@ Public Sub DrawText( _
          so that the rotated text obviously appears in the center of the button _
          whilst the rotation occurs around the centrepoint of the text
         Dim Org As POINT
-        Call blu.gdi32_SetViewportOrgEx(hndDeviceContext, Centre.X, Centre.Y, Org)
+        Call gdi32_SetViewportOrgEx(hndDeviceContext, Centre.X, Centre.Y, Org)
         
         'In order to use Get/SetWorldTransform we have to make this call
         Dim OldGM As Long
-        Let OldGM = blu.gdi32_SetGraphicsMode(hndDeviceContext, GM_ADVANCED)
+        Let OldGM = gdi32_SetGraphicsMode(hndDeviceContext, GM_ADVANCED)
         
         'Now calculate the rotation
         Const Pi As Single = 3.14159
@@ -1075,7 +1203,7 @@ Public Sub DrawText( _
         
         'Read any current transform from the device context
         Dim OldXForm As XFORM, RotXForm As XFORM
-        Call blu.gdi32_GetWorldTransform(hndDeviceContext, OldXForm)
+        Call gdi32_GetWorldTransform(hndDeviceContext, OldXForm)
         
         'Define our rotation matrix
         With RotXForm
@@ -1086,14 +1214,14 @@ Public Sub DrawText( _
         End With
         
         'Apply the matrix -- rotate the world!
-        Call blu.gdi32_SetWorldTransform(hndDeviceContext, RotXForm)
+        Call gdi32_SetWorldTransform(hndDeviceContext, RotXForm)
     End If
     
     'Draw the text! _
      ----------------------------------------------------------------------------------
     'Select the colour of the text
-    Call blu.gdi32_SetTextColor( _
-        hndDeviceContext, blu.OLETranslateColor(Colour) _
+    Call gdi32_SetTextColor( _
+        hndDeviceContext, OLETranslateColor(Colour) _
     )
     
     'Add a little padding either side
@@ -1103,7 +1231,7 @@ Public Sub DrawText( _
     End With
 
     'Now just paint the text
-    Call blu.user32_DrawText( _
+    Call user32_DrawText( _
         hndDeviceContext:=hndDeviceContext, _
         Text:=Text, Length:=Len(Text), _
         BoundingBox:=BoundingBox, _
@@ -1116,29 +1244,29 @@ Public Sub DrawText( _
     'If we rotated the text, we need to do some additional clean up
     If Orientation <> Horizontal Then
         'Restore the previous world transform
-        Call blu.gdi32_SetWorldTransform(hndDeviceContext, OldXForm)
+        Call gdi32_SetWorldTransform(hndDeviceContext, OldXForm)
         'Switch back to the previous graphics mode
-        Call blu.gdi32_SetGraphicsMode(hndDeviceContext, OldGM)
+        Call gdi32_SetGraphicsMode(hndDeviceContext, OldGM)
         'Return the origin point (0,0) back to the upper-left corner
-        Call blu.gdi32_SetViewportOrgEx(hndDeviceContext, Org.X, Org.Y, Org)
+        Call gdi32_SetViewportOrgEx(hndDeviceContext, Org.X, Org.Y, Org)
     End If
     
     'Select the previous object into the DC (i.e. unselect the font)
-    Call blu.gdi32_SelectObject(hndDeviceContext, hndOld)
-    Call blu.gdi32_DeleteObject(hndFont)
+    Call gdi32_SelectObject(hndDeviceContext, hndOld)
+    Call gdi32_DeleteObject(hndFont)
 End Sub
 
 'GetMousePos_Screen : Get the mouse coordinates on the screen _
  ======================================================================================
-Public Function GetMousePos_Screen() As blu.POINT
-    Call blu.user32_GetCursorPos(GetMousePos_Screen)
+Public Function GetMousePos_Screen() As POINT
+    Call user32_GetCursorPos(GetMousePos_Screen)
 End Function
 
 'GetMousePos_Window : Get the mouse position within (relative) a window _
  ======================================================================================
 Public Function GetMousePos_Window(ByVal hWnd As Long) As POINT
     Let GetMousePos_Window = GetMousePos_Screen()
-    Call blu.user32_ScreenToClient(hWnd, GetMousePos_Window)
+    Call user32_ScreenToClient(hWnd, GetMousePos_Window)
 End Function
 
 'GetParentForm : Recurses through the parent objects until we hit the top form _
@@ -1166,9 +1294,8 @@ NowCheckMDI:
      which acts as the viewport of the MDI form and then up again to hit the MDI form
     If Not TypeOf GetParentForm Is MDIForm Then
         Dim MDIParent_hWnd As Long
-        Let MDIParent_hWnd = _
-            blu.user32_GetParent( _
-            blu.user32_GetParent(GetParentForm.hWnd) _
+        Let MDIParent_hWnd = user32_GetParent( _
+            user32_GetParent(GetParentForm.hWnd) _
         )
         'Once we have the handle, check the list of loaded VB forms to find the _
          MDI form it belongs to
@@ -1200,6 +1327,52 @@ End Function
  ======================================================================================
 Public Function GetSystemMetric(ByVal Metric As SM) As Long
     Let GetSystemMetric = user32_GetSystemMetrics(Metric)
+End Function
+
+'HSLToRGB : Convert Hue, Saturation, Ligthness to (roughly) Red, Green, Blue _
+ ======================================================================================
+'<www.xbeat.net/vbspeed/c_HSLToRGB.htm>
+Public Function HSLToRGB( _
+    ByVal Hue As Long, _
+    ByVal Saturation As Long, _
+    ByVal Luminance As Long _
+) As Long
+    'by Donald (Sterex 1996), donald@xbeat.net, 20011124
+    Dim r As Long, G As Long, B As Long
+    Dim lMax As Long, lMid As Long, lMin As Long
+    Dim q As Single
+
+    lMax = (Luminance * 255) / 100
+  
+    If Saturation > 0 Then
+
+        lMin = (100 - Saturation) * lMax / 100
+        q = (lMax - lMin) / 60
+        
+        Select Case Hue
+            Case 0 To 60
+                lMid = (Hue - 0) * q + lMin
+                r = lMax: G = lMid: B = lMin
+            Case 60 To 120
+                lMid = -(Hue - 120) * q + lMin
+                r = lMid: G = lMax: B = lMin
+            Case 120 To 180
+                lMid = (Hue - 120) * q + lMin
+                r = lMin: G = lMax: B = lMid
+            Case 180 To 240
+                lMid = -(Hue - 240) * q + lMin
+                r = lMin: G = lMid: B = lMax
+            Case 240 To 300
+                lMid = (Hue - 240) * q + lMin
+                r = lMid: G = lMin: B = lMax
+            Case 300 To 360
+                lMid = -(Hue - 360) * q + lMin
+                r = lMax: G = lMin: B = lMid
+        End Select
+        HSLToRGB = B * &H10000 + G * &H100& + r
+    Else
+        HSLToRGB = lMax * &H10101
+    End If
 End Function
 
 'InitCommonControls : Enable Windows themeing on controls (application wide) _
@@ -1236,6 +1409,25 @@ Public Function InitCommonControls(Optional ByVal Types As ICC = ICC_STANDARD_CL
     If hndModule <> 0 Then Call kernel32_FreeLibrary(hndModule)
 End Function
 
+'Max : Limit a number to a maximum value _
+ ======================================================================================
+Public Function Max(ByVal InputNumber As Long, Optional ByVal Maximum As Long = 2147483647) As Long
+    Let Max = IIf(InputNumber > Maximum, Maximum, InputNumber)
+End Function
+
+'Min : Limit a number to a minimum value _
+ ======================================================================================
+Public Function Min(ByVal InputNumber As Long, Optional ByVal Minimum As Long = 0) As Long
+    Let Min = IIf(InputNumber < Minimum, Minimum, InputNumber)
+End Function
+
+'NotZero : Ensure a number is not zero. Useful when dividing by an unknown factor _
+ ======================================================================================
+Public Function NotZero(ByVal InputNumber As Long, Optional ByVal AtLeast As Long = 1) As Long
+    'This is different from Min / Max because it allows you to handle +/- numbers
+    If InputNumber = 0 Then Let NotZero = AtLeast Else Let NotZero = InputNumber
+End Function
+
 'OLETranslate : Translate an OLE color to an RGB Long _
  ======================================================================================
 Public Function OLETranslateColor(ByVal Colour As OLE_COLOR) As Long
@@ -1243,6 +1435,83 @@ Public Function OLETranslateColor(ByVal Colour As OLE_COLOR) As Long
     If olepro32_OleTranslateColor( _
         OLEColour:=Colour, hndPalette:=0, ptrColour:=OLETranslateColor _
     ) Then Let OLETranslateColor = vbWhite
+End Function
+
+'Range : Limit a number to a minimum and maximum value _
+ ======================================================================================
+Public Function Range( _
+    ByVal InputNumber As Long, _
+    Optional ByVal Maximum As Long = 2147483647, _
+    Optional ByVal Minimum As Long = -2147483648# _
+) As Long
+    Let Range = Max(Min(InputNumber, Minimum), Maximum)
+End Function
+
+'RGBToHSL : Convert Red, Green, Blue to Hue, Saturation, Lightness _
+ ======================================================================================
+'<www.xbeat.net/vbspeed/c_RGBToHSL.htm>
+Public Function RGBToHSL(ByVal RGBValue As Long) As HSL
+    'by Paul - wpsjr1@syix.com, 20011120
+    Dim r As Long, G As Long, B As Long
+    Dim lMax As Long, lMin As Long
+    Dim q As Single
+    Dim lDifference As Long
+    Static Lum(255) As Long
+    Static QTab(255) As Single
+    Static init As Long
+    
+    If init = 0 Then
+        For init = 2 To 255 ' 0 and 1 are both 0
+            Lum(init) = init * 100 / 255
+        Next
+        For init = 1 To 255
+            QTab(init) = 60 / init
+        Next
+    End If
+    
+    r = RGBValue And &HFF
+    G = (RGBValue And &HFF00&) \ &H100&
+    B = (RGBValue And &HFF0000) \ &H10000
+    
+    If r > G Then
+        lMax = r: lMin = G
+    Else
+        lMax = G: lMin = r
+    End If
+    If B > lMax Then
+        lMax = B
+    ElseIf B < lMin Then
+        lMin = B
+    End If
+    
+    RGBToHSL.Luminance = Lum(lMax)
+    
+    lDifference = lMax - lMin
+    If lDifference Then
+        'Do a 65K 2D lookup table here for more speed if needed
+        RGBToHSL.Saturation = (lDifference) * 100 / lMax
+        q = QTab(lDifference)
+        Select Case lMax
+            Case r
+                If B > G Then
+                    RGBToHSL.Hue = q * (G - B) + 360
+                Else
+                    RGBToHSL.Hue = q * (G - B)
+                End If
+            Case G
+                RGBToHSL.Hue = q * (B - r) + 120
+            Case B
+                RGBToHSL.Hue = q * (r - G) + 240
+        End Select
+    End If
+End Function
+
+'RoundUp : Always round a number upwards _
+ ======================================================================================
+Public Function RoundUp(ByVal InputNumber As Double) As Double
+    If Int(InputNumber) = InputNumber _
+        Then Let RoundUp = InputNumber _
+        Else Let RoundUp = Int(InputNumber) + 1
 End Function
 
 'SetIcon : Use a 32-bit icon from the compiled in resource file _
@@ -1263,7 +1532,7 @@ Public Sub SetIcon( _
     'We can't load icons from the EXE when running from the IDE, obviously! _
      As a cheap fall-back we'll load the icon from the RES file, but you won't get _
      the quality 32-bit icons, so expect some roughness
-    If Run.InIDE = True Then
+    If InIDE = True Then
         'Find which form this handle belongs to
         Dim VBForm As VB.Form
         For Each VBForm In VB.Forms

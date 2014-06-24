@@ -43,8 +43,7 @@ Option Explicit
  which must have an aligning picturebox if you want to place anything on the MDIForm
 
 'Status             Ready to use
-'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), bluBorderless.cll, _
-                    Lib.bas
+'Dependencies       blu.bas, bluMouseEvents.cls (bluMagic.cls), bluBorderless.ctl
 'Last Updated       19-SEP-13
 'Last Update        `SendMessage` API was moved to WIN32
 
@@ -144,9 +143,9 @@ Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single
     
     'If you hold the mouse button down inside the control but release the button _
      outside then it doesn't count (allows you to escape from an accidental close)
-    Dim ClientRect As RECT
-    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRect)
-    If blu.user32_PtInRect(ClientRect, X, Y) = API_FALSE Then Exit Sub
+    Dim ClientRECT As RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    If blu.user32_PtInRect(ClientRECT, X, Y) = API_FALSE Then Exit Sub
     
     'Only left button applies to action
     If Button <> VBRUN.MouseButtonConstants.vbLeftButton Then Exit Sub
@@ -232,11 +231,11 @@ Private Sub UserControl_Paint()
         UserControl.hDC, UserControl.BackColor _
     )
     'Get the dimensions of the control
-    Dim ClientRect As RECT
-    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRect)
+    Dim ClientRECT As RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRECT)
     'Then use those to fill with the selected background colour
     Call blu.user32_FillRect( _
-        UserControl.hDC, ClientRect, _
+        UserControl.hDC, ClientRECT, _
         blu.gdi32_GetStockObject(DC_BRUSH) _
     )
 
@@ -256,7 +255,7 @@ Private Sub UserControl_Paint()
     
     'Use the shared text drawing procedure to save effort
     Call blu.DrawText( _
-        hndDeviceContext:=UserControl.hDC, BoundingBox:=ClientRect, _
+        hndDeviceContext:=UserControl.hDC, BoundingBox:=ClientRECT, _
         Text:=Letter, Colour:=ForeColour, Alignment:=vbCenter, Orientation:=Horizontal, _
         FontName:="Marlett", FontSizePx:=14 _
     )

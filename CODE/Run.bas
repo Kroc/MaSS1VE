@@ -137,25 +137,11 @@ Public Property Get AppData() As String: Let AppData = Run.Path & "App Data\": E
  ======================================================================================
 Public Property Get UserData() As String: Let UserData = Run.Path & "User Data\": End Property
 
-'PROPERTY InIDE : Are we running the code from the Visual Basic IDE? _
- ======================================================================================
-Public Property Get InIDE() As Boolean
-    On Error GoTo Err_True
-    
-    'Do something that only faults in the IDE
-    Debug.Print 1 \ 0
-    InIDE = False
-    Exit Property
-
-Err_True:
-    InIDE = True
-End Property
-
 'PROPERTY Path : Like `App.Path` but normalised for IDE / EXE _
  ======================================================================================
 Public Property Get Path() As String
     'Set `Run.Path` so that program output goes to the RELEASE folder when in IDE
-    Let Path = Lib.EndSlash(App.Path) & IIf(Run.InIDE, "RELEASE\", vbNullString)
+    Let Path = Lib.EndSlash(App.Path) & IIf(blu.InIDE, "RELEASE\", vbNullString)
 End Property
 
 'PROPERTY UpdateWaiting : Check if an update has already been downloaded _

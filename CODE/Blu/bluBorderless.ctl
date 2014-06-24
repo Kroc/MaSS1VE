@@ -40,9 +40,9 @@ Option Explicit
  non-accelerated theme
 
 'Status             INCOMPLETE, DO NOT USE
-'Dependencies       blu.bas, Lib.bas
-'Last Updated       18-APR-14
-'Last Update        Merged into the rewrite of bluControlBox
+'Dependencies       blu.bas
+'Last Updated       08-MAY-14
+'Last Update        Removed lib.bas depedency
 
 '--------------------------------------------------------------------------------------
 
@@ -458,9 +458,9 @@ Private Sub UserControl_MouseUp(Button As Integer, Shift As Integer, X As Single
     
     'If you hold the mouse button down inside the control but release the button _
      outside then it doesn't count (allows you to escape from an accidental close)
-    Dim ClientRect As RECT
-    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRect)
-    If blu.user32_PtInRect(ClientRect, X, Y) = API_FALSE Then Exit Sub
+    Dim ClientRECT As RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    If blu.user32_PtInRect(ClientRECT, X, Y) = API_FALSE Then Exit Sub
     
     'Only left button applies to action
     If Button <> VBRUN.MouseButtonConstants.vbLeftButton Then Exit Sub
@@ -855,6 +855,32 @@ End Property
 
 '/// PRIVATE PROCEDURES ///////////////////////////////////////////////////////////////
 
+'Exists : Check if an item exists in a Collection object _
+ ======================================================================================
+'<stackoverflow.com/questions/40651/check-if-a-record-exists-in-a-vb6-collection/9535221#9535221>
+Private Function Exists(ByVal Key As String, ByRef Col As Collection) As Boolean
+    Dim var As Variant
+    
+TryObject:
+    On Error GoTo ExistsTryObject
+    Set var = Col(Key)
+    Let Exists = True
+    Exit Function
+
+TryNonObject:
+    On Error GoTo ExistsTryNonObject
+    Let var = Col(Key)
+    Let Exists = True
+    Exit Function
+
+ExistsTryObject:
+    'This will reset your Err Handler
+    Resume TryNonObject
+
+ExistsTryNonObject:
+    Let Exists = False
+End Function
+
 'IsDLLAndProcedureAvailable : Check if we'll be able to make a DLL call _
  ======================================================================================
 Private Function IsDLLAndProcedureAvailable(ByVal DLL As String, ByVal Procedure As String) As Boolean
@@ -1049,9 +1075,9 @@ End Sub
  ======================================================================================
 Private Sub Refresh()
     'Queue a `WM_PAINT` message to repaint the control box
-    Dim ClientRect As blu.RECT
-    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRect)
-    Call user32_InvalidateRect(UserControl.hWnd, ClientRect, API_FALSE)
+    Dim ClientRECT As blu.RECT
+    Call blu.user32_GetClientRect(UserControl.hWnd, ClientRECT)
+    Call user32_InvalidateRect(UserControl.hWnd, ClientRECT, API_FALSE)
 End Sub
 
 'RegisterNonClientHandler _
@@ -1060,7 +1086,7 @@ Private Sub RegisterNonClientHandler( _
     ByVal hndWindow As Long, _
     ByVal HandlerType As NCH_TYPE _
 )
-    If Lib.Exists(Key:=hndWindow, Col:=NonClientHandlers) = False Then
+    If Exists(Key:=hndWindow, Col:=NonClientHandlers) = False Then
         
         Call NonClientHandlers.Add(Item:=hndWindow, Key:=CStr(hndWindow))
         

@@ -6,9 +6,9 @@ Begin VB.UserControl bluViewport
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   4800
-   ScaleHeight     =   240
+   ScaleHeight     =   300
    ScaleMode       =   3  'Pixel
-   ScaleWidth      =   320
+   ScaleWidth      =   400
    ToolboxBitmap   =   "bluViewport.ctx":0000
 End
 Attribute VB_Name = "bluViewport"
@@ -33,11 +33,14 @@ Option Explicit
  changes, not every time the window scrolls
 
 'Status             Ready, but incomplete
-'Dependencies       bluImage.cls, bluMagic.cls, bluMouseEvents.cls, Lib.bas, WIN32.bas
-'Last Updated       19-SEP-13
-'Last Update        `SendMessage` API moved to WIN32
+'Dependencies       blu.bas, bluImage.cls, bluMagic.cls, bluMouseEvents.cls
+'Last Updated       24-JUN-14
+'Last Update        Removed Lib.bas dependency, _
+                    Fixed old bug with scrollbars wrongly showing when image width _
+                     and/or height is the same as the viewport
 
-'TODO: When scrolling, include mouse button / key state with the mouse move event sent
+'TODO: When scrolling, include mouse button / key state with the mouse move event sent _
+       (this info should come from bluMouseEvents)
 
 '--------------------------------------------------------------------------------------
 
@@ -195,7 +198,7 @@ Private Buffer As bluImage
 'To try be fast as possible we cache various values here:
 Private Type CACHEVARS
     UserControl_BackColor As Long       'Back colour, but already OLE translated
-    ClientRect As RECT                  'The width / height of the viewport
+    ClientRECT As RECT                  'The width / height of the viewport
     ImageRECT As RECT                   'The whole image's size
     DC_BRUSH As Long                    'The stock colour brush built in to DCs
     
@@ -452,8 +455,8 @@ Private Sub MouseEvents_MouseHScroll(ByVal CharsScrolled As Single, ByVal Button
     With c.Info(HORZ)
         Let .Mask = SIF_POS
         'For increased zoom, we need to dampen the scrolling speed!
-        Let .Pos = Lib.Range( _
-            InputNumber:=.Pos - Lib.NotZero( _
+        Let .Pos = blu.Range( _
+            InputNumber:=.Pos - blu.NotZero( _
                 InputNumber:=(CharsScrolled * My_ScrollCharSize) \ My_Zoom, _
                 AtLeast:=Sgn(CharsScrolled) _
             ), _
@@ -485,8 +488,8 @@ Private Sub MouseEvents_MouseVScroll(ByVal LinesScrolled As Single, ByVal Button
         With c.Info(VERT)
             Let .Mask = SIF_POS
             'For increased zoom, we need to dampen the scrolling speed!
-            Let .Pos = Lib.Range( _
-                InputNumber:=.Pos - Lib.NotZero( _
+            Let .Pos = blu.Range( _
+                InputNumber:=.Pos - blu.NotZero( _
                     InputNumber:=(LinesScrolled * My_ScrollLineSize) \ My_Zoom, _
                     AtLeast:=Sgn(LinesScrolled) _
                 ), _
@@ -582,13 +585,68 @@ Public Property Get ImageHeight() As Long
     Let ImageHeight = Layers(0).IMAGE.Height
 End Property
 
+'GET PaletteColour : Get an individual palette colour for an 8-bit layer: _
+ ======================================================================================
+Public Property Get PaletteColour( _
+    ByVal Index As Byte, ByRef Layer As Long _
+) As OLE_COLOR
+    Dim QuadColour As blu.RGBQUAD
+    
+    'TODO: Is layer within range?
+    'Only available for 8-bit layers!
+    If Layers(Layer).IMAGE.Depth <> [8-Bit] Then Let PaletteColour = -1: Exit Property
+    
+    'Try to fetch the colour
+    If gdi32_GetDIBColorTable( _
+        hndDeviceContext:=Layers(Layer).IMAGE.hDC, _
+        StartIndex:=Index, Count:=1, _
+        ptrRGBQUAD:=QuadColour _
+    ) = 1 Then
+        Let PaletteColour = VBA.RGB(QuadColour.Red, QuadColour.Green, QuadColour.Blue)
+    Else
+        Let PaletteColour = -1
+    End If
+End Property
+
+'LET PaletteColour : Set an individual palette colour for an 8-bit layer: _
+ ======================================================================================
+Public Property Let PaletteColour( _
+    ByVal Index As Byte, ByRef Layer As Long, _
+    NewColour As OLE_COLOR _
+)
+    'TODO: Is layer within range?
+    'Only available for 8-bit layers!
+    If Layers(Layer).IMAGE.Depth <> [8-Bit] Then Exit Property
+    
+    'Should the colour be a system colour (like "button face"), get the real colour
+    Let NewColour = blu.OLETranslateColor(NewColour)
+
+    'Prepre the colour structure to use with the API call
+    Dim QuadColour As blu.RGBQUAD
+    With QuadColour
+        .Blue = (NewColour And &HFF0000) \ &H10000
+        .Green = (NewColour And &HFF00&) \ &H100
+        .Red = (NewColour And &HFF)
+    End With
+
+    'Push the colour in
+    Call gdi32_SetDIBColorTable( _
+        hndDeviceContext:=Layers(Layer).IMAGE.hDC, _
+        StartIndex:=Index, Count:=1, _
+        ptrRGBQUAD:=QuadColour _
+    )
+    
+    'Need to repaint to see the colour change
+    Call Me.Refresh
+End Property
+
 'PROPERTY ScrollMax : Return the maximum scroll value _
  ======================================================================================
 'You can't set this value as it is automatically managed by the viewport based on the _
  image size and viewport size
 Public Property Get ScrollMax(ByVal Bar As bluScrollBar) As Long
 Attribute ScrollMax.VB_ProcData.VB_Invoke_Property = ";Behavior"
-    Let ScrollMax = Lib.Min( _
+    Let ScrollMax = blu.Min( _
         c.Info(Bar).Max - c.Info(Bar).Page _
     )
 End Property
@@ -640,7 +698,7 @@ Public Property Let ScrollX(ByVal Value As Long)
     'Scroll the viewport...
     With c.Info(HORZ)
         Let .Mask = SIF_POS
-        Let .Pos = Lib.Max(.Pos, Me.ScrollMax(HORZ))
+        Let .Pos = blu.Max(.Pos, Me.ScrollMax(HORZ))
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, HORZ, c.Info(HORZ), API_TRUE)
     RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
@@ -666,7 +724,7 @@ Public Property Let ScrollY(ByVal Value As Long)
     'Scroll the viewport...
     With c.Info(VERT)
         Let .Mask = SIF_POS
-        Let .Pos = Lib.Max(.Pos, Me.ScrollMax(VERT))
+        Let .Pos = blu.Max(.Pos, Me.ScrollMax(VERT))
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
     RaiseEvent Scroll(c.Info(HORZ).Pos, c.Info(VERT).Pos)
@@ -690,7 +748,7 @@ End Property
 Public Property Get Zoom() As Long: Let Zoom = My_Zoom: End Property
 Public Property Let Zoom(ByVal ZoomLevel As Long)
     'Keep within the defined bounds
-    Let ZoomLevel = Lib.Range(ZoomLevel, My_ZoomMax, My_ZoomMin)
+    Let ZoomLevel = blu.Range(ZoomLevel, My_ZoomMax, My_ZoomMin)
     'Don't change the zoom if not necessary (avoid repaints)
     If My_Zoom = ZoomLevel Then Exit Property Else Let My_Zoom = ZoomLevel
     
@@ -792,7 +850,7 @@ End Sub
 Public Sub Refresh()
 Attribute Refresh.VB_UserMemId = -550
     'Queue a `WM_PAINT` message to repaint the whole viewport area
-    Call blu.user32_InvalidateRect(UserControl.hWnd, c.ClientRect, API_FALSE)
+    Call blu.user32_InvalidateRect(UserControl.hWnd, c.ClientRECT, API_FALSE)
 End Sub
 
 'ScrollTo : Scroll to an X and Y location in one call _
@@ -801,14 +859,14 @@ Public Sub ScrollTo(ByVal X As Long, ByVal Y As Long)
     'Scroll X
     With c.Info(HORZ)
         Let .Mask = SIF_POS
-        Let .Pos = Lib.Range(X, Me.ScrollMax(HORZ), 0)
+        Let .Pos = blu.Range(X, Me.ScrollMax(HORZ), 0)
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, HORZ, c.Info(HORZ), API_TRUE)
     
     'Scroll Y
     With c.Info(VERT)
         Let .Mask = SIF_POS
-        Let .Pos = Lib.Range(Y, Me.ScrollMax(VERT), 0)
+        Let .Pos = blu.Range(Y, Me.ScrollMax(VERT), 0)
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
     
@@ -832,14 +890,21 @@ End Sub
 'SetImageProperties : Set the size of the back buffer image to scroll around _
  ======================================================================================
 Public Sub SetImageProperties( _
-    ByVal Width As Long, ByVal Height As Long _
+             ByRef Width As Long, ByRef Height As Long, _
+    Optional ByRef BitDepth As bluImage_Depth = [24-Bit] _
 )
     'Changing the image size will destroy all existing layers
     Erase Layers
     ReDim Layers(0) As Layer
     With Layers(0)
         Set .IMAGE = New bluImage
-        Call .IMAGE.Create24Bit(Width, Height, c.UserControl_BackColor)
+        If BitDepth = [8-Bit] Then
+            Call .IMAGE.Create8Bit(Width, Height, , True)
+        ElseIf BitDepth = [24-Bit] Then
+            Call .IMAGE.Create24Bit(Width, Height, c.UserControl_BackColor, True)
+        ElseIf BitDepth = [32-Bit] Then
+            Call .IMAGE.Create32Bit(Width, Height, c.UserControl_BackColor, True)
+        End If
     End With
     Let NumberOfLayers = 1
     
@@ -872,25 +937,35 @@ End Function
 Private Sub InitScrollBars()
     'Show / Hide scrollbars? _
      ----------------------------------------------------------------------------------
-    'Get the size of the viewport
-    Call blu.user32_GetClientRect(UserControl.hWnd, c.ClientRect)
-    
     'The size of the image, accounting for zooming
     Dim ImageSize As SIZE
     Let ImageSize.Width = c.ImageRECT.Right * My_Zoom
     Let ImageSize.Height = c.ImageRECT.Bottom * My_Zoom
     
-    'Show or hide the scrollbars based on the size of the viewport
+    'Get the current size of the viewport
+    Call blu.user32_GetClientRect(UserControl.hWnd, c.ClientRECT)
+    'If the image is wider than the viewport, show the horizontal scrollbar
     Call user32_ShowScrollBar( _
-        UserControl.hWnd, HORZ, Abs(ImageSize.Width > c.ClientRect.Right) _
+        UserControl.hWnd, HORZ, Abs(ImageSize.Width > c.ClientRECT.Right) _
     )
+    'If the image were no longer to fit in the height of the viewport because of the _
+     appearance of the horizontal scrollbar at the bottom, we need to account for _
+     this and add a vertical scrollbar. Fetch new viewport dimensions before checking
+    Call blu.user32_GetClientRect(UserControl.hWnd, c.ClientRECT)
+    'If the image is taller than the viewport, show the vertical scrollbar
     Call user32_ShowScrollBar( _
-        UserControl.hWnd, VERT, Abs(ImageSize.Height > c.ClientRect.Bottom) _
+        UserControl.hWnd, VERT, Abs(ImageSize.Height > c.ClientRECT.Bottom) _
     )
-    
-    'If a scrollbar was visible and gets hidden, it changes the size of the viewport, _
-     regrab the size and work from that now on
-    Call blu.user32_GetClientRect(UserControl.hWnd, c.ClientRect)
+    'Again, this could cause a situation where the appearance of the veritcal _
+     scrollbar means that the image no longer fits horizontally, get an updated _
+     viewport size, ...
+    Call blu.user32_GetClientRect(UserControl.hWnd, c.ClientRECT)
+    '... and show the horizontal scrollbar if necessary
+    Call user32_ShowScrollBar( _
+        UserControl.hWnd, HORZ, Abs(ImageSize.Width > c.ClientRECT.Right) _
+    )
+    'Lastly, grab the final size of the viewport (sans the scrollbars)
+    Call blu.user32_GetClientRect(UserControl.hWnd, c.ClientRECT)
     
     'Setup the back buffer: _
      ----------------------------------------------------------------------------------
@@ -898,7 +973,7 @@ Private Sub InitScrollBars()
     Set Buffer = Nothing
     Set Buffer = New bluImage
     Call Buffer.Create24Bit( _
-        c.ClientRect.Right, c.ClientRect.Bottom, _
+        c.ClientRECT.Right, c.ClientRECT.Bottom, _
         c.UserControl_BackColor _
     )
     
@@ -910,10 +985,10 @@ Private Sub InitScrollBars()
     'Calculate portion of image to be displayed: _
      ----------------------------------------------------------------------------------
     'If the image is narrower than than the viewport then centre it horizontally
-    If My_Centre = True And ImageSize.Width < c.ClientRect.Right Then
+    If My_Centre = True And ImageSize.Width < c.ClientRECT.Right Then
         'Offset the image by half the difference in space between the image and _
          the viewport's width so that it appears centred
-        Let c.Centre.X = (c.ClientRect.Right - ImageSize.Width) \ 2
+        Let c.Centre.X = (c.ClientRECT.Right - ImageSize.Width) \ 2
         'We will be painting the full width of the image, nothing clipped
         Let c.Dst.Width = ImageSize.Width
     Else
@@ -927,20 +1002,20 @@ Private Sub InitScrollBars()
          To fix this we have to normalise the destination width/height so that it is _
          a multiple of the zoom factor
         Let c.Dst.Width = _
-            c.ClientRect.Right + (My_Zoom - 1) - (c.ClientRect.Right Mod My_Zoom)
+            c.ClientRECT.Right + (My_Zoom - 1) - (c.ClientRECT.Right Mod My_Zoom)
     End If
         
     'If the image is shorter than the viewport then centre it vertically
-    If My_Centre = True And ImageSize.Height < c.ClientRect.Bottom Then
+    If My_Centre = True And ImageSize.Height < c.ClientRECT.Bottom Then
         'Offset the image by half the difference in space between the image and _
          the viewport's height so that it appears centred
-        Let c.Centre.Y = (c.ClientRect.Bottom - ImageSize.Height) \ 2
+        Let c.Centre.Y = (c.ClientRECT.Bottom - ImageSize.Height) \ 2
         'We will be painting the full height of the image, nothing clipped
         Let c.Dst.Height = ImageSize.Height
     Else
         Let c.Centre.Y = 0
         Let c.Dst.Height = _
-            c.ClientRect.Bottom + (My_Zoom - 1) - (c.ClientRect.Bottom Mod My_Zoom)
+            c.ClientRECT.Bottom + (My_Zoom - 1) - (c.ClientRECT.Bottom Mod My_Zoom)
     End If
     
     Let c.Src.Width = c.Dst.Width \ My_Zoom
@@ -956,20 +1031,28 @@ Private Sub InitScrollBars()
     With c.Info(HORZ)
         Let OldHpos = .Pos
         Let .Mask = SIF_PAGE Or SIF_RANGE Or SIF_POS
-        Let .Page = c.ClientRect.Right \ My_Zoom
-        Let .Max = Lib.Min(c.ImageRECT.Right)
-        Let .Pos = Lib.Range(.Pos, Me.ScrollMax(HORZ), .Min)
+        Let .Page = c.ClientRECT.Right \ My_Zoom
+        Let .Max = blu.Min(c.ImageRECT.Right)
+        Let .Pos = blu.Range(.Pos, Me.ScrollMax(HORZ), .Min)
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, HORZ, c.Info(HORZ), API_TRUE)
+    
+    Call user32_ShowScrollBar( _
+        UserControl.hWnd, HORZ, Abs(ImageSize.Width > c.ClientRECT.Right) _
+    )
     
     With c.Info(VERT)
         Let OldVPos = .Pos
         Let .Mask = SIF_PAGE Or SIF_RANGE Or SIF_POS
-        Let .Page = c.ClientRect.Bottom \ My_Zoom
-        Let .Max = Lib.Min(c.ImageRECT.Bottom)
-        Let .Pos = Lib.Range(.Pos, Me.ScrollMax(VERT), .Min)
+        Let .Page = c.ClientRECT.Bottom \ My_Zoom
+        Let .Max = blu.Min(c.ImageRECT.Bottom)
+        Let .Pos = blu.Range(.Pos, Me.ScrollMax(VERT), .Min)
     End With
     Call user32_SetScrollInfo(UserControl.hWnd, VERT, c.Info(VERT), API_TRUE)
+    
+    Call user32_ShowScrollBar( _
+        UserControl.hWnd, VERT, Abs(ImageSize.Height > c.ClientRECT.Bottom) _
+    )
     
     'Now send a scroll event if the scroll value changed
     If OldHpos <> c.Info(HORZ).Pos _
@@ -1009,7 +1092,7 @@ Private Sub SubclassWindowProcedure( _
                              
                 'Clear the image with the background colour
                 Call blu.user32_FillRect( _
-                    Buffer.hDC, c.ClientRect, c.DC_BRUSH _
+                    Buffer.hDC, c.ClientRECT, c.DC_BRUSH _
                 )
                 
                 'Work downward through the layers:
@@ -1060,7 +1143,7 @@ Private Sub SubclassWindowProcedure( _
                 
                 'Copy the back buffer onto the display
                 Call blu.gdi32_BitBlt( _
-                    Paint.hndDC, 0, 0, c.ClientRect.Right, c.ClientRect.Bottom, _
+                    Paint.hndDC, 0, 0, c.ClientRECT.Right, c.ClientRECT.Bottom, _
                     Buffer.hDC, 0, 0, vbSrcCopy _
                 )
                 
@@ -1135,7 +1218,7 @@ Private Sub SubclassWindowProcedure( _
                         
                 End Select
                 'Make sure the new value isn't out of range
-                Let .Pos = Lib.Range(.Pos, Me.ScrollMax(Bar), .Min)
+                Let .Pos = blu.Range(.Pos, Me.ScrollMax(Bar), .Min)
                 
                 'Convert the old position to a relative value (+/-...)
                 Let ScrollBy(Bar) = ScrollBy(Bar) - .Pos

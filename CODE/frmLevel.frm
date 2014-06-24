@@ -5,13 +5,13 @@ Begin VB.Form frmLevel
    Caption         =   "Level"
    ClientHeight    =   8400
    ClientLeft      =   60
-   ClientTop       =   405
-   ClientWidth     =   14655
+   ClientTop       =   408
+   ClientWidth     =   14652
    ControlBox      =   0   'False
    LinkTopic       =   "Form1"
    MDIChild        =   -1  'True
    ScaleHeight     =   8400
-   ScaleWidth      =   14655
+   ScaleWidth      =   14652
    Visible         =   0   'False
    WindowState     =   2  'Maximized
    Begin MaSS1VE.bluTab bluTab 
@@ -20,7 +20,7 @@ Begin VB.Form frmLevel
       TabIndex        =   7
       Top             =   480
       Width           =   495
-      _ExtentX        =   873
+      _ExtentX        =   868
       _ExtentY        =   2117
       AutoSize        =   -1  'True
       Border          =   0   'False
@@ -36,7 +36,7 @@ Begin VB.Form frmLevel
       Height          =   480
       Left            =   0
       ScaleHeight     =   480
-      ScaleWidth      =   14655
+      ScaleWidth      =   14652
       TabIndex        =   3
       Top             =   0
       Width           =   14655
@@ -67,9 +67,9 @@ Begin VB.Form frmLevel
          ForeColor       =   &H80000008&
          Height          =   480
          Left            =   3840
-         ScaleHeight     =   32
+         ScaleHeight     =   40
          ScaleMode       =   3  'Pixel
-         ScaleWidth      =   49
+         ScaleWidth      =   61
          TabIndex        =   0
          TabStop         =   0   'False
          Top             =   0
@@ -82,7 +82,7 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _ExtentX        =   1296
+         _ExtentX        =   1291
          _ExtentY        =   847
          Caption         =   "UNDO"
          Style           =   1
@@ -94,7 +94,7 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _ExtentX        =   1296
+         _ExtentX        =   1291
          _ExtentY        =   847
          Caption         =   "REDO"
          Style           =   1
@@ -106,7 +106,7 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   975
-         _ExtentX        =   1720
+         _ExtentX        =   1715
          _ExtentY        =   847
          Caption         =   "SHARE"
          Style           =   1
@@ -118,7 +118,7 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _ExtentX        =   1085
+         _ExtentX        =   1080
          _ExtentY        =   847
          Caption         =   "CUT"
          Style           =   1
@@ -130,7 +130,7 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   735
-         _ExtentX        =   1296
+         _ExtentX        =   1291
          _ExtentY        =   847
          Caption         =   "COPY"
          Style           =   1
@@ -142,7 +142,7 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   855
-         _ExtentX        =   1508
+         _ExtentX        =   1503
          _ExtentY        =   847
          Caption         =   "PASTE"
          Style           =   1
@@ -176,7 +176,7 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _ExtentX        =   1085
+         _ExtentX        =   1080
          _ExtentY        =   847
          Caption         =   "OFF"
          Style           =   1
@@ -209,7 +209,7 @@ Begin VB.Form frmLevel
          Top             =   0
          Visible         =   0   'False
          Width           =   615
-         _ExtentX        =   1085
+         _ExtentX        =   1080
          _ExtentY        =   847
          Alignment       =   1
          Caption         =   "grid"
@@ -220,7 +220,7 @@ Begin VB.Form frmLevel
          Left            =   11040
          Top             =   0
          Width           =   735
-         _ExtentX        =   1296
+         _ExtentX        =   1291
          _ExtentY        =   847
          Alignment       =   1
          Caption         =   "zoom"
@@ -266,8 +266,8 @@ Begin VB.Form frmLevel
       Height          =   5535
       Index           =   0
       Left            =   480
-      ScaleHeight     =   5535
-      ScaleWidth      =   3255
+      ScaleHeight     =   5532
+      ScaleWidth      =   3252
       TabIndex        =   2
       Top             =   480
       Width           =   3255
@@ -277,8 +277,8 @@ Begin VB.Form frmLevel
          TabIndex        =   13
          Top             =   1200
          Width           =   1575
-         _ExtentX        =   2778
-         _ExtentY        =   2778
+         _ExtentX        =   2773
+         _ExtentY        =   2773
          Centre          =   0   'False
       End
       Begin VB.PictureBox picBlocksToolbar 
@@ -291,7 +291,7 @@ Begin VB.Form frmLevel
          Height          =   1200
          Left            =   0
          ScaleHeight     =   1200
-         ScaleWidth      =   3255
+         ScaleWidth      =   3252
          TabIndex        =   4
          Top             =   0
          Width           =   3255
@@ -303,9 +303,9 @@ Begin VB.Form frmLevel
             ForeColor       =   &H80000008&
             Height          =   510
             Left            =   0
-            ScaleHeight     =   34
+            ScaleHeight     =   43
             ScaleMode       =   3  'Pixel
-            ScaleWidth      =   34
+            ScaleWidth      =   43
             TabIndex        =   6
             TabStop         =   0   'False
             Top             =   600
@@ -319,9 +319,9 @@ Begin VB.Form frmLevel
             ForeColor       =   &H80000008&
             Height          =   510
             Left            =   0
-            ScaleHeight     =   34
+            ScaleHeight     =   43
             ScaleMode       =   3  'Pixel
-            ScaleWidth      =   34
+            ScaleWidth      =   43
             TabIndex        =   5
             TabStop         =   0   'False
             Top             =   0
@@ -332,8 +332,8 @@ Begin VB.Form frmLevel
             Left            =   480
             Top             =   0
             Width           =   615
-            _ExtentX        =   1085
-            _ExtentY        =   873
+            _ExtentX        =   1080
+            _ExtentY        =   868
             Caption         =   "LMB"
             Style           =   1
          End
@@ -342,8 +342,8 @@ Begin VB.Form frmLevel
             Left            =   480
             Top             =   600
             Width           =   615
-            _ExtentX        =   1085
-            _ExtentY        =   873
+            _ExtentX        =   1080
+            _ExtentY        =   868
             Caption         =   "RMB"
             Style           =   1
          End
@@ -357,9 +357,9 @@ Begin VB.Form frmLevel
       HasDC           =   0   'False
       Height          =   7575
       Left            =   3720
-      ScaleHeight     =   505
+      ScaleHeight     =   631
       ScaleMode       =   3  'Pixel
-      ScaleWidth      =   729
+      ScaleWidth      =   911
       TabIndex        =   15
       Top             =   480
       Width           =   10935
@@ -369,8 +369,8 @@ Begin VB.Form frmLevel
          TabIndex        =   16
          Top             =   0
          Width           =   2655
-         _ExtentX        =   4683
-         _ExtentY        =   4048
+         _ExtentX        =   4678
+         _ExtentY        =   4043
          ZoomMax         =   3
       End
    End
@@ -614,7 +614,7 @@ Private Sub Form_Resize()
         ) \ 192
         'Whichever of these is the lowest determines the zoom level we will use
         Dim ZoomLevel As Long
-        Let ZoomLevel = Lib.Max( _
+        Let ZoomLevel = blu.Max( _
             IIf(Ratio.Width > Ratio.Height, Ratio.Height, Ratio.Width), _
             Me.vwpLevel.ZoomMax _
         )
@@ -937,8 +937,8 @@ Public Property Set Level(ByVal TheLevel As S1Level)
          one extra row for only one or two blocks (which would normally round down)
         Call vwpBlocks.SetImageProperties( _
             Width:=x32(PaneBlockWidth) + PaneBlockWidth - 1, _
-            Height:=x32(Lib.RoundUp(Level.BlockMapping.Length / PaneBlockWidth)) + _
-                    Lib.RoundUp(Level.BlockMapping.Length / PaneBlockWidth) _
+            Height:=x32(blu.RoundUp(Level.BlockMapping.Length / PaneBlockWidth)) + _
+                    blu.RoundUp(Level.BlockMapping.Length / PaneBlockWidth) _
         )
         Dim i As Byte
         For i = 0 To My_Level.BlockMapping.Length - 1
@@ -1013,20 +1013,20 @@ Public Sub SetTheme()
     End If
     
     'Calculate the inert text colour from the main active colour
-    Let HSLColour = Lib.RGBToHSL(ActiveColour)
+    Let HSLColour = blu.RGBToHSL(ActiveColour)
     'Use light text on dark background and dark text on light background
     If HSLColour.Luminance < 100 Then Let HSLColour.Luminance = 85
     'Duller colour
     Let HSLColour.Saturation = 27
     
-    Let InertColour = Lib.HSLToRGB( _
+    Let InertColour = blu.HSLToRGB( _
         HSLColour.Hue, HSLColour.Saturation, HSLColour.Luminance _
     )
     
     Call mdiMain.SetTheme(, , ActiveColour, InertColour)
     
     'Deal with all blu controls automatically
-    Call blu.ApplyColoursToForm( _
+    Call Lib.ApplyColoursToForm( _
         Me, blu.BaseColour, blu.TextColour, ActiveColour, InertColour _
     )
     

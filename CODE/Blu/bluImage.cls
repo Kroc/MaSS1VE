@@ -24,8 +24,8 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       blu.bas
-'Last Updated       03-JAN-14
-'Last Update        Paint function now returns a value!
+'Last Updated       24-JUN-14
+'Last Update        Integrated with blu.bas
 
 'By Kroc Camen <kroc@camendesign.com>
 'Written using MSDN documentaion with hints and tricks learnt from: _
@@ -43,253 +43,6 @@ Public Enum bluImage_Depth
     [32-Bit] = 32
 End Enum
 
-'/// PRIVATE ENUMS ////////////////////////////////////////////////////////////////////
-
-'Compression descriptor for the DIB image in memory, we don't use this beyond the _
- `DI_RGB` value as we want our images to be manipulable
-Private Enum gdi32_Compression
-    BI_RGB = 0                      'Uncompressed
-    BI_RLE8 = 1                     'Run-Length-Encoding designed for 8-Bit images
-    BI_RLE4 = 2                     'Run-Length-Encoding designed for 4-Bit images
-    BI_BITFIELDS = 3                'Allows use of 5-5-5 and 5-6-5 bit colours
-    BI_JPEG = 4                     'It's a JPEG!
-    BI_PNG = 5                      'It's a PNG!
-End Enum
-
-Private Enum gdi32_Usage
-    DIB_RGB_COLORS = 0
-    DIB_PAL_COLORS = 1
-End Enum
-
-
-'/// PRIVATE TYPES ////////////////////////////////////////////////////////////////////
-'Sructures used in the Win32 API calls
-
-'A palette entry in the BITMAPINFO structure _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162938%28v=vs.85%29.aspx>
-Private Type RGBQUAD
-    Blue                As Byte
-    Green               As Byte
-    Red                 As Byte
-    Reserved            As Byte
-End Type
-
-'The header used on a .BMP file _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183374%28v=vs.85%29.aspx>
-Private Type BITMAPFILEHEADER
-    Type As Integer
-    SIZE As Long
-    Reserved1 As Integer
-    Reserved2 As Integer
-    OffsetToBits As Long
-End Type
-
-'The header that describes a bitmap _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183376%28v=vs.85%29.aspx>
-Private Type BITMAPINFOHEADER
-    SizeOfMe            As Long     'Number of bytes required by the structure
-    Width               As Long     'Width of the bitmap, in pixels
-    Height              As Long     'Height of the bitmap, in pixels. If negative the _
-                                     bitmap is top-down instead of upside-down
-    BitPlanes           As Integer  'Number of bit-planes; keep this as 1
-    Depth               As Integer  'Bit-depth
-    Compression         As Long
-    DataSize            As Long     'Length of the data for the bits (4-Byte aligned)
-    pxpmX               As Long     'Pixels Per Metre on the X-Axis
-    pxpmY               As Long     'Pixles Per Metre on the Y-Axis
-    UsedColors          As Long     'Number of (palette) colours used in the image
-    ImportantColors     As Long     'Number of palette colours deemed critical
-End Type
-
-'A bitmap combines the header and the palette _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183375%28v=vs.85%29.aspx/html>
-Private Type BITMAPINFO
-    Header              As BITMAPINFOHEADER
-    Colors(0 To 255)    As RGBQUAD
-End Type
-
-'/// API CALLS ////////////////////////////////////////////////////////////////////////
-
-'Create / Destroy : _
- --------------------------------------------------------------------------------------
-
-'Create a memory Device Context compatible with an existing device (screen by default) _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183489%28v=vs.85%29.aspx>
-Private Declare Function gdi32_CreateCompatibleDC Lib "gdi32" Alias "CreateCompatibleDC" ( _
-    ByVal hndDeviceContext As Long _
-) As Long
-
-'Creates the DIB based on the `BITMAPINFO` structure passed _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183494%28v=vs.85%29.aspx>
-Private Declare Function gdi32_CreateDIBSection Lib "gdi32" Alias "CreateDIBSection" ( _
-    ByVal hndDeviceContext As Long, _
-    ByRef ptrBITMAPINFO As BITMAPINFO, _
-    ByVal Usage As gdi32_Usage, _
-    ByRef ptrBits As Long, _
-    ByVal hndFileMappingObject As Long, _
-    ByVal Offset As Long _
-) As Long
-
-'Select a GDI object into a Device Context _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162957%28v=vs.85%29.aspx>
-Private Declare Function gdi32_SelectObject Lib "gdi32" Alias "SelectObject" ( _
-    ByVal hndDeviceContext As Long, _
-    ByVal hndGdiObject As Long _
-) As Long
-
-'Delete a GDI object we created (the DIB) _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183539%28v=vs.85%29.aspx>
-Private Declare Function gdi32_DeleteObject Lib "gdi32" Alias "DeleteObject" ( _
-    ByVal hndGdiObject As Long _
-) As Long
-
-'Delete a Device Context _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183533%28v=vs.85%29.aspx>
-Private Declare Function gdi32_DeleteDC Lib "gdi32" Alias "DeleteDC" ( _
-    ByVal hndDeviceContext As Long _
-) As Long
-
-'Fill memory with zeroes (used to erase a BITMAPINFO structure) _
- <msdn.microsoft.com/en-us/library/windows/desktop/aa366920%28v=vs.85%29.aspx>
-Private Declare Sub kernel32_RtlZeroMemory Lib "kernel32" Alias "RtlZeroMemory" ( _
-    ByRef ptrDestination As Any, _
-    ByVal Length As Long _
-)
-
-'Copy raw memory from one place to another _
- <msdn.microsoft.com/en-us/library/windows/desktop/aa366535%28v=vs.85%29.aspx>
-Private Declare Sub kernel32_RtlMoveMemory Lib "kernel32" Alias "RtlMoveMemory" ( _
-    ByRef ptrDestination As Any, _
-    ByRef ptrSource As Any, _
-    ByVal Length As Long _
-)
-
-'Colours : _
- --------------------------------------------------------------------------------------
-
-'Convert a system color (such as "button face" or "inactive window") to a RGB value _
- <msdn.microsoft.com/en-us/library/windows/desktop/ms694353%28v=vs.85%29.aspx>
-Private Declare Function olepro32_OleTranslateColor Lib "olepro32" Alias "OleTranslateColor" ( _
-    ByVal OLEColour As OLE_COLOR, _
-    ByVal hndPalette As Long, _
-    ByRef ptrColour As Long _
-) As Long
-
-'Get palette colour(s) on a DIB _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd144878%28v=vs.85%29.aspx>
-Private Declare Function gdi32_GetDIBColorTable Lib "gdi32" Alias "GetDIBColorTable" ( _
-    ByVal hndDeviceContext As Long, _
-    ByVal StartIndex As Long, _
-    ByVal Count As Long, _
-    ByRef ptrRGBQUAD As Any _
-) As Long
-
-'Set palette colour(s) on a DIB _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162972%28v=vs.85%29.aspx>
-Private Declare Function gdi32_SetDIBColorTable Lib "gdi32" Alias "SetDIBColorTable" ( _
-    ByVal hndDeviceContext As Long, _
-    ByVal StartIndex As Long, _
-    ByVal Count As Long, _
-    ByRef ptrRGBQUAD As Any _
-) As Long
-
-'Painting : _
- --------------------------------------------------------------------------------------
-
-'Get the raw data stream of the image (can manipulate as a byte array) _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd144879%28v=vs.85%29.aspx>
-Private Declare Function gdi32_GetDIBits Lib "gdi32" Alias "GetDIBits" ( _
-    ByVal hndDeviceContext As Long, _
-    ByVal hndDIB As Long, _
-    ByVal StartScan As Long, _
-    ByVal NumberOfScans As Long, _
-    ByRef ptrBits As Any, _
-    ByRef ptrBITMAPINFO As BITMAPINFO, _
-    ByVal Usage As gdi32_Usage _
-) As Long
-
-'Set the image pixel data from a byte array _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162973%28v=vs.85%29.aspx>
-Private Declare Function gdi32_SetDIBits Lib "gdi32" Alias "SetDIBits" ( _
-    ByVal hndDeviceContext As Long, _
-    ByVal hndDIB As Long, _
-    ByVal StartScan As Long, _
-    ByVal NumberOfScans As Long, _
-    ByRef ptrBits As Any, _
-    ByRef ptrBITMAPINFO As BITMAPINFO, _
-    ByVal Usage As gdi32_Usage _
-) As Long
-
-'Copy an image or portion thereof to somewhere else _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183370%28v=vs.85%29.aspx>
-Private Declare Function gdi32_BitBlt Lib "gdi32" Alias "BitBlt" ( _
-    ByVal hndDestDC As Long, _
-    ByVal DestLeft As Long, _
-    ByVal DestTop As Long, _
-    ByVal Width As Long, _
-    ByVal Height As Long, _
-    ByVal hndSrcDC As Long, _
-    ByVal SrcLeft As Long, _
-    ByVal SrcTop As Long, _
-    ByVal RasterOperation As VBRUN.RasterOpConstants _
-) As Long
-
-'Copy an image or portion thereof to somewhere else, stretching if necessary _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd145120%28v=vs.85%29.aspx>
-Private Declare Function gdi32_StretchBlt Lib "gdi32" Alias "StretchBlt" ( _
-    ByVal hndDestDC As Long, _
-    ByVal DestLeft As Long, _
-    ByVal DestTop As Long, _
-    ByVal Width As Long, _
-    ByVal Height As Long, _
-    ByVal hndSrcDC As Long, _
-    ByVal SrcLeft As Long, _
-    ByVal SrcTop As Long, _
-    ByVal SrcWidth As Long, _
-    ByVal SrcHeight As Long, _
-    ByVal RasterOperation As VBRUN.RasterOpConstants _
-) As Long
-
-'Copy and optionally stretch an image, making one colour transparent _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd373586%28v=VS.85%29.aspx>
-Private Declare Function gdi32_GdiTransparentBlt Lib "gdi32" Alias "GdiTransparentBlt" ( _
-    ByVal hndDestDC As Long, _
-    ByVal DestLeft As Long, _
-    ByVal DestTop As Long, _
-    ByVal DestWidth As Long, _
-    ByVal DestHeight As Long, _
-    ByVal hndSrcDC As Long, _
-    ByVal SrcLeft As Long, _
-    ByVal SrcTop As Long, _
-    ByVal SrcWidth As Long, _
-    ByVal SrcHeight As Long, _
-    ByVal TransparentColour As Long _
-) As Long
-
-'Populate a RECT structure _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd145085%28v=vs.85%29.aspx>
-Private Declare Function user32_SetRect Lib "user32" Alias "SetRect" ( _
-    ByRef RECTToSet As RECT, _
-    ByVal Left As Long, _
-    ByVal Top As Long, _
-    ByVal Right As Long, _
-    ByVal Bottom As Long _
-) As Long
-
-'Paint an area of an image one colour _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd162719%28v=vs.85%29.aspx>
-Private Declare Function user32_FillRect Lib "user32" Alias "FillRect" ( _
-    ByVal hndDeviceContext As Long, _
-    ByRef ptrRECT As RECT, _
-    ByVal hndBrush As Long _
-) As Long
-
-'Set a colour to use for painting operations _
- <msdn.microsoft.com/en-us/library/windows/desktop/dd183518%28v=vs.85%29.aspx>
-Private Declare Function gdi32_CreateSolidBrush Lib "gdi32" Alias "CreateSolidBrush" ( _
-    ByVal Color As Long _
-) As Long
-
 '/// PROPERTY STORAGE /////////////////////////////////////////////////////////////////
 
 Private My_hndDC As Long                'Handle to Device Context used for the DIB
@@ -305,7 +58,7 @@ Public IsTransparent As Boolean         'Paint the background transparent?
 
 'We'll keep hold of the structure used to create the bitmap as this can be used to _
  get and set the data as a byte stream
-Private BITMAP As BITMAPINFO
+Private BITMAP As blu.BITMAPINFO
 
 'When we select the DIB into the DC, we need to keep hold of (and restore) the object _
  that might already be in the DC
@@ -381,7 +134,7 @@ Public Property Get Depth() As bluImage_Depth: Let Depth = My_Depth: End Propert
 'GET Colour : Get an individual palette colour: _
  ======================================================================================
 Public Property Get Colour(ByVal Index As Byte) As OLE_COLOR
-    Dim QuadColour As RGBQUAD
+    Dim QuadColour As blu.RGBQUAD
     
     'Try to fetch the colour
     If gdi32_GetDIBColorTable( _
@@ -399,10 +152,10 @@ End Property
  ======================================================================================
 Public Property Let Colour(ByVal Index As Byte, NewColour As OLE_COLOR)
     'Should the colour be a system colour (like "button face"), get the real colour
-    Let NewColour = OLETranslateColor(NewColour)
+    Let NewColour = blu.OLETranslateColor(NewColour)
     
     'Prepre the colour structure to use with the API call
-    Dim QuadColour As RGBQUAD
+    Dim QuadColour As blu.RGBQUAD
     With QuadColour
         .Blue = (NewColour And &HFF0000) \ &H10000
         .Green = (NewColour And &HFF00&) \ &H100
@@ -428,7 +181,7 @@ Public Sub Cls()
         RECTToSet:=Box, Left:=0, Top:=0, Right:=Me.Width, Bottom:=Me.Height _
     )
     'Set the background colour to fill
-    Call blu.gdi32_SetDCBrushColor( _
+    Call gdi32_SetDCBrushColor( _
         My_hndDC, Me.BackgroundColour _
     )
     'Do the filling
@@ -707,13 +460,4 @@ Public Function FileExists(fName As String) As Boolean
     Dim Temp As Long
     Let Temp = VBA.GetAttr(fName)
     Let FileExists = Not CBool(Err)
-End Function
-
-'OLETranslate : Translate an OLE color to an RGB Long _
- ======================================================================================
-Private Function OLETranslateColor(ByVal Colour As OLE_COLOR) As Long
-    'OleTranslateColor returns -1 if it fails; if that happens, default to white
-    If olepro32_OleTranslateColor( _
-        OLEColour:=Colour, hndPalette:=0, ptrColour:=OLETranslateColor _
-    ) Then Let OLETranslateColor = vbWhite
 End Function

@@ -4,9 +4,9 @@ Begin VB.MDIForm mdiMain
    AutoShowChildren=   0   'False
    BackColor       =   &H00FFAF00&
    Caption         =   "MaSS1VE"
-   ClientHeight    =   7845
+   ClientHeight    =   7836
    ClientLeft      =   120
-   ClientTop       =   450
+   ClientTop       =   456
    ClientWidth     =   15120
    LinkTopic       =   "MDIForm1"
    NegotiateToolbars=   0   'False
@@ -21,7 +21,7 @@ Begin VB.MDIForm mdiMain
       ScaleHeight     =   360
       ScaleWidth      =   15120
       TabIndex        =   6
-      Top             =   7485
+      Top             =   7476
       Width           =   15120
       Begin MaSS1VE.bluControlBox cbxSizer 
          Height          =   360
@@ -29,9 +29,9 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   7
          Top             =   0
          Width           =   360
-         _extentx        =   635
-         _extenty        =   635
-         kind            =   3
+         _ExtentX        =   508
+         _ExtentY        =   508
+         Kind            =   3
       End
    End
    Begin VB.PictureBox picHelp 
@@ -40,9 +40,9 @@ Begin VB.MDIForm mdiMain
       BackColor       =   &H00FFFFFF&
       BorderStyle     =   0  'None
       ForeColor       =   &H80000008&
-      Height          =   6495
+      Height          =   6480
       Left            =   11460
-      ScaleHeight     =   6495
+      ScaleHeight     =   6480
       ScaleWidth      =   3660
       TabIndex        =   1
       Top             =   990
@@ -54,8 +54,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   8
          Top             =   480
          Width           =   1695
-         _extentx        =   2990
-         _extenty        =   2990
+         _ExtentX        =   2985
+         _ExtentY        =   2985
       End
       Begin VB.PictureBox picHelpToolbar 
          Appearance      =   0  'Flat
@@ -65,7 +65,7 @@ Begin VB.MDIForm mdiMain
          Height          =   480
          Left            =   0
          ScaleHeight     =   480
-         ScaleWidth      =   3735
+         ScaleWidth      =   3732
          TabIndex        =   2
          Top             =   0
          Width           =   3735
@@ -80,19 +80,19 @@ Begin VB.MDIForm mdiMain
       HasDC           =   0   'False
       Height          =   990
       Left            =   0
-      ScaleHeight     =   990
+      ScaleHeight     =   996
       ScaleWidth      =   15120
       TabIndex        =   0
       Top             =   0
       Width           =   15120
       Begin MaSS1VE.bluBorderless bluBorderless 
-         Height          =   480
+         Height          =   384
          Left            =   13680
          TabIndex        =   9
          Top             =   0
-         Width           =   1440
-         _extentx        =   2540
-         _extenty        =   847
+         Width           =   1152
+         _ExtentX        =   2032
+         _ExtentY        =   677
       End
       Begin MaSS1VE.bluButton btnUpdate 
          Height          =   480
@@ -101,10 +101,10 @@ Begin VB.MDIForm mdiMain
          Top             =   0
          Visible         =   0   'False
          Width           =   1095
-         _extentx        =   1931
-         _extenty        =   847
-         caption         =   "UPDATE!"
-         state           =   1
+         _ExtentX        =   1926
+         _ExtentY        =   847
+         Caption         =   "UPDATE!"
+         State           =   1
       End
       Begin MaSS1VE.bluTab bluTab 
          Height          =   495
@@ -112,8 +112,8 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   3
          Top             =   495
          Width           =   1200
-         _extentx        =   2117
-         _extenty        =   873
+         _ExtentX        =   2117
+         _ExtentY        =   868
       End
       Begin MaSS1VE.bluButton btnHelp 
          Height          =   495
@@ -121,48 +121,48 @@ Begin VB.MDIForm mdiMain
          TabIndex        =   4
          Top             =   495
          Width           =   975
-         _extentx        =   1720
-         _extenty        =   873
-         caption         =   "HELP"
+         _ExtentX        =   1715
+         _ExtentY        =   868
+         Caption         =   "HELP"
       End
       Begin MaSS1VE.bluLabel lblMaSS1VE 
          Height          =   495
          Left            =   3840
          Top             =   0
          Width           =   4455
-         _extentx        =   7858
-         _extenty        =   873
-         caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
-         enabled         =   0
+         _ExtentX        =   7853
+         _ExtentY        =   868
+         Caption         =   "MaSS1VE: The Master System Sonic 1 Visual Editor"
+         Enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblTip 
          Height          =   495
          Left            =   10320
          Top             =   495
          Width           =   3855
-         _extentx        =   6800
-         _extenty        =   873
-         alignment       =   1
-         caption         =   "The quick brown fox jumps over the lazy dog"
-         enabled         =   0
+         _ExtentX        =   6795
+         _ExtentY        =   868
+         Alignment       =   1
+         Caption         =   "The quick brown fox jumps over the lazy dog"
+         Enabled         =   0   'False
       End
       Begin MaSS1VE.bluLabel lblVersion 
          Height          =   480
          Left            =   11880
          Top             =   0
          Width           =   1815
-         _extentx        =   3201
-         _extenty        =   847
-         alignment       =   1
-         caption         =   "v0.0.0"
-         enabled         =   0
+         _ExtentX        =   3196
+         _ExtentY        =   847
+         Alignment       =   1
+         Caption         =   "v0.0.0"
+         Enabled         =   0   'False
       End
    End
    Begin MaSS1VE.bluDownload bluDownload 
       Left            =   120
       Top             =   1200
-      _extentx        =   847
-      _extenty        =   847
+      _ExtentX        =   677
+      _ExtentY        =   677
    End
 End
 Attribute VB_Name = "mdiMain"
@@ -531,7 +531,7 @@ Public Sub SetTheme( _
     Optional ByVal InertColour As OLE_COLOR = blu.InertColour _
 )
     'Deal with all blu controls automatically
-    Call blu.ApplyColoursToForm( _
+    Call Lib.ApplyColoursToForm( _
         Me, BaseColour, TextColour, ActiveColour, InertColour _
     )
     'Specifics for this form

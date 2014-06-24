@@ -3,14 +3,14 @@ Begin VB.UserControl bluLabel
    Appearance      =   0  'Flat
    BackColor       =   &H00FFFFFF&
    CanGetFocus     =   0   'False
-   ClientHeight    =   375
+   ClientHeight    =   372
    ClientLeft      =   0
    ClientTop       =   0
-   ClientWidth     =   1830
+   ClientWidth     =   1836
    ForeColor       =   &H00808080&
-   ScaleHeight     =   25
+   ScaleHeight     =   31
    ScaleMode       =   3  'Pixel
-   ScaleWidth      =   122
+   ScaleWidth      =   153
    ToolboxBitmap   =   "bluLabel.ctx":0000
    Windowless      =   -1  'True
 End
@@ -81,7 +81,7 @@ Private Sub UserControl_Paint()
     
     'Select the background colour
     Call blu.gdi32_SetDCBrushColor( _
-        UserControl.hDC, UserControl.BackColor _
+        UserControl.hDC, blu.OLETranslateColor(UserControl.BackColor) _
     )
     'Get the dimensions of the label _
      (can't use `GetClientRect` as we don't have a hWnd!)

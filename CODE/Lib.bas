@@ -9,13 +9,6 @@ Option Explicit
 
 'A bunch of common functions VB should have had built-in
 
-'Used in converting colours to Hue / Saturation / Lightness
-Public Type HSL
-    Hue As Long
-    Saturation As Long
-    Luminance As Long
-End Type
-
 '/// API //////////////////////////////////////////////////////////////////////////////
 
 'Launch a file with its associated application _
@@ -107,6 +100,33 @@ Public Const RDW_ALLCHILDREN As Long = &H80
 'End Function
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
+
+'ApplyColoursToForm : Change the colour scheme of the form controls _
+ ======================================================================================
+Public Sub ApplyColoursToForm( _
+    ByRef TheForm As Object, _
+    Optional ByVal BaseColour As OLE_COLOR = BaseColour, _
+    Optional ByVal TextColour As OLE_COLOR = TextColour, _
+    Optional ByVal ActiveColour As OLE_COLOR = ActiveColour, _
+    Optional ByVal InertColour As OLE_COLOR = InertColour _
+)
+    'Deal with all blu controls automatically
+    Dim FormControl As Control
+    For Each FormControl In TheForm.Controls
+        If (TypeOf FormControl Is bluLabel) _
+        Or (TypeOf FormControl Is bluButton) _
+        Or (TypeOf FormControl Is bluTab) _
+        Then
+            With FormControl
+                On Error Resume Next
+                Let .BaseColour = BaseColour
+                Let .TextColour = TextColour
+                Let .ActiveColour = ActiveColour
+                Let .InertColour = InertColour
+            End With
+        End If
+    Next
+End Sub
 
 'ArrayDimmed : Is an array dimmed? _
  ======================================================================================
@@ -310,148 +330,6 @@ Public Sub CombSort(ByRef pvarArray As Variant)
         Next
     Loop Until lngGap = 1 And Not blnSwapped
 End Sub
-
-'RoundUp : Always round a number upwards _
- ======================================================================================
-Public Function RoundUp(ByVal InputNumber As Double) As Double
-    If Int(InputNumber) = InputNumber _
-        Then Let RoundUp = InputNumber _
-        Else Let RoundUp = Int(InputNumber) + 1
-End Function
-
-'Min : Limit a number to a minimum value _
- ======================================================================================
-Public Function Min(ByVal InputNumber As Long, Optional ByVal Minimum As Long = 0) As Long
-    Let Min = IIf(InputNumber < Minimum, Minimum, InputNumber)
-End Function
-
-'Max : Limit a number to a maximum value _
- ======================================================================================
-Public Function Max(ByVal InputNumber As Long, Optional ByVal Maximum As Long = 2147483647) As Long
-    Let Max = IIf(InputNumber > Maximum, Maximum, InputNumber)
-End Function
-
-'Range : Limit a number to a minimum and maximum value _
- ======================================================================================
-Public Function Range( _
-    ByVal InputNumber As Long, _
-    Optional ByVal Maximum As Long = 2147483647, _
-    Optional ByVal Minimum As Long = -2147483648# _
-) As Long
-    Let Range = Max(Min(InputNumber, Minimum), Maximum)
-End Function
-
-'NotZero : Ensure a number is not zero. Useful when dividing by an unknown factor _
- ======================================================================================
-Public Function NotZero(ByVal InputNumber As Long, Optional ByVal AtLeast As Long = 1) As Long
-    'This is different from Min / Max because it allows you to handle +/- numbers
-    If InputNumber = 0 Then Let NotZero = AtLeast Else Let NotZero = InputNumber
-End Function
-
-'RGBToHSL : Convert Red, Green, Blue to Hue, Saturation, Lightness _
- ======================================================================================
-'<www.xbeat.net/vbspeed/c_RGBToHSL.htm>
-Public Function RGBToHSL(ByVal RGBValue As Long) As HSL
-    'by Paul - wpsjr1@syix.com, 20011120
-    Dim r As Long, G As Long, B As Long
-    Dim lMax As Long, lMin As Long
-    Dim q As Single
-    Dim lDifference As Long
-    Static Lum(255) As Long
-    Static QTab(255) As Single
-    Static init As Long
-    
-    If init = 0 Then
-        For init = 2 To 255 ' 0 and 1 are both 0
-            Lum(init) = init * 100 / 255
-        Next
-        For init = 1 To 255
-            QTab(init) = 60 / init
-        Next
-    End If
-    
-    r = RGBValue And &HFF
-    G = (RGBValue And &HFF00&) \ &H100&
-    B = (RGBValue And &HFF0000) \ &H10000
-    
-    If r > G Then
-        lMax = r: lMin = G
-    Else
-        lMax = G: lMin = r
-    End If
-    If B > lMax Then
-        lMax = B
-    ElseIf B < lMin Then
-        lMin = B
-    End If
-    
-    RGBToHSL.Luminance = Lum(lMax)
-    
-    lDifference = lMax - lMin
-    If lDifference Then
-        'Do a 65K 2D lookup table here for more speed if needed
-        RGBToHSL.Saturation = (lDifference) * 100 / lMax
-        q = QTab(lDifference)
-        Select Case lMax
-            Case r
-                If B > G Then
-                    RGBToHSL.Hue = q * (G - B) + 360
-                Else
-                    RGBToHSL.Hue = q * (G - B)
-                End If
-            Case G
-                RGBToHSL.Hue = q * (B - r) + 120
-            Case B
-                RGBToHSL.Hue = q * (r - G) + 240
-        End Select
-    End If
-End Function
-
-'HSLToRGB : Convert Hue, Saturation, Ligthness to (roughly) Red, Green, Blue _
- ======================================================================================
-'<www.xbeat.net/vbspeed/c_HSLToRGB.htm>
-Public Function HSLToRGB( _
-    ByVal Hue As Long, _
-    ByVal Saturation As Long, _
-    ByVal Luminance As Long _
-) As Long
-    'by Donald (Sterex 1996), donald@xbeat.net, 20011124
-    Dim r As Long, G As Long, B As Long
-    Dim lMax As Long, lMid As Long, lMin As Long
-    Dim q As Single
-
-    lMax = (Luminance * 255) / 100
-  
-    If Saturation > 0 Then
-
-        lMin = (100 - Saturation) * lMax / 100
-        q = (lMax - lMin) / 60
-        
-        Select Case Hue
-            Case 0 To 60
-                lMid = (Hue - 0) * q + lMin
-                r = lMax: G = lMid: B = lMin
-            Case 60 To 120
-                lMid = -(Hue - 120) * q + lMin
-                r = lMid: G = lMax: B = lMin
-            Case 120 To 180
-                lMid = (Hue - 120) * q + lMin
-                r = lMin: G = lMax: B = lMid
-            Case 180 To 240
-                lMid = -(Hue - 240) * q + lMin
-                r = lMin: G = lMid: B = lMax
-            Case 240 To 300
-                lMid = (Hue - 240) * q + lMin
-                r = lMid: G = lMin: B = lMax
-            Case 300 To 360
-                lMid = -(Hue - 360) * q + lMin
-                r = lMax: G = lMin: B = lMid
-        End Select
-        HSLToRGB = B * &H10000 + G * &H100& + r
-    Else
-        HSLToRGB = lMax * &H10101
-    End If
-End Function
 
 'EndSlash : Make sure a path always ends in a slash _
  ======================================================================================
