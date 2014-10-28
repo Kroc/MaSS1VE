@@ -24,8 +24,9 @@ Option Explicit
 
 'Status             Ready to use
 'Dependencies       blu.bas, bluMagic.cls
-'Last Updated       24-JUN-14
-'Last Update        Improved integration with blu.bas
+'Last Updated       27-JUN-14
+'Last Update        Fixed bug with negative mouse position thanks to Tanner Helland _
+                    & PhotoDemon <photodemon.org>
 
 '/// API DEFS /////////////////////////////////////////////////////////////////////////
 
@@ -252,8 +253,8 @@ Private Sub GetMouseStateFromParam( _
     If (wParam And MK.MK_SHIFT) <> 0 Then Let Shift = Shift Or vbShiftMask
     
     'The X and Y mouse coords are in the Long value as upper and lower 16-bits
-    Let X = lParam And &HFFFF&
-    Let Y = lParam \ &H10000
+    Let X = blu.LoWord(lParam)
+    Let Y = blu.HiWord(lParam)
 End Sub
 
 '/// SUBCLASS /////////////////////////////////////////////////////////////////////////

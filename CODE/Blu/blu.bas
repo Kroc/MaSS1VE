@@ -35,7 +35,7 @@ Public Type POINT
 End Type
 
 'Effectively the same as POINT, but used for better readability
-Public Type SIZE
+Public Type Size
     Width As Long
     Height As Long
 End Type
@@ -168,7 +168,7 @@ Public Declare Function kernel32_GetModuleHandle Lib "kernel32" Alias "GetModule
 'The above can apparently be buggy so this is used as a fallback _
  <msdn.microsoft.com/en-us/library/windows/desktop/ms684175%28v=vs.85%29.aspx>
 Public Declare Function kernel32_LoadLibrary Lib "kernel32" Alias "LoadLibraryA" ( _
-    ByVal FileName As String _
+    ByVal Filename As String _
 ) As Long
 
 'Free the resource associated with the above call _
@@ -479,11 +479,11 @@ Public Enum WM
     
     WM_SETCURSOR = &H20                 'Which cursor should the mouse have?
     WM_MOUSEMOVE = &H200
-    WM_MOUSEWHEEL = &H20A
+    WM_MOUSEWHEEL = &H20A               'Mouse wheel scrolled
     WM_LBUTTONDOWN = &H201              'Left mouse button is down
     WM_LBUTTONDBLCLK = &H203            'Left double-click
     WM_XBUTTONDOWN = &H20B              'Mouse X button pressed (Back / Forward)
-    WM_MOUSEHWHEEL = &H20E
+    WM_MOUSEHWHEEL = &H20E              'Horizontal mouse wheel scrolled
     WM_MOUSEHOVER = &H2A1
     WM_MOUSELEAVE = &H2A3
     WM_NCLBUTTONDOWN = &HA1             'Left mouse button is down in a non-client area
@@ -505,7 +505,7 @@ End Enum
  <msdn.microsoft.com/en-us/library/windows/desktop/dd183374%28v=vs.85%29.aspx>
 Public Type BITMAPFILEHEADER
     Type As Integer
-    SIZE As Long
+    Size As Long
     Reserved1 As Integer
     Reserved2 As Integer
     OffsetToBits As Long
@@ -1256,7 +1256,7 @@ Public Sub DrawText( _
      ----------------------------------------------------------------------------------
     'Select the colour of the text
     Call gdi32_SetTextColor( _
-        hndDeviceContext, OLETranslateColor(Colour) _
+        hndDeviceContext, OleTranslateColor(Colour) _
     )
     
     'Add a little padding either side
@@ -1364,6 +1364,18 @@ Public Function GetSystemMetric(ByVal Metric As SM) As Long
     Let GetSystemMetric = user32_GetSystemMetrics(Metric)
 End Function
 
+'HiWord : Get the high-Word (top 16-bits) from a Long (32-bits) _
+ ======================================================================================
+Public Function HiWord(ByVal Value As Long) As Integer
+    'Special thanks to Tanner Helland & PhotoDemon <photodemon.org> _
+     for making this negative-safe
+    If Value And &H80000000 Then
+        Let HiWord = (Value \ 65535) - 1
+    Else
+        Let HiWord = Value \ 65535
+    End If
+End Function
+
 'HSLToRGB : Convert Hue, Saturation, Ligthness to (roughly) Red, Green, Blue _
  ======================================================================================
 '<www.xbeat.net/vbspeed/c_HSLToRGB.htm>
@@ -1373,7 +1385,7 @@ Public Function HSLToRGB( _
     ByVal Luminance As Long _
 ) As Long
     'by Donald (Sterex 1996), donald@xbeat.net, 20011124
-    Dim r As Long, G As Long, B As Long
+    Dim r As Long, G As Long, b As Long
     Dim lMax As Long, lMid As Long, lMin As Long
     Dim q As Single
 
@@ -1387,24 +1399,24 @@ Public Function HSLToRGB( _
         Select Case Hue
             Case 0 To 60
                 lMid = (Hue - 0) * q + lMin
-                r = lMax: G = lMid: B = lMin
+                r = lMax: G = lMid: b = lMin
             Case 60 To 120
                 lMid = -(Hue - 120) * q + lMin
-                r = lMid: G = lMax: B = lMin
+                r = lMid: G = lMax: b = lMin
             Case 120 To 180
                 lMid = (Hue - 120) * q + lMin
-                r = lMin: G = lMax: B = lMid
+                r = lMin: G = lMax: b = lMid
             Case 180 To 240
                 lMid = -(Hue - 240) * q + lMin
-                r = lMin: G = lMid: B = lMax
+                r = lMin: G = lMid: b = lMax
             Case 240 To 300
                 lMid = (Hue - 240) * q + lMin
-                r = lMid: G = lMin: B = lMax
+                r = lMid: G = lMin: b = lMax
             Case 300 To 360
                 lMid = -(Hue - 360) * q + lMin
-                r = lMax: G = lMin: B = lMid
+                r = lMax: G = lMin: b = lMid
         End Select
-        HSLToRGB = B * &H10000 + G * &H100& + r
+        HSLToRGB = b * &H10000 + G * &H100& + r
     Else
         HSLToRGB = lMax * &H10101
     End If
@@ -1444,6 +1456,18 @@ Public Function InitCommonControls(Optional ByVal Types As ICC = ICC_STANDARD_CL
     If hndModule <> 0 Then Call kernel32_FreeLibrary(hndModule)
 End Function
 
+'LoWord : Get the low-Word (bottom 16-bits) from a Long (32-bits) _
+ ======================================================================================
+Public Function LoWord(ByVal Value As Long) As Integer
+    'Special thanks to Tanner Helland & PhotoDemon <photodemon.org> _
+     for making this negative-safe
+    If Value And &H8000& Then
+        Let LoWord = &H8000 Or (Value And &H7FFF&)
+    Else
+        Let LoWord = Value And &HFFFF&
+    End If
+End Function
+
 'Max : Limit a number to a maximum value _
  ======================================================================================
 Public Function Max(ByVal InputNumber As Long, Optional ByVal Maximum As Long = 2147483647) As Long
@@ -1465,11 +1489,11 @@ End Function
 
 'OLETranslate : Translate an OLE color to an RGB Long _
  ======================================================================================
-Public Function OLETranslateColor(ByVal Colour As OLE_COLOR) As Long
+Public Function OleTranslateColor(ByVal Colour As OLE_COLOR) As Long
     'OleTranslateColor returns -1 if it fails; if that happens, default to white
     If olepro32_OleTranslateColor( _
-        OLEColour:=Colour, hndPalette:=0, ptrColour:=OLETranslateColor _
-    ) Then Let OLETranslateColor = vbWhite
+        OLEColour:=Colour, hndPalette:=0, ptrColour:=OleTranslateColor _
+    ) Then Let OleTranslateColor = vbWhite
 End Function
 
 'Range : Limit a number to a minimum and maximum value _
@@ -1487,7 +1511,7 @@ End Function
 '<www.xbeat.net/vbspeed/c_RGBToHSL.htm>
 Public Function RGBToHSL(ByVal RGBValue As Long) As HSL
     'by Paul - wpsjr1@syix.com, 20011120
-    Dim r As Long, G As Long, B As Long
+    Dim r As Long, G As Long, b As Long
     Dim lMax As Long, lMin As Long
     Dim q As Single
     Dim lDifference As Long
@@ -1506,17 +1530,17 @@ Public Function RGBToHSL(ByVal RGBValue As Long) As HSL
     
     r = RGBValue And &HFF
     G = (RGBValue And &HFF00&) \ &H100&
-    B = (RGBValue And &HFF0000) \ &H10000
+    b = (RGBValue And &HFF0000) \ &H10000
     
     If r > G Then
         lMax = r: lMin = G
     Else
         lMax = G: lMin = r
     End If
-    If B > lMax Then
-        lMax = B
-    ElseIf B < lMin Then
-        lMin = B
+    If b > lMax Then
+        lMax = b
+    ElseIf b < lMin Then
+        lMin = b
     End If
     
     RGBToHSL.Luminance = Lum(lMax)
@@ -1528,14 +1552,14 @@ Public Function RGBToHSL(ByVal RGBValue As Long) As HSL
         q = QTab(lDifference)
         Select Case lMax
             Case r
-                If B > G Then
-                    RGBToHSL.Hue = q * (G - B) + 360
+                If b > G Then
+                    RGBToHSL.Hue = q * (G - b) + 360
                 Else
-                    RGBToHSL.Hue = q * (G - B)
+                    RGBToHSL.Hue = q * (G - b)
                 End If
             Case G
-                RGBToHSL.Hue = q * (B - r) + 120
-            Case B
+                RGBToHSL.Hue = q * (b - r) + 120
+            Case b
                 RGBToHSL.Hue = q * (r - G) + 240
         End Select
     End If

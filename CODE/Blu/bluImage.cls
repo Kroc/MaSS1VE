@@ -58,7 +58,7 @@ Public IsTransparent As Boolean         'Paint the background transparent?
 
 'We'll keep hold of the structure used to create the bitmap as this can be used to _
  get and set the data as a byte stream
-Private BITMAP As blu.BITMAPINFO
+Private Bitmap As blu.BITMAPINFO
 
 'When we select the DIB into the DC, we need to keep hold of (and restore) the object _
  that might already be in the DC
@@ -91,12 +91,12 @@ Private Sub Class_Terminate()
     Let My_ptrBits = 0
     
     'Erase the BITMAPINFO structure
-    Call kernel32_RtlZeroMemory(ptrDestination:=BITMAP, Length:=Len(BITMAP))
+    Call kernel32_RtlZeroMemory(ptrDestination:=Bitmap, Length:=Len(Bitmap))
 End Sub
 
 '/// PUBLIC PROPERTIES ////////////////////////////////////////////////////////////////
 
-'PROPERTY BackgroundColour _
+'GET BackgroundColour _
  ======================================================================================
 Public Property Get BackgroundColour() As Long
     'For 24/32-bit images the background colour is stored in the property, _
@@ -105,31 +105,6 @@ Public Property Get BackgroundColour() As Long
         Then Let BackgroundColour = Me.Colour(0) _
         Else Let BackgroundColour = My_BackgroundColour
 End Property
-
-'PROPERTY hDC : Expose the "hDC" for external drawing operations _
- ======================================================================================
-Public Property Get hDC() As Long: Let hDC = My_hndDC: End Property
-
-'PROPERTY Width _
- ======================================================================================
-Public Property Get Width() As Long
-    If My_hndDC <> 0 And My_hndDIB <> 0 _
-        Then Let Width = BITMAP.Header.Width _
-        Else Let Width = 0
-End Property
-
-'PROPERTY Height _
- ======================================================================================
-Public Property Get Height() As Long
-    'Remember that the height is negative to flip the image the right way up!
-    If My_hndDC <> 0 And My_hndDIB <> 0 _
-        Then Let Height = Abs(BITMAP.Header.Height) _
-        Else Let Height = 0
-End Property
-
-'PROPERTY Depth : Expose the bit-depth _
- ======================================================================================
-Public Property Get Depth() As bluImage_Depth: Let Depth = My_Depth: End Property
 
 'GET Colour : Get an individual palette colour: _
  ======================================================================================
@@ -152,7 +127,7 @@ End Property
  ======================================================================================
 Public Property Let Colour(ByVal Index As Byte, NewColour As OLE_COLOR)
     'Should the colour be a system colour (like "button face"), get the real colour
-    Let NewColour = blu.OLETranslateColor(NewColour)
+    Let NewColour = blu.OleTranslateColor(NewColour)
     
     'Prepre the colour structure to use with the API call
     Dim QuadColour As blu.RGBQUAD
@@ -168,6 +143,33 @@ Public Property Let Colour(ByVal Index As Byte, NewColour As OLE_COLOR)
         StartIndex:=Index, Count:=1, _
         ptrRGBQUAD:=QuadColour _
     )
+End Property
+
+'GET Depth : Expose the bit-depth _
+ ======================================================================================
+Public Property Get Depth() As bluImage_Depth: Let Depth = My_Depth: End Property
+
+'GET hDC : Expose the "hDC" for external drawing operations _
+ ======================================================================================
+Public Property Get hDC() As Long: Let hDC = My_hndDC: End Property
+
+Public Property Get hDIB() As Long: Let hDIB = My_hndDIB: End Property
+
+'GET Height _
+ ======================================================================================
+Public Property Get Height() As Long
+    'Remember that the height is negative to flip the image the right way up!
+    If My_hndDC <> 0 And My_hndDIB <> 0 _
+        Then Let Height = Abs(Bitmap.Header.Height) _
+        Else Let Height = 0
+End Property
+
+'GET Width _
+ ======================================================================================
+Public Property Get Width() As Long
+    If My_hndDC <> 0 And My_hndDIB <> 0 _
+        Then Let Width = Bitmap.Header.Width _
+        Else Let Width = 0
 End Property
 
 '/// PUBLIC PROCEDURES ////////////////////////////////////////////////////////////////
@@ -268,13 +270,13 @@ End Function
 Public Function GetByteStream() As Byte()
     'Create a buffer of the right size
     Dim ByteStream() As Byte
-    ReDim ByteStream(0 To BITMAP.Header.DataSize - 1) As Byte
+    ReDim ByteStream(0 To Bitmap.Header.DataSize - 1) As Byte
     'Call the API to copy the data into our buffer
     Call gdi32_GetDIBits( _
         hndDeviceContext:=My_hndDC, _
         hndDIB:=My_hndDIB, _
-        StartScan:=0, NumberOfScans:=Abs(BITMAP.Header.Height), _
-        ptrBits:=ByteStream(0), ptrBITMAPINFO:=BITMAP, Usage:=DIB_RGB_COLORS _
+        StartScan:=0, NumberOfScans:=Abs(Bitmap.Header.Height), _
+        ptrBits:=ByteStream(0), ptrBITMAPINFO:=Bitmap, Usage:=DIB_RGB_COLORS _
     )
     Let GetByteStream = ByteStream
 End Function
@@ -285,8 +287,8 @@ Public Function SetByteStream(ByRef ByteStream() As Byte)
     Call gdi32_SetDIBits( _
         hndDeviceContext:=My_hndDC, _
         hndDIB:=My_hndDIB, _
-        StartScan:=0, NumberOfScans:=Abs(BITMAP.Header.Height), _
-        ptrBits:=ByteStream(0), ptrBITMAPINFO:=BITMAP, _
+        StartScan:=0, NumberOfScans:=Abs(Bitmap.Header.Height), _
+        ptrBits:=ByteStream(0), ptrBITMAPINFO:=Bitmap, _
         Usage:=DIB_RGB_COLORS _
     )
 End Function
@@ -358,9 +360,9 @@ Public Sub Save(ByVal FilePath As String)
         'The bitmap identifier at the beginning of the file
         Let .Type = &H4D42
         'The length of the file (size of the header plus the image data)
-        Let .SIZE = Len(FileHeader) + BITMAP.Header.DataSize
+        Let .Size = Len(FileHeader) + Bitmap.Header.DataSize
         'How big the header is, i.e. where does the image data begin?
-        Let .OffsetToBits = Len(FileHeader) + Len(BITMAP)
+        Let .OffsetToBits = Len(FileHeader) + Len(Bitmap)
     End With
     
     'Delete the image if it's already there
@@ -372,7 +374,7 @@ Public Sub Save(ByVal FilePath As String)
     Open FilePath For Binary Access Write Lock Read As #FileNumber
         'Headers
         Put #FileNumber, , FileHeader
-        Put #FileNumber, , BITMAP
+        Put #FileNumber, , Bitmap
         'Image data
         Put #FileNumber, , Me.GetByteStream
     Close #FileNumber
@@ -407,8 +409,8 @@ Private Function Create( _
     Let My_Depth = BitDepth
     
     'Define the bitmap
-    With BITMAP.Header
-        .SizeOfMe = Len(BITMAP.Header)
+    With Bitmap.Header
+        .SizeOfMe = Len(Bitmap.Header)
         .BitPlanes = 1
         .Width = ImageWidth
         .Height = -ImageHeight      'Flip the image to be top-down, as you expect
@@ -420,7 +422,7 @@ Private Function Create( _
     
     If My_Depth = [8-Bit] Then
         'Set a quick and dirty test palette
-        Dim i As Long: For i = 0 To 255: With BITMAP.Colors(i)
+        Dim i As Long: For i = 0 To 255: With Bitmap.Colors(i)
             .Blue = (i Mod 16) * 16: .Green = (i Mod 16) * 16: .Red = (i Mod 16) * 16
         End With: Next
     End If
@@ -431,7 +433,7 @@ Private Function Create( _
         'Proceed to creating the DIB
         Let My_hndDIB = gdi32_CreateDIBSection( _
             hndDeviceContext:=My_hndDC, _
-            ptrBITMAPINFO:=BITMAP, _
+            ptrBITMAPINFO:=Bitmap, _
             Usage:=DIB_RGB_COLORS, _
             ptrBits:=My_ptrBits, _
             hndFileMappingObject:=0, Offset:=0 _

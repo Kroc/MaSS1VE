@@ -33,7 +33,8 @@ Option Explicit
 
 '--------------------------------------------------------------------------------------
 
-'Paul Caton has done some amazing things combining ASM and VB. Unfortunately, he has _
+'LaVolpe: _
+"Paul Caton has done some amazing things combining ASM and VB. Unfortunately, he has _
  moved on from VB and left this code to me. His original code can be found at the _
  links provided below. I am taking the initiative to learn from his thunks, update, _
  rewrite, or otherwise improve those thunks. Therefore, some of this code will differ _
@@ -63,39 +64,7 @@ Option Explicit
  virtual memory.
 
 'The issue with Paul's code regarding usercontrols that subclass ContainerHwnd _
- multiple times has been resolved with the use of the timers. How that specific _
- situation was resolved is briefly explained:
-
-'FYI: Usercontrol (UC) issues when subclassing same parent window multiple times & _
- how timer prevents crash
-'     A = the ContainerHwnd's original window procedure
-'     ucB loads & subclasses ContainerHwnd, B now ContainerHwnd's procedure, A is previous
-'     ucC loads & subclasses ContainerHwnd, C now ContainerHwnd's procedure, B is previous
-'     ucD loads & subclasses ContainerHwnd, D now ContainerHwnd's procedure, C is previous
-'     When unloading occurs in VB, the first loaded is first unloaded
-'       and children are unloaded before the parent/ContainerHwnd.....
-'     ucB unloads and changes ContainerHwnd's procedure to A - good, is original procedure
-'     ucC unloads and changes ContainerHwnd's procedure to B - bad because B is dead
-'     ucD unloads and changes ContainerHwnd's procedure to C - bad because C is dead
-'     ContainerHwnd unloads and message sent to C -- crash because C is dead
-'
-'     Delay timer prevents this from occurring by keeping each alive and, within
-'         this thunk, the bBypassing flag is set when UC was destroyed. So to
-'         continue on, here is what happens when ContainerHwnd unloads using delay mechanism
-'     .... ContainerHwnd unloads and message sent to C (kept alive until timer fires)
-'     .... C gets message, Bypass is active, sets ContainerHwnd's procedure to B
-'     .... B gets message, Bypass is active, sets ContainerHwnd's procedure to A - where we want to be
-'     .... Timers fire and clear memory for C & B in that order
-
-'    Hooking issues have now been resolved too. The issue with hooks is similar to that with subclassing.
-'    When a hook is established and user hits END, cleanup cannot occur and hook remains.  Unfortunately,
-'    END does not trigger messages to let the thunk know that END occurred; whereas with subclassing,
-'    END terminates windows and that generates messages. Now, depending on the hook type, you may not get
-'    another message for awhile until it is triggered. Well, the object containing the callback was destroyed
-'    by END, and the next message the hook receives will try to forward it to the destroyed object - crash.
-'    So, the fix is to determine if the object containing the callback changed and if it was,
-'    then do not allow callbacks to that object.  Hook thunk memory is never released when END is executed.
-'    Hook memory release only occurs during normal shutdown, via shk_TerminateHooks, and when VB is closed.
+ multiple times has been resolved with the use of the timers.
 
 ' Other subclassing thunk modifications/enhancements are listed below:
 '   - thunks can also be used inside of property pages if so desired
@@ -119,6 +88,74 @@ Option Explicit
 '           --- Exceptions. If either the following tests (depending on situation) returns false, unicode will not be used
 '           1) Subclassing: The window being subclassed must return non-zero from IsWindowUnicode(hWnd)
 '           2) Hooking: Non-zero must be returned from IsWindowUnicode(GetDesktopWindow)
+
+'/// API //////////////////////////////////////////////////////////////////////////////
+
+'Shared: _
+ --------------------------------------------------------------------------------------
+Private Declare Sub RtlMoveMemory Lib "kernel32" (ByVal Destination As Long, ByVal Source As Long, ByVal Length As Long)
+Private Declare Function IsBadCodePtr Lib "kernel32" (ByVal lpfn As Long) As Long
+Private Declare Function VirtualAlloc Lib "kernel32" (ByVal lpAddress As Long, ByVal dwSize As Long, ByVal flAllocationType As Long, ByVal flProtect As Long) As Long
+Private Declare Function VirtualFree Lib "kernel32" (ByVal lpAddress As Long, ByVal dwSize As Long, ByVal dwFreeType As Long) As Long
+Private Declare Function GetModuleHandleA Lib "kernel32" (ByVal lpModuleName As String) As Long
+Private Declare Function GetModuleHandleW Lib "kernel32" (ByVal lpModuleName As Long) As Long
+Private Declare Function GetProcAddress Lib "kernel32" (ByVal hModule As Long, ByVal lpProcName As String) As Long
+
+Private Enum eThunkType
+    SubclassThunk = 0
+    HookThunk = 1
+    CallbackThunk = 2
+End Enum
+
+'Subclassing: _
+ --------------------------------------------------------------------------------------
+Public Enum eMsgWhen                    'When to callback
+  MSG_BEFORE = 1                        'Callback before the original WndProc
+  MSG_AFTER = 2                         'Callback after the original WndProc
+  MSG_BEFORE_AFTER = MSG_BEFORE Or MSG_AFTER
+End Enum
+
+' see ssc_Subclass for complete listing of indexes and what they relate to
+Private Const IDX_PARM_USER As Long = 13    'Thunk data index of the User-defined callback parameter data index
+Private Const IDX_UNICODE   As Long = 107   'Must be UBound(subclass thunkdata)+1; index for unicode support
+Private Const MSG_ENTRIES   As Long = 32    'Number of msg table entries. Set to 1 if using ALL_MESSAGES for all subclassed windows
+Private Const ALL_MESSAGES  As Long = -1    'All messages will callback
+
+Private Declare Function CallWindowProcA Lib "user32" (ByVal lpPrevWndFunc As Long, ByVal hWnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare Function CallWindowProcW Lib "user32" (ByVal lpPrevWndFunc As Long, ByVal hWnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare Function GetCurrentProcessId Lib "kernel32" () As Long
+Private Declare Function GetWindowThreadProcessId Lib "user32" (ByVal hWnd As Long, lpdwProcessId As Long) As Long
+Private Declare Function IsWindow Lib "user32" (ByVal hWnd As Long) As Long
+Private Declare Function IsWindowUnicode Lib "user32.dll" (ByVal hWnd As Long) As Long
+Private Declare Function SetWindowLongA Lib "user32" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+Private Declare Function SetWindowLongW Lib "user32" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
+
+'Hooking: _
+ --------------------------------------------------------------------------------------
+Private Declare Function SetWindowsHookExA Lib "user32" (ByVal idHook As Long, ByVal lpfn As Long, ByVal hMod As Long, ByVal dwThreadId As Long) As Long
+Private Declare Function SetWindowsHookExW Lib "user32" (ByVal idHook As Long, ByVal lpfn As Long, ByVal hMod As Long, ByVal dwThreadId As Long) As Long
+Private Declare Function UnhookWindowsHookEx Lib "user32" (ByVal hHook As Long) As Long
+Private Declare Function CallNextHookEx Lib "user32.dll" (ByVal hHook As Long, ByVal nCode As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
+Private Declare Function GetDesktopWindow Lib "user32.dll" () As Long
+
+'<msdn2.microsoft.com/en-us/library/ms644990.aspx>
+Public Enum eHookType
+  WH_MSGFILTER = -1
+  WH_JOURNALRECORD = 0
+  WH_JOURNALPLAYBACK = 1
+  WH_KEYBOARD = 2
+  WH_GETMESSAGE = 3
+  WH_CALLWNDPROC = 4
+  WH_CBT = 5
+  WH_SYSMSGFILTER = 6
+  WH_MOUSE = 7
+  WH_DEBUG = 9
+  WH_SHELL = 10
+  WH_FOREGROUNDIDLE = 11
+  WH_CALLWNDPROCRET = 12
+  WH_KEYBOARD_LL = 13       ' NT/2000/XP+ only, Global hook only
+  WH_MOUSE_LL = 14          ' NT/2000/XP+ only, Global hook only
+End Enum
 
 '========================================================================================================
 ' COMMON-USE ITEMS USED IN ALL THUNKS
@@ -146,21 +183,6 @@ Private Const IDX_BTABLE    As Long = 11    'Thunk data index of the Before tabl
 Private Const IDX_ATABLE    As Long = 12    'Thunk data index of the After table for messages
 Private Const IDX_CALLBACKORDINAL As Long = 36 ' Ubound(callback thunkdata)+1, index of the callback
 
-' Declarations:
-Private Declare Sub RtlMoveMemory Lib "kernel32" (ByVal Destination As Long, ByVal Source As Long, ByVal Length As Long)
-Private Declare Function IsBadCodePtr Lib "kernel32" (ByVal lpfn As Long) As Long
-Private Declare Function VirtualAlloc Lib "kernel32" (ByVal lpAddress As Long, ByVal dwSize As Long, ByVal flAllocationType As Long, ByVal flProtect As Long) As Long
-Private Declare Function VirtualFree Lib "kernel32" (ByVal lpAddress As Long, ByVal dwSize As Long, ByVal dwFreeType As Long) As Long
-Private Declare Function GetModuleHandleA Lib "kernel32" (ByVal lpModuleName As String) As Long
-Private Declare Function GetModuleHandleW Lib "kernel32" (ByVal lpModuleName As Long) As Long
-Private Declare Function GetProcAddress Lib "kernel32" (ByVal hModule As Long, ByVal lpProcName As String) As Long
-Private Enum eThunkType
-    SubclassThunk = 0
-    HookThunk = 1
-    CallbackThunk = 2
-End Enum
-
-
 '========================================================================================================
 ' TO USE IDE-SAFE SUBCLASSING...
 '===============================
@@ -187,29 +209,6 @@ End Enum
 '   3. In your form/uc/class/ppg unload/terminate event, include the statement: ssc_Terminate or zTerminateThunks SubclassThunk
 '   4. Include the generic window procedure routine: myWndProc at bottom of this module
 '   5. Also include the following declarations
-  
-'-Selfsub specific declarations----------------------------------------------------------------------------
-Public Enum eMsgWhen                                                   'When to callback
-  MSG_BEFORE = 1                                                        'Callback before the original WndProc
-  MSG_AFTER = 2                                                         'Callback after the original WndProc
-  MSG_BEFORE_AFTER = MSG_BEFORE Or MSG_AFTER                            'Callback before and after the original WndProc
-End Enum
-
-' see ssc_Subclass for complete listing of indexes and what they relate to
-Private Const IDX_PARM_USER As Long = 13    'Thunk data index of the User-defined callback parameter data index
-Private Const IDX_UNICODE   As Long = 107   'Must be UBound(subclass thunkdata)+1; index for unicode support
-Private Const MSG_ENTRIES   As Long = 32    'Number of msg table entries. Set to 1 if using ALL_MESSAGES for all subclassed windows
-Private Const ALL_MESSAGES  As Long = -1    'All messages will callback
-
-Private Declare Function CallWindowProcA Lib "user32" (ByVal lpPrevWndFunc As Long, ByVal hWnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Private Declare Function CallWindowProcW Lib "user32" (ByVal lpPrevWndFunc As Long, ByVal hWnd As Long, ByVal msg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
-Private Declare Function GetCurrentProcessId Lib "kernel32" () As Long
-Private Declare Function GetWindowThreadProcessId Lib "user32" (ByVal hWnd As Long, lpdwProcessId As Long) As Long
-Private Declare Function IsWindow Lib "user32" (ByVal hWnd As Long) As Long
-Private Declare Function IsWindowUnicode Lib "user32.dll" (ByVal hWnd As Long) As Long
-Private Declare Function SetWindowLongA Lib "user32" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
-Private Declare Function SetWindowLongW Lib "user32" (ByVal hWnd As Long, ByVal nIndex As Long, ByVal dwNewLong As Long) As Long
-'-------------------------------------------------------------------------------------------------
 
 '========================================================================================================
 ' TO USE IDE-SAFE HOOKING...
@@ -244,32 +243,7 @@ Private Declare Function SetWindowLongW Lib "user32" (ByVal hWnd As Long, ByVal 
 '          MSG_BEFORE_AFTER = MSG_BEFORE Or MSG_AFTER   'Callback before and after the original WndProc/HookProc
 '        End Enum
 '   6. Also include the following declarations which do not exist in the common-use or subclassing sections
-  
-'-SelfHook specific declarations----------------------------------------------------------------------------
-Private Declare Function SetWindowsHookExA Lib "user32" (ByVal idHook As Long, ByVal lpfn As Long, ByVal hMod As Long, ByVal dwThreadId As Long) As Long
-Private Declare Function SetWindowsHookExW Lib "user32" (ByVal idHook As Long, ByVal lpfn As Long, ByVal hMod As Long, ByVal dwThreadId As Long) As Long
-Private Declare Function UnhookWindowsHookEx Lib "user32" (ByVal hHook As Long) As Long
-Private Declare Function CallNextHookEx Lib "user32.dll" (ByVal hHook As Long, ByVal nCode As Long, ByVal wParam As Long, ByRef lParam As Any) As Long
-Private Declare Function GetDesktopWindow Lib "user32.dll" () As Long
 
-Public Enum eHookType  ' http://msdn2.microsoft.com/en-us/library/ms644990.aspx
-  WH_MSGFILTER = -1
-  WH_JOURNALRECORD = 0
-  WH_JOURNALPLAYBACK = 1
-  WH_KEYBOARD = 2
-  WH_GETMESSAGE = 3
-  WH_CALLWNDPROC = 4
-  WH_CBT = 5
-  WH_SYSMSGFILTER = 6
-  WH_MOUSE = 7
-  WH_DEBUG = 9
-  WH_SHELL = 10
-  WH_FOREGROUNDIDLE = 11
-  WH_CALLWNDPROCRET = 12
-  WH_KEYBOARD_LL = 13       ' NT/2000/XP+ only, Global hook only
-  WH_MOUSE_LL = 14          ' NT/2000/XP+ only, Global hook only
-End Enum
-'-------------------------------------------------------------------------------------------------
 '========================================================================================================
 ' TO USE IDE-SAFE CALLBACKS...
 '==============================
@@ -292,11 +266,9 @@ End Enum
 '  (-) can be removed if not needed. See their comments
 '   all of above can be made public if so desired
 '   3. In your form/uc/class unload/terminate event, include the statement: scb_TerminateCallbacks or zTerminateThunks CallbackThunk
-'   4. No additional delcarations are required, all that are needed exist in the common-use section above                                                                                                 '
-'
-    '-SelfCallback specific declarations----------------------------------------------------------
-    ' none
-'-------------------------------------------------------------------------------------------------
+'   4. No additional delcarations are required, all that are needed exist in the common-use section above
+
+'/// EVENTS ///////////////////////////////////////////////////////////////////////////
 
 'CLASS Terminate _
  ======================================================================================
@@ -317,16 +289,17 @@ End Sub
 '/// SUBCLASSING //////////////////////////////////////////////////////////////////////
 'Routines specific to subclassing
 
-'ssc_Subclass _
+'ssc_Subclass : Subclass the specified window handle _
  ======================================================================================
-Public Function ssc_Subclass(ByVal lng_hWnd As Long, _
-                    Optional ByVal lParamUser As Long = 0, _
-                    Optional ByVal nOrdinal As Long = 1, _
-                    Optional ByVal oCallback As Object = Nothing, _
-                    Optional ByVal bIdeSafety As Boolean = True, _
-                    Optional ByRef bUnicode As Boolean = False, _
-                    Optional ByVal bIsAPIwindow As Boolean = False) As Boolean 'Subclass the specified window handle
-
+Public Function ssc_Subclass( _
+             ByVal lng_hWnd As Long, _
+    Optional ByVal lParamUser As Long = 0, _
+    Optional ByVal nOrdinal As Long = 1, _
+    Optional ByVal oCallback As Object = Nothing, _
+    Optional ByVal bIdeSafety As Boolean = True, _
+    Optional ByRef bUnicode As Boolean = False, _
+    Optional ByVal bIsAPIwindow As Boolean = False _
+) As Boolean
     '*************************************************************************************************
     '* lng_hWnd   - Handle of the window to subclass
     '* lParamUser - Optional, user-defined callback parameter

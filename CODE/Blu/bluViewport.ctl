@@ -6,9 +6,9 @@ Begin VB.UserControl bluViewport
    ClientLeft      =   0
    ClientTop       =   0
    ClientWidth     =   4800
-   ScaleHeight     =   300
+   ScaleHeight     =   240
    ScaleMode       =   3  'Pixel
-   ScaleWidth      =   400
+   ScaleWidth      =   320
    ToolboxBitmap   =   "bluViewport.ctx":0000
 End
 Attribute VB_Name = "bluViewport"
