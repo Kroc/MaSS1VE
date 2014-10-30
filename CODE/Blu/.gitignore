@@ -1,6 +1,7 @@
 *
 !.gitignore
 
+!*.txt
 !*.bas
 !*.cls
 !*.ctl

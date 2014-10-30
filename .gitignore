@@ -1,6 +1,7 @@
 *
 !.gitignore
 !.gitattributes
+!.gitmodules
 
 !README.md
 !LICENCE.txt

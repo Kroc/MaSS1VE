@@ -1,7 +1,7 @@
 *
 !.gitignore
 
-!Blu/
+!blu
 !*.bas
 !*.cls
 !*.ctl
