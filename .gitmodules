@@ -1,3 +1,5 @@
 [submodule "CODE/blu"]
+
 	path = CODE/blu
-	url = git://github.com/Kroc/blu.git
+
+	url = https://github.com/Kroc/blu.git
